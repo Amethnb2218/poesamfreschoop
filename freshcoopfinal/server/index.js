@@ -124,13 +124,9 @@ const mimeTypes = {
 await mkdir(dataDir, { recursive: true });
 await ensureDatabase();
 
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
-
 createServer(async (request, response) => {
-  const origin = request.headers.origin || '';
-  if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
-    response.setHeader('Access-Control-Allow-Origin', origin || '*');
-  }
+  const origin = request.headers.origin || '*';
+  response.setHeader('Access-Control-Allow-Origin', origin);
   response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
   response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
