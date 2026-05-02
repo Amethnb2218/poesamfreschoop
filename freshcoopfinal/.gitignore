@@ -5,3 +5,4 @@ dist/
 *.log
 server/data/
 fusion-redesign-*.png
+.vercel
