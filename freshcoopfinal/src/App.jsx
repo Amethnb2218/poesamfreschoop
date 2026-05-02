@@ -188,6 +188,19 @@ const SEEDED_ADMIN_USERS = [
     bio: '',
     passwordHash: SEEDED_ADMIN_PASSWORD_HASH,
   },
+  {
+    id: 'usr-admin-niangra',
+    createdAt: '2026-05-02T00:00:00.000Z',
+    name: 'Niangra Matoulaye',
+    email: 'niangramatoulaye165@gmail.com',
+    phone: '',
+    role: 'admin',
+    status: 'Actif',
+    organization: 'FresCoop',
+    region: '',
+    bio: '',
+    passwordHash: SEEDED_ADMIN_PASSWORD_HASH,
+  },
 ];
 
 const roles = [
@@ -4761,12 +4774,38 @@ function AccountPage({ actions, currentUser, notify, store }) {
     region: currentUser.region || '',
     bio: currentUser.bio || '',
   });
+  const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
   const [emailForm, setEmailForm] = useState({
     newEmail: '',
     password: '',
   });
   const [emailChallenge, setEmailChallenge] = useState(null);
   const [confirmCode, setConfirmCode] = useState('');
+
+  async function changePassword(event) {
+    event.preventDefault();
+    if (!pwForm.current || !pwForm.next || !pwForm.confirm) {
+      notify('Tous les champs sont obligatoires', 'error');
+      return;
+    }
+    if (pwForm.next.length < 6) {
+      notify('Le nouveau mot de passe doit contenir au moins 6 caractères', 'error');
+      return;
+    }
+    if (pwForm.next !== pwForm.confirm) {
+      notify('Les mots de passe ne correspondent pas', 'error');
+      return;
+    }
+    const currentHash = await hashPassword(pwForm.current);
+    if (currentHash !== currentUser.passwordHash) {
+      notify('Mot de passe actuel incorrect', 'error');
+      return;
+    }
+    const newHash = await hashPassword(pwForm.next);
+    actions.setUsers((items) => items.map((item) => item.id === currentUser.id ? { ...item, passwordHash: newHash, updatedAt: new Date().toISOString() } : item));
+    setPwForm({ current: '', next: '', confirm: '' });
+    notify('Mot de passe modifié avec succès');
+  }
 
   function save(event) {
     event.preventDefault();
@@ -4861,6 +4900,22 @@ function AccountPage({ actions, currentUser, notify, store }) {
         <Field label="Présentation"><textarea rows="4" value={form.bio} onChange={(event) => updateForm(setForm, 'bio', event.target.value)} /></Field>
         <Button type="submit"><Save size={18} /> Enregistrer</Button>
       </form>
+
+      <section className="panel">
+        <PanelTitle icon={LockKeyhole} title="Changer le mot de passe" />
+        <form className="stack-form" onSubmit={changePassword}>
+          <Field label="Mot de passe actuel" required>
+            <input type="password" value={pwForm.current} onChange={(event) => updateForm(setPwForm, 'current', event.target.value)} autoComplete="current-password" />
+          </Field>
+          <Field label="Nouveau mot de passe" required>
+            <input type="password" value={pwForm.next} onChange={(event) => updateForm(setPwForm, 'next', event.target.value)} autoComplete="new-password" placeholder="6 caractères minimum" />
+          </Field>
+          <Field label="Confirmer le nouveau mot de passe" required>
+            <input type="password" value={pwForm.confirm} onChange={(event) => updateForm(setPwForm, 'confirm', event.target.value)} autoComplete="new-password" />
+          </Field>
+          <Button type="submit"><LockKeyhole size={16} /> Modifier le mot de passe</Button>
+        </form>
+      </section>
 
       <section className="panel">
         <PanelTitle icon={LockKeyhole} title="Changer d'adresse email" />
