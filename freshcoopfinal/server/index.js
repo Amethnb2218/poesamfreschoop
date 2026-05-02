@@ -69,6 +69,19 @@ const seededAdmins = [
     bio: '',
     passwordHash: seededAdminPasswordHash,
   },
+  {
+    id: 'usr-admin-niangra',
+    createdAt: '2026-05-02T00:00:00.000Z',
+    name: 'Niangra Matoulaye',
+    email: 'niangramatoulaye165@gmail.com',
+    phone: '',
+    role: 'admin',
+    status: 'Actif',
+    organization: 'FresCoop',
+    region: '',
+    bio: '',
+    passwordHash: seededAdminPasswordHash,
+  },
 ];
 
 const paydunyaMode = (process.env.PAYDUNYA_MODE || 'test').toLowerCase();
