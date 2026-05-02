@@ -457,14 +457,7 @@ const imageStories = [
 
 const publicSitePaths = [
   '/public',
-  '/solution',
-  '/comment-ca-marche',
-  '/impact-public',
-  '/acheteurs-b2b',
-  '/coopératives-gie',
-  '/partenaires',
   '/demo-jury',
-  '/equipe',
   '/contact',
 ];
 
@@ -550,7 +543,7 @@ function App() {
   if (isPublicPath(route.pathname) || (!currentUser && route.pathname === '/')) {
     return (
       <>
-        <PublicSitePage navigate={navigate} path={route.pathname} store={store} />
+        <PublicSitePage navigate={navigate} path={route.pathname} />
         {toast && <Toast toast={toast} />}
       </>
     );
@@ -720,27 +713,71 @@ function VerifyReceiptPage({ navigate, route, store }) {
   );
 }
 
-function PublicSitePage({ navigate, path, store }) {
-  const data = getFrescoopOperatingData(store);
-  const page = getPublicPageContent(path);
-  const nav = [
-    ['/public', 'Accueil'],
-    ['/solution', 'Solution'],
-    ['/comment-ca-marche', 'Comment ca marche'],
-    ['/impact-public', 'Impact'],
-    ['/acheteurs-b2b', 'Acheteurs B2B'],
-    ['/coopératives-gie', 'Coopératives'],
-    ['/partenaires', 'Partenaires'],
-    ['/demo-jury', 'Demo jury'],
-    ['/contact', 'Contact'],
+function PublicSitePage({ navigate, path }) {
+  useEffect(() => {
+    const sectionMap = { '/demo-jury': 'demo-jury', '/contact': 'contact' };
+    const sectionId = sectionMap[path];
+    if (sectionId) {
+      setTimeout(() => document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' }), 120);
+    }
+  }, [path]);
+
+  function scrollTo(id) {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  const navItems = [
+    ['accueil', 'Accueil'],
+    ['probleme', 'Le probleme'],
+    ['mvp', 'Notre MVP'],
+    ['demo-jury', 'Demo jury'],
+    ['objectifs', 'Objectifs'],
+    ['contact', 'Contact'],
+  ];
+
+  const mvpBlocs = [
+    { Icon: FolderPlus, title: 'Creation de lot', desc: 'La productrice depose, pese et photographie son lot au hub.' },
+    { Icon: ClipboardCheck, title: 'QR + fiche qualite', desc: 'Un QR unique est genere. La qualite est evaluee visuellement.' },
+    { Icon: ShoppingCart, title: 'Reservation B2B', desc: 'Un acheteur reserve le lot avec prix, quantite et date de retrait.' },
+    { Icon: Landmark, title: 'Paiement partenaire', desc: 'Le paiement est opere par un partenaire agree, pas par FresCoop.' },
+    { Icon: FileCheck2, title: 'Preuve economique', desc: 'L\'historique complet du lot devient une preuve exportable et portable.' },
+  ];
+
+  const parcoursSteps = [
+    'La productrice cree un lot au hub',
+    'Pesee et photo qualite',
+    'QR code genere et imprime',
+    'Evaluation qualite enregistree',
+    'Acheteur B2B reserve le lot',
+    'Paiement via partenaire agree',
+    'Recu et preuve economique exportes',
+    'KPI pilote mis a jour',
+  ];
+
+  const objectifs = [
+    { label: 'Productrices enregistrees', target: 100 },
+    { label: 'Lots traces et QR generes', target: 300 },
+    { label: 'Commandes B2B confirmees', target: 150 },
+    { label: 'Paiements partenaires', target: 100 },
+    { label: 'Preuves economiques exportees', target: 100 },
+    { label: 'Acheteurs B2B actifs', target: 20 },
+    { label: 'Cooperatives pilotes', target: 3 },
+  ];
+
+  const roadmapItems = [
+    { title: 'Capteurs IoT temps reel', desc: 'Temperature et humidite dans les hubs.' },
+    { title: 'Acces USSD *384#', desc: 'Saisie et consultation sans smartphone.' },
+    { title: 'Score credit multi-saison', desc: 'Historique pour banques et SFD.' },
+    { title: 'IA predictive', desc: 'Estimation duree de vie des lots.' },
+    { title: 'Marketplace B2B elargie', desc: 'Interconnexion regionale.' },
   ];
 
   return (
     <main className="public-site">
       <nav className="public-nav">
-        <button className="brand" type="button" onClick={() => navigate('/public')}><span>F</span><strong>FresCoop</strong></button>
+        <button className="brand" type="button" onClick={() => scrollTo('accueil')}><span>F</span><strong>FresCoop</strong></button>
         <div>
-          {nav.map(([href, label]) => <button key={href} className={path === href ? 'active' : ''} type="button" onClick={() => navigate(href)}>{label}</button>)}
+          {navItems.map(([id, label]) => <button key={id} type="button" onClick={() => scrollTo(id)}>{label}</button>)}
         </div>
         <div className="public-nav-auth">
           <Button variant="secondary" onClick={() => navigate('/login')}><LockKeyhole size={17} /> Se connecter</Button>
@@ -748,86 +785,154 @@ function PublicSitePage({ navigate, path, store }) {
         </div>
       </nav>
 
-      <section className="public-hero" style={{ backgroundImage: `linear-gradient(90deg, rgba(5,23,18,0.92), rgba(5,23,18,0.28)), url("${page.image}")` }}>
+      <section id="accueil" className="public-hero" style={{ backgroundImage: `linear-gradient(90deg, rgba(5,23,18,0.92), rgba(5,23,18,0.28)), url("${publicImages.hero}")` }}>
         <div>
-          <span className="eyebrow">{page.kicker}</span>
-          <h1>{page.title}</h1>
-          <p>{page.body}</p>
+          <span className="eyebrow">Plateforme agri-tech POESAM 2026</span>
+          <h1>FresCoop transforme chaque recolte vendue en preuve economique verifiable.</h1>
+          <p>Nous aidons les productrices a vendre plus vite, reduire les pertes et construire un historique economique utile pour acceder au financement.</p>
           <div className="button-row">
-            <Button onClick={() => navigate('/login')}><UserCheck size={18} /> Créer un compte</Button>
-            <Button variant="secondary" onClick={() => navigate('/login')}><LockKeyhole size={18} /> Se connecter</Button>
+            <Button onClick={() => navigate('/login')}><Eye size={18} /> Voir la demo jury</Button>
+            <Button variant="secondary" onClick={() => scrollTo('mvp')}><ArrowRight size={18} /> Decouvrir le parcours d'un lot</Button>
           </div>
-          <p style={{ fontSize: '0.82rem', opacity: 0.85, marginTop: '10px' }}>
-            Compte démo disponible — identifiant : <strong>demo</strong> · mot de passe : <strong>demo123</strong>
-          </p>
+          <p className="public-demo-creds">Compte demo : identifiant <strong>demo</strong> / mot de passe <strong>demo123</strong></p>
         </div>
       </section>
 
-      <section className="public-kpi-band">
-        <article><strong>{formatNumber(data.lots.length)}</strong><span>lots suivis</span></article>
-        <article><strong>{formatNumber(sumBy(data.lots, 'weightKg'))} kg</strong><span>proteges par le froid</span></article>
-        <article><strong>{formatMoney(sumBy(data.reservations, 'value'))}</strong><span>reservations B2B</span></article>
-        <article><strong>{data.consentRecords.filter((item) => item.status === 'Actif').length}</strong><span>partages consentis</span></article>
-      </section>
-
-      <section className="public-band">
+      <section id="probleme" className="public-band">
         <div>
-          <span className="eyebrow">Parcours du lot</span>
-          <h2>Entree, froid, IA, acheteur, paiement partenaire, preuve.</h2>
+          <span className="eyebrow">Le probleme</span>
+          <h2>Au Senegal, les productrices perdent leurs recoltes, leurs revenus et leur acces au credit.</h2>
         </div>
-        <div className="public-steps">
-          {['Dépôt et pesée', 'QR et photos qualité', 'Capteurs froid', 'IA durée de vie', 'Réservation B2B', 'Paiement partenaire', 'Preuve économique'].map((item, index) => (
-            <article key={item}><span>{index + 1}</span><strong>{item}</strong></article>
-          ))}
+        <div className="public-probleme-grid">
+          <article>
+            <strong>40%</strong>
+            <span>de pertes post-recolte</span>
+            <p>Les fruits et legumes perissent faute de froid, de debouche rapide et de logistique adaptee.</p>
+          </article>
+          <article>
+            <strong>0</strong>
+            <span>tracabilite des ventes</span>
+            <p>Aucune preuve de transaction exploitable par une banque, un assureur ou un partenaire.</p>
+          </article>
+          <article>
+            <strong>&lt; 5%</strong>
+            <span>acces au credit formel</span>
+            <p>Les productrices n'ont pas d'historique economique reconnu par les institutions financieres.</p>
+          </article>
         </div>
       </section>
 
-      <section className="public-band split">
+      <section id="mvp" className="public-band">
         <div>
-          <span className="eyebrow">{page.sectionKicker}</span>
-          <h2>{page.sectionTitle}</h2>
-          <p>{page.sectionBody}</p>
+          <span className="eyebrow">Notre MVP</span>
+          <h2>Cinq blocs. Une chaine de confiance complete.</h2>
+          <p className="public-subtitle">Vendre, tracer, prouver, financer. Chaque bloc est operationnel dans la demo.</p>
         </div>
-        <div className="public-value-grid">
-          {page.values.map((item) => (
-            <article key={item.title}>
-              <strong>{item.title}</strong>
-              <p>{item.body}</p>
+        <div className="public-mvp-grid">
+          {mvpBlocs.map((bloc, i) => (
+            <article key={bloc.title} className="public-mvp-card">
+              <span className="public-mvp-number">{i + 1}</span>
+              <bloc.Icon size={28} />
+              <strong>{bloc.title}</strong>
+              <p>{bloc.desc}</p>
             </article>
           ))}
         </div>
       </section>
+
+      <section id="demo-jury" className="public-demo-banner">
+        <div>
+          <span className="eyebrow">Demo jury</span>
+          <h2>Testez le parcours complet d'un lot en 3 minutes.</h2>
+          <p>Connectez-vous avec le compte demo et suivez un lot de la creation a la preuve economique.</p>
+          <div className="public-demo-creds-box">
+            <span><LockKeyhole size={16} /> Identifiant : <strong>demo</strong></span>
+            <span><LockKeyhole size={16} /> Mot de passe : <strong>demo123</strong></span>
+          </div>
+          <Button onClick={() => navigate('/login')}><Eye size={18} /> Lancer la demo</Button>
+        </div>
+      </section>
+
+      <section className="public-band">
+        <div>
+          <span className="eyebrow">Parcours d'un lot</span>
+          <h2>De la recolte a la preuve : 8 etapes.</h2>
+        </div>
+        <div className="public-steps-8">
+          {parcoursSteps.map((step, i) => (
+            <article key={step}><span>{i + 1}</span><strong>{step}</strong></article>
+          ))}
+        </div>
+      </section>
+
+      <section id="objectifs" className="public-band">
+        <div>
+          <span className="eyebrow">Objectifs pilote</span>
+          <h2>Ce que nous visons pour le deploiement initial.</h2>
+          <p className="public-subtitle">Ces chiffres sont des objectifs, pas des resultats. Le pilote demarre apres la competition.</p>
+        </div>
+        <div className="public-objectifs-grid">
+          {objectifs.map((obj) => (
+            <article key={obj.label}>
+              <div className="public-objectif-header">
+                <strong>{obj.label}</strong>
+                <span>Cible : {obj.target}</span>
+              </div>
+              <div className="public-progress-bar"><div className="public-progress-fill" style={{ width: '3%' }} /></div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="public-band public-diff-section">
+        <div>
+          <span className="eyebrow">Differenciation</span>
+          <h2>FresCoop n'est pas un wallet.</h2>
+          <p className="public-subtitle">Les paiements restent operes par des partenaires agrees. La plateforme orchestre froid, marche, preuve et consentement.</p>
+        </div>
+        <div className="public-diff-list">
+          {[
+            'Les productrices detiennent leurs preuves economiques, les partagent et les revoquent.',
+            'Chaque lot est un actif economique trace, pas un simple enregistrement.',
+            'Les donnees sont partagees par consentement explicite et revocable.',
+            'Le score de bancabilite est calcule a partir de preuves reelles, pas de declarations.',
+          ].map((point) => (
+            <article key={point}><CheckCircle2 size={20} /><p>{point}</p></article>
+          ))}
+        </div>
+      </section>
+
+      <section className="public-band">
+        <div>
+          <span className="eyebrow">Feuille de route</span>
+          <h2>Ce qui arrive apres le pilote.</h2>
+        </div>
+        <div className="public-roadmap-grid">
+          {roadmapItems.map((item) => (
+            <article key={item.title}>
+              <span className="public-roadmap-badge">A venir</span>
+              <strong>{item.title}</strong>
+              <p>{item.desc}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <footer id="contact" className="public-footer">
+        <div>
+          <div className="brand big"><span>F</span><strong>FresCoop</strong></div>
+          <p>FresCoop ne cree pas seulement un marche agricole. FresCoop cree la preuve economique qui rend les productrices visibles, fiables et financables.</p>
+          <p>Contact : <strong>contact@frescoop.sn</strong></p>
+          <p style={{ fontSize: '0.78rem', opacity: 0.7 }}>POESAM 2026 - Dakar, Senegal</p>
+        </div>
+        <div className="public-footer-demo">
+          <strong>Acces demo jury</strong>
+          <p>Identifiant : demo / Mot de passe : demo123</p>
+          <Button onClick={() => navigate('/login')}><Eye size={18} /> Acceder a la demo</Button>
+        </div>
+      </footer>
     </main>
   );
-}
-
-function getPublicPageContent(path) {
-  const base = {
-    image: publicImages.hero,
-    kicker: 'Infrastructure premier kilometre froid',
-    title: 'FresCoop protege les lots perissables et transforme les ventes en preuves economiques.',
-    body: 'Une plateforme agri-tech B2B2C pour coopératives, productrices, commercantes, hubs, acheteurs et partenaires agrees au Senegal.',
-    sectionKicker: 'Valeur POESAM',
-    sectionTitle: 'Moins de pertes, meilleur prix net, plus de recurrence acheteur.',
-    sectionBody: 'FresCoop n est pas un wallet: les paiements restent operes par partenaires agrees. La plateforme orchestre froid, marche, preuve et consentement.',
-    values: [
-      { title: 'Reduction pertes', body: 'Capteurs, alertes et routage rapide pour sauver les lots sensibles.' },
-      { title: 'Prix net producteur', body: 'Recommandations de debouche selon qualite, temps restant et demande.' },
-      { title: 'Preuve portable', body: 'Historique explicable, partageable et revocable avec partenaires.' },
-    ],
-  };
-  const pages = {
-    '/solution': { kicker: 'Solution', title: 'Un systeme operationnel, pas une simple marketplace.', image: publicImages.operations, sectionTitle: 'Froid, intelligence marche et confiance dans un meme flux.' },
-    '/comment-ca-marche': { kicker: 'Comment ca marche', title: 'Chaque lot devient un actif suivi, valorise et prouvable.', image: publicImages.logistics, sectionTitle: 'Le parcours terrain reste simple pour zones rurales.' },
-    '/impact-public': { kicker: 'Impact', title: 'Mesurer pertes evitees, revenus proteges et preuves generees.', image: publicImages.impact, sectionTitle: 'Des KPI visibles pour jury, partenaires et coopératives.' },
-    '/acheteurs-b2b': { kicker: 'Acheteurs B2B', title: 'Des lots fiables, reserves plus vite, rachetables en un clic.', image: publicImages.market, sectionTitle: 'Les acheteurs gagnent en regularite et qualite.' },
-    '/coopératives-gie': { kicker: 'Coopératives & GIE', title: 'Une vue volume, membres, reversements et impact femmes/jeunes.', image: publicImages.agriculture, sectionTitle: 'Les organisations prouvent leur performance terrain.' },
-    '/partenaires': { kicker: 'Partenaires agrees', title: 'Des donnees consenties, minimales et tracables.', image: publicImages.proofs, sectionTitle: 'Finance et assurance sans acces opaque aux donnees.' },
-    '/demo-jury': { kicker: 'Demo jury', title: 'Une sandbox qui raconte la vie complete d un lot.', image: publicImages.data, sectionTitle: 'Le jury voit la reduction des pertes et la preuve économique.' },
-    '/equipe': { kicker: 'Equipe', title: 'Une equipe orientee terrain, operations et confiance numerique.', image: publicImages.auth, sectionTitle: 'FresCoop se construit avec coopératives et partenaires locaux.' },
-    '/contact': { kicker: 'Pilote', title: 'Candidature pilote pour coopératives, hubs et acheteurs.', image: publicImages.commerce, sectionTitle: 'Demarrer avec un hub, une culture et un acheteur recurrent.' },
-  };
-  return { ...base, ...(pages[path] || {}) };
 }
 
 function AuthShell({ children, meta }) {
@@ -910,9 +1015,13 @@ function LoginPage({ actions, notify, onLogin, store }) {
     }
     if (user.status !== 'Actif') {
       const s = String(user.status || '').toLowerCase();
-      const msg = s === 'suspendu'
-        ? 'Votre compte a été suspendu. Contactez un administrateur FresCoop.'
-        : 'Compte non actif. Contactez un administrateur FresCoop.';
+      const msg = s === 'en attente'
+        ? 'Votre inscription est en attente de validation par un administrateur. Vous recevrez un acces des que votre compte sera approuve.'
+        : s === 'suspendu'
+          ? 'Votre compte a ete suspendu. Contactez un administrateur FresCoop.'
+          : s === 'rejete'
+            ? 'Votre demande d\'inscription a ete rejetee. Contactez un administrateur FresCoop pour plus d\'informations.'
+            : 'Compte non actif. Contactez un administrateur FresCoop.';
       notify(msg, 'error');
       return;
     }
@@ -952,12 +1061,13 @@ function LoginPage({ actions, notify, onLogin, store }) {
     // 3) Construit le nouvel utilisateur
     let user;
     try {
+      const needsApproval = registerForm.role === 'agriculteur';
       user = await buildUser({
         ...registerForm,
         name,
         email: emailInput,
         password,
-        status: 'Actif',
+        status: needsApproval ? 'En attente' : 'Actif',
       });
     } catch (err) {
       notify('Impossible de sécuriser le mot de passe. Réessayez.', 'error');
@@ -965,24 +1075,35 @@ function LoginPage({ actions, notify, onLogin, store }) {
       return;
     }
 
-    // 4) Applique le nouvel utilisateur au store local — le useEffect se
-    //    chargera de faire le PUT en arrière-plan (avec le flag pendingMutation
-    //    qui protège contre les écrasements du polling).
+    const notification = user.status === 'En attente' ? {
+      id: uid('notif'),
+      createdAt: new Date().toISOString(),
+      type: 'approval_request',
+      title: 'Nouvelle inscription agriculteur',
+      body: `${user.name} (${user.email}) demande a etre valide comme agriculteur.`,
+      recipientRole: 'admin',
+      targetUserId: user.id,
+      read: false,
+    } : null;
+
     if (freshStore) {
-      // On a une copie serveur à jour : merge-là avec le nouvel user pour
-      // garantir que le PUT suivant contiendra TOUTES les données serveur +
-      // notre ajout (pas juste le cache local potentiellement périmé).
       const merged = normalizeStore({
         ...freshStore,
         users: [user, ...(freshStore.users || [])],
+        notifications: notification ? [notification, ...(freshStore.notifications || [])] : (freshStore.notifications || []),
       });
       actions.replaceStore(merged);
     } else {
       actions.setUsers((items) => [user, ...items]);
+      if (notification) actions.setNotifications((items) => [notification, ...items]);
     }
 
-    notify(`Bienvenue ${user.name} !`, 'success');
-    onLogin(user.id);
+    if (user.status === 'En attente') {
+      notify('Inscription envoyee ! Un administrateur doit valider votre compte avant que vous puissiez vous connecter.', 'success');
+    } else {
+      notify(`Bienvenue ${user.name} !`, 'success');
+      onLogin(user.id);
+    }
   }
 
   return (
@@ -5528,26 +5649,34 @@ function AgentWorkflowPanel({ onStep, order }) {
 }
 
 function UserCompactRow({ onStatusChange, onDelete, user, canDelete }) {
+  const isPending = user.status === 'En attente';
   return (
-    <article className="user-row">
+    <article className={`user-row ${isPending ? 'user-row-pending' : ''}`}>
       <div className="user-cell-main">
         <Badge>{roleLabel(user.role)}</Badge>
         <strong>{user.name}</strong>
         <small>{user.email}</small>
       </div>
       <div>
-        <span>{user.phone || 'Téléphone non renseigné'}</span>
+        <span>{user.phone || 'Telephone non renseigne'}</span>
         <small>{formatDate(user.createdAt)}</small>
       </div>
       <div>
-        <span>{user.organization || 'Organisation non renseignée'}</span>
-        <small>{user.region || 'Région non renseignée'}</small>
+        <span>{user.organization || 'Organisation non renseignee'}</span>
+        <small>{user.region || 'Region non renseignee'}</small>
       </div>
-      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-        <select value={user.status} onChange={(event) => onStatusChange(event.target.value)}>
-          <option>Actif</option>
-          <option>Suspendu</option>
-        </select>
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+        {isPending ? (
+          <>
+            <button className="btn btn-sm" type="button" onClick={() => onStatusChange('Actif')} style={{ background: 'var(--green-700)', color: '#fff', padding: '5px 12px', borderRadius: 'var(--radius)', border: 0, fontWeight: 900, fontSize: '0.8rem' }}>Approuver</button>
+            <button className="btn btn-sm" type="button" onClick={() => onStatusChange('Rejete')} style={{ background: '#c53030', color: '#fff', padding: '5px 12px', borderRadius: 'var(--radius)', border: 0, fontWeight: 900, fontSize: '0.8rem' }}>Rejeter</button>
+          </>
+        ) : (
+          <select value={user.status} onChange={(event) => onStatusChange(event.target.value)}>
+            <option>Actif</option>
+            <option>Suspendu</option>
+          </select>
+        )}
         {canDelete && (
           <button
             className="icon-danger"
