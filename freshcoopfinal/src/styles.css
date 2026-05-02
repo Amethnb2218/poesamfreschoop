@@ -733,6 +733,12 @@ button:disabled {
   background: var(--green-100);
 }
 
+.public-nav-auth {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .public-hero {
   display: grid;
   align-items: end;

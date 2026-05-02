@@ -82,6 +82,19 @@ const PRODUCT_PAGE_SIZE_OPTIONS = [6, 9, 12];
 const ORDER_PAGE_SIZE_OPTIONS = [5, 10, 20];
 const SEEDED_ADMIN_EMAIL = 'amethsl2218@gmail.com';
 const SEEDED_ADMIN_PASSWORD_HASH = '62a1a5600217bfc84fa5ac26faf898b366581f3b1512624444654b795b108a92';
+const DEMO_USER = {
+  id: 'usr-demo',
+  createdAt: '2026-05-02T00:00:00.000Z',
+  name: 'Visiteur Demo',
+  email: 'demo',
+  phone: '',
+  role: 'agriculteur',
+  status: 'Actif',
+  organization: 'FresCoop Demo',
+  region: 'Dakar',
+  bio: 'Compte de démonstration pour découvrir FresCoop.',
+  passwordHash: 'd3ad9315b7be5dd53b31a273b3b3aba5defe700808305aa16a3062b76658a791',
+};
 const SEEDED_ADMIN_USER = {
   id: 'usr-admin-poesam',
   createdAt: '2026-04-28T00:00:00.000Z',
@@ -97,6 +110,7 @@ const SEEDED_ADMIN_USER = {
 };
 const SEEDED_ADMIN_USERS = [
   SEEDED_ADMIN_USER,
+  DEMO_USER,
   {
     id: 'usr-admin-richef360',
     createdAt: '2026-04-29T00:00:00.000Z',
@@ -728,7 +742,10 @@ function PublicSitePage({ navigate, path, store }) {
         <div>
           {nav.map(([href, label]) => <button key={href} className={path === href ? 'active' : ''} type="button" onClick={() => navigate(href)}>{label}</button>)}
         </div>
-        <Button onClick={() => navigate('/login')}><LockKeyhole size={17} /> App metier</Button>
+        <div className="public-nav-auth">
+          <Button variant="secondary" onClick={() => navigate('/login')}><LockKeyhole size={17} /> Se connecter</Button>
+          <Button onClick={() => navigate('/login')}><UserCheck size={17} /> S'inscrire</Button>
+        </div>
       </nav>
 
       <section className="public-hero" style={{ backgroundImage: `linear-gradient(90deg, rgba(5,23,18,0.92), rgba(5,23,18,0.28)), url("${page.image}")` }}>
@@ -737,9 +754,12 @@ function PublicSitePage({ navigate, path, store }) {
           <h1>{page.title}</h1>
           <p>{page.body}</p>
           <div className="button-row">
-            <Button onClick={() => navigate('/demo-jury')}><BarChart3 size={18} /> Voir demo jury</Button>
-            <Button variant="secondary" onClick={() => navigate('/contact')}><MessageSquare size={18} /> Candidature pilote</Button>
+            <Button onClick={() => navigate('/login')}><UserCheck size={18} /> Créer un compte</Button>
+            <Button variant="secondary" onClick={() => navigate('/login')}><LockKeyhole size={18} /> Se connecter</Button>
           </div>
+          <p style={{ fontSize: '0.82rem', opacity: 0.85, marginTop: '10px' }}>
+            Compte démo disponible — identifiant : <strong>demo</strong> · mot de passe : <strong>demo123</strong>
+          </p>
         </div>
       </section>
 
