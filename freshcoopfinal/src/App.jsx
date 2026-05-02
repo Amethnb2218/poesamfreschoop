@@ -175,6 +175,19 @@ const SEEDED_ADMIN_USERS = [
     bio: '',
     passwordHash: SEEDED_ADMIN_PASSWORD_HASH,
   },
+  {
+    id: 'usr-admin-papa',
+    createdAt: '2026-05-02T00:00:00.000Z',
+    name: 'Papa Lioune',
+    email: 'papalioune03@gmail.com',
+    phone: '',
+    role: 'admin',
+    status: 'Actif',
+    organization: 'FresCoop',
+    region: '',
+    bio: '',
+    passwordHash: SEEDED_ADMIN_PASSWORD_HASH,
+  },
 ];
 
 const roles = [
@@ -6913,17 +6926,27 @@ function createFrescoopDemoStore(store) {
 }
 
 function removeRichPoesamDemo(store) {
-  const isDemo = (item) => String(item?.id || '').includes('-demo-');
+  const demoPatterns = ['-demo-', 'coop-', 'buyer-', 'lot-', 'hub-', 'crate-', 'sensor-', 'reading-', 'qa-', 'border-', 'dispatch-', 'payrec-', 'payout-', 'consent-', 'ecopro-', 'offer-', 'alert-demo', 'audit-demo', 'kpi-'];
+  const isDemo = (item) => {
+    const id = String(item?.id || '');
+    return demoPatterns.some((p) => id.includes(p));
+  };
+  const realUserEmails = new Set();
+  (store.users || []).forEach((u) => {
+    if (!isDemo(u)) realUserEmails.add(u.email);
+  });
   const cleaned = { ...store };
-  ['users', 'products', 'orders', 'hubs', 'lots', 'transactions', 'proofs', 'attestations'].forEach((k) => {
+  const allKeys = ['users', 'products', 'orders', 'hubs', 'lots', 'transactions', 'proofs', 'attestations', 'cooperatives', 'crates', 'lotPhotos', 'sensorDevices', 'sensorReadings', 'qualityAssessments', 'buyers', 'buyerOrders', 'reservations', 'dispatches', 'paymentRecords', 'payoutRecords', 'consentRecords', 'economicProfiles', 'partnerOffers', 'alerts', 'auditLogs', 'kpiAggregates'];
+  allKeys.forEach((k) => {
     cleaned[k] = (store[k] || []).filter((item) => !isDemo(item));
   });
   return normalizeStore(cleaned);
 }
 
 function hasRichDemo(store) {
-  return ['users', 'products', 'orders'].some((k) =>
-    (store[k] || []).some((item) => String(item?.id || '').includes('-demo-')),
+  const demoPatterns = ['-demo-', 'coop-', 'buyer-', 'lot-', 'hub-'];
+  return ['users', 'products', 'orders', 'lots', 'hubs', 'cooperatives', 'buyers'].some((k) =>
+    (store[k] || []).some((item) => demoPatterns.some((p) => String(item?.id || '').includes(p))),
   );
 }
 
