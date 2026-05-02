@@ -1,0 +1,13 @@
+{
+  "name": "frescoop-backend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js --api-only",
+    "start:full": "node server/index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
