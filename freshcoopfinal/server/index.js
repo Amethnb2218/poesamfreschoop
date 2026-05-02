@@ -88,7 +88,7 @@ const seededDemoUser = {
   id: 'usr-demo',
   createdAt: '2026-05-02T00:00:00.000Z',
   name: 'Visiteur Demo',
-  email: 'demo',
+  email: 'demovisiteur@gmail.com',
   phone: '',
   role: 'agriculteur',
   status: 'Actif',

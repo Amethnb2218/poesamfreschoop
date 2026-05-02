@@ -86,7 +86,7 @@ const DEMO_USER = {
   id: 'usr-demo',
   createdAt: '2026-05-02T00:00:00.000Z',
   name: 'Visiteur Demo',
-  email: 'demo',
+  email: 'demovisiteur@gmail.com',
   phone: '',
   role: 'agriculteur',
   status: 'Actif',
@@ -295,7 +295,7 @@ const basePageMeta = {
     image: publicImages.orders,
     kicker: 'Commandes',
     title: 'Suivre commandes, contacts et reponses vendeurs.',
-    body: 'Clients, vendeurs et admin voient uniquement les commandes qui les concernent.',
+    body: 'Clients, acheteurs et agriculteurs voient uniquement les commandes qui les concernent.',
   },
   '/paiement': {
     image: publicImages.proofs,
@@ -319,7 +319,7 @@ const basePageMeta = {
     image: publicImages.admin,
     kicker: 'Administration',
     title: 'Gerer les comptes, roles et statuts des utilisateurs.',
-    body: 'L admin conserve une vue complete sur les acteurs, dossiers, commandes et preuves.',
+    body: 'L admin conserve une vue complete sur les acteurs, dossiers et preuves.',
   },
   '/impact': {
     image: publicImages.impact,
@@ -484,13 +484,13 @@ function App() {
     else window.localStorage.removeItem(SESSION_KEY);
   }, [sessionUserId]);
 
-  // Déconnexion forcée si le compte courant vient d'être suspendu par l'admin
+  // Deconnexion forcee si le compte courant n'est plus valide par l'admin
   useEffect(() => {
     if (!currentUser) return;
-    const status = String(currentUser.status || 'Actif').toLowerCase();
-    if (status === 'suspendu' || status === 'inactif' || status === 'bloque' || status === 'bloqué') {
+    const status = normalize(currentUser.status || 'Actif');
+    if (status !== 'actif') {
       setSessionUserId('');
-      setToast({ message: 'Votre compte a été suspendu par un administrateur.', type: 'error' });
+      setToast({ message: getInactiveAccountMessage(currentUser.status), type: 'error' });
       navigate('/login');
     }
   }, [currentUser?.status, currentUser?.id]);
@@ -794,7 +794,7 @@ function PublicSitePage({ navigate, path }) {
             <Button onClick={() => navigate('/login')}><Eye size={18} /> Voir la demo jury</Button>
             <Button variant="secondary" onClick={() => scrollTo('mvp')}><ArrowRight size={18} /> Decouvrir le parcours d'un lot</Button>
           </div>
-          <p className="public-demo-creds">Compte demo : identifiant <strong>demo</strong> / mot de passe <strong>demo123</strong></p>
+          <p className="public-demo-creds">Compte demo : identifiant <strong>demovisiteur@gmail.com</strong> / mot de passe <strong>demo123</strong></p>
         </div>
       </section>
 
@@ -846,7 +846,7 @@ function PublicSitePage({ navigate, path }) {
           <h2>Testez le parcours complet d'un lot en 3 minutes.</h2>
           <p>Connectez-vous avec le compte demo et suivez un lot de la creation a la preuve economique.</p>
           <div className="public-demo-creds-box">
-            <span><LockKeyhole size={16} /> Identifiant : <strong>demo</strong></span>
+            <span><LockKeyhole size={16} /> Identifiant : <strong>demovisiteur@gmail.com</strong></span>
             <span><LockKeyhole size={16} /> Mot de passe : <strong>demo123</strong></span>
           </div>
           <Button onClick={() => navigate('/login')}><Eye size={18} /> Lancer la demo</Button>
@@ -927,7 +927,7 @@ function PublicSitePage({ navigate, path }) {
         </div>
         <div className="public-footer-demo">
           <strong>Acces demo jury</strong>
-          <p>Identifiant : demo / Mot de passe : demo123</p>
+          <p>Identifiant : demovisiteur@gmail.com / Mot de passe : demo123</p>
           <Button onClick={() => navigate('/login')}><Eye size={18} /> Acceder a la demo</Button>
         </div>
       </footer>
@@ -1014,15 +1014,7 @@ function LoginPage({ actions, notify, onLogin, store }) {
       return;
     }
     if (user.status !== 'Actif') {
-      const s = String(user.status || '').toLowerCase();
-      const msg = s === 'en attente'
-        ? 'Votre inscription est en attente de validation par un administrateur. Vous recevrez un acces des que votre compte sera approuve.'
-        : s === 'suspendu'
-          ? 'Votre compte a ete suspendu. Contactez un administrateur FresCoop.'
-          : s === 'rejete'
-            ? 'Votre demande d\'inscription a ete rejetee. Contactez un administrateur FresCoop pour plus d\'informations.'
-            : 'Compte non actif. Contactez un administrateur FresCoop.';
-      notify(msg, 'error');
+      notify(getInactiveAccountMessage(user.status), 'error');
       return;
     }
     onLogin(user.id);
@@ -1081,9 +1073,10 @@ function LoginPage({ actions, notify, onLogin, store }) {
       type: 'approval_request',
       title: 'Nouvelle inscription agriculteur',
       body: `${user.name} (${user.email}) demande a etre valide comme agriculteur.`,
+      path: '/utilisateurs',
       recipientRole: 'admin',
       targetUserId: user.id,
-      read: false,
+      readAt: '',
     } : null;
 
     if (freshStore) {
@@ -1484,9 +1477,9 @@ function AdminHomePage({ navigate, stats, store }) {
         <div>
           <span className="eyebrow">Centre de pilotage revenus</span>
           <h2>Transformer les produits publies en ventes, preuves et financement.</h2>
-          <p>Le concours doit voir une plateforme qui cree du revenu: FresCoop suit la valeur du marche, detecte les commandes a convertir et montre quels vendeurs peuvent etre rendus bancables.</p>
+          <p>Le concours doit voir une plateforme qui cree du revenu: FresCoop suit la valeur du catalogue, controle les comptes vendeurs et montre quels acteurs peuvent etre rendus bancables.</p>
           <div className="button-row">
-            <Button onClick={() => navigate('/commandes')}><ShoppingCart size={18} /> Convertir commandes</Button>
+            <Button onClick={() => navigate('/produits')}><Store size={18} /> Suivre produits</Button>
             <Button variant="secondary" onClick={() => navigate('/impact')}><BarChart3 size={18} /> Voir impact</Button>
             <Button variant="secondary" onClick={() => downloadHtml('rapport-poesam-frescoop.html', renderBusinessReportHtml(store))}><Download size={18} /> Rapport POESAM</Button>
             <Button variant="secondary" onClick={() => navigate('/donnees')}><Database size={18} /> Export donnees</Button>
@@ -1495,13 +1488,13 @@ function AdminHomePage({ navigate, stats, store }) {
         <div className="money-hero-score">
           <span>Valeur marche</span>
           <strong>{formatMoney(revenue.catalogValue)}</strong>
-          <small>{formatMoney(revenue.openOrderValue)} en commandes ouvertes</small>
+          <small>{revenue.activeSellerCount}/{revenue.sellerCount} vendeur(s) actifs</small>
         </div>
       </section>
 
       <div className="money-kpi-grid">
-        <MoneyKpi icon={CircleDollarSign} label="Commandes confirmees" value={formatMoney(revenue.orderValue)} detail={`${stats.orders} commande(s) au total`} />
-        <MoneyKpi icon={ShoppingCart} label="A convertir maintenant" value={formatMoney(revenue.openOrderValue)} detail={`${revenue.openOrders.length} commande(s) ouvertes`} />
+        <MoneyKpi icon={CircleDollarSign} label="Valeur catalogue" value={formatMoney(revenue.catalogValue)} detail={`${stats.products} produit(s) suivis`} />
+        <MoneyKpi icon={ShoppingCart} label="Produits publies" value={store.products.filter((item) => item.status === 'Publie').length} detail="offres visibles sur le marche" />
         <MoneyKpi icon={Store} label="Vendeurs avec offre" value={`${revenue.activeSellerCount}/${revenue.sellerCount}`} detail="agriculteurs et commercants" />
         <MoneyKpi icon={BadgeCheck} label="Bancabilite" value={`${pipeline.validated}/${Math.max(1, pipeline.total)}`} detail="dossiers valides ou attestables" />
       </div>
@@ -1538,7 +1531,7 @@ function AdminHomePage({ navigate, stats, store }) {
                     <strong>{item.product.name}</strong>
                     <small>{item.seller?.name || 'Vendeur'} - {formatMoney(item.catalogValue)} en stock</small>
                   </div>
-                  <b>{formatMoney(item.orderValue || item.catalogValue)}</b>
+                  <b>{formatMoney(item.catalogValue)}</b>
                 </article>
               ))}
             </div>
@@ -2937,8 +2930,7 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
     }));
     actions.setOrders((items) => [...newOrders, ...items]);
 
-    // Notifier vendeur + agent terrain + admin en même temps (sync mobile + site)
-    const admins = (store.users || []).filter((u) => u.role === 'admin');
+    // Notifier vendeur et agent terrain. Les admins ne voient pas les commandes clients.
     const notifPayloads = [];
     newOrders.forEach((order) => {
       const productName = order.productSnapshot?.name || 'un produit';
@@ -2966,17 +2958,6 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
           type: 'order-assigned',
         }));
       }
-      // 3) Tous les admins (supervision)
-      admins.forEach((admin) => {
-        notifPayloads.push(createAppNotification({
-          actor: currentUser,
-          recipientId: admin.id,
-          title: 'Commande passée',
-          body: `${clientName} → ${productName} · ${amount} FCFA`,
-          path: '/commandes',
-          type: 'order-new',
-        }));
-      });
     });
     if (notifPayloads.length > 0) {
       actions.setNotifications((items) => [...notifPayloads, ...items]);
@@ -3012,9 +2993,6 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
     if (order.clientId) recipients.add(order.clientId);
     if (order.sellerId) recipients.add(order.sellerId);
     if (order.assignedAgentId) recipients.add(order.assignedAgentId);
-    (store.users || [])
-      .filter((u) => u.role === 'admin')
-      .forEach((u) => recipients.add(u.id));
     if (recipients.size === 0) return;
     const payloads = Array.from(recipients).map((rid) =>
       createAppNotification({
@@ -3839,6 +3817,84 @@ function UsersPage({ actions, currentUser, notify, store }) {
     }
   }
 
+  function handleUserStatusChange(user, status) {
+    const now = new Date().toISOString();
+    const previousStatus = user.status || 'Actif';
+    const wasPending = previousStatus === 'En attente';
+    const statusPatch = {
+      status,
+      updatedAt: now,
+      ...(status === 'Actif' && wasPending ? { approvedAt: now, approvedBy: currentUser.id } : {}),
+      ...(status === 'Rejete' && wasPending ? { rejectedAt: now, rejectedBy: currentUser.id } : {}),
+    };
+    const auditAction = status === 'Actif' && wasPending
+      ? 'user_approved'
+      : status === 'Rejete' && wasPending
+        ? 'user_rejected'
+        : status === 'Actif'
+          ? 'user_reactivated'
+          : status === 'Suspendu'
+            ? 'user_suspended'
+            : 'user_status_changed';
+    const auditLabel = status === 'Actif' && wasPending
+      ? 'Approbation'
+      : status === 'Rejete' && wasPending
+        ? 'Rejet'
+        : status === 'Actif'
+          ? 'Reactivation'
+          : status === 'Suspendu'
+            ? 'Suspension'
+            : 'Changement de statut';
+
+    actions.setUsers((items) => items.map((item) => item.id === user.id ? { ...item, ...statusPatch } : item));
+    actions.setAuditLogs((items) => [
+      createAuditLog(
+        currentUser,
+        auditAction,
+        `${auditLabel} de ${user.name} (${roleLabel(user.role)}, ${user.email})`,
+        user.id,
+      ),
+      ...items,
+    ]);
+
+    actions.setNotifications((items) => {
+      const resolved = items.map((item) => (
+        item.type === 'approval_request' && item.targetUserId === user.id
+          ? {
+              ...item,
+              readAt: item.readAt || now,
+              resolvedAt: now,
+              resolvedBy: currentUser.id,
+              resolvedStatus: status,
+            }
+          : item
+      ));
+      if (!wasPending || !['Actif', 'Rejete'].includes(status)) return resolved;
+      return [
+        createAppNotification({
+          actor: currentUser,
+          body: status === 'Actif'
+            ? 'Votre compte agriculteur est maintenant actif. Vous pouvez vous connecter et utiliser FresCoop.'
+            : 'Votre demande de compte agriculteur a ete rejetee. Contactez un administrateur FresCoop pour plus d informations.',
+          path: '/',
+          recipientId: user.id,
+          title: status === 'Actif' ? 'Compte agriculteur approuve' : 'Inscription agriculteur rejetee',
+          type: 'account-status',
+        }),
+        ...resolved,
+      ];
+    });
+
+    notify(
+      status === 'Actif' && wasPending
+        ? `${user.name} approuve. Le compte est actif.`
+        : status === 'Rejete' && wasPending
+          ? `${user.name} rejete. Le compte reste bloque.`
+          : `Statut de ${user.name} mis a jour: ${status}`,
+      status === 'Rejete' ? 'info' : 'success',
+    );
+  }
+
   return (
     <PageFrame>
       <section className="panel users-admin-panel">
@@ -3890,7 +3946,7 @@ function UsersPage({ actions, currentUser, notify, store }) {
 
         {(() => {
           const userAuditLogs = (store.auditLogs || []).filter((log) =>
-            ['user_deleted', 'user_suspended', 'user_reactivated'].includes(log.action),
+            ['user_deleted', 'user_suspended', 'user_reactivated', 'user_approved', 'user_rejected', 'user_status_changed'].includes(log.action),
           ).slice(0, 8);
           if (userAuditLogs.length === 0) return null;
           return (
@@ -3901,8 +3957,18 @@ function UsersPage({ actions, currentUser, notify, store }) {
               </div>
               <ul className="user-audit-list">
                 {userAuditLogs.map((log) => {
-                  const icon = log.action === 'user_deleted' ? '🗑️' : log.action === 'user_suspended' ? '⛔' : '✅';
-                  const label = log.action === 'user_deleted' ? 'Suppression' : log.action === 'user_suspended' ? 'Suspension' : 'Réactivation';
+                  const icon = log.action === 'user_deleted' ? '🗑️' : log.action === 'user_suspended' || log.action === 'user_rejected' ? '⛔' : '✅';
+                  const label = log.action === 'user_deleted'
+                    ? 'Suppression'
+                    : log.action === 'user_suspended'
+                      ? 'Suspension'
+                      : log.action === 'user_approved'
+                        ? 'Approbation'
+                        : log.action === 'user_rejected'
+                          ? 'Rejet'
+                          : log.action === 'user_status_changed'
+                            ? 'Statut'
+                            : 'Réactivation';
                   return (
                     <li key={log.id} className={`audit-row audit-${log.action}`}>
                       <span className="audit-icon">{icon}</span>
@@ -3940,18 +4006,7 @@ function UsersPage({ actions, currentUser, notify, store }) {
                       <UserCompactRow
                         key={user.id}
                         canDelete={canDelete}
-                        onStatusChange={(status) => {
-                          actions.setUsers((items) => items.map((item) => item.id === user.id ? { ...item, status } : item));
-                          actions.setAuditLogs((items) => [
-                            createAuditLog(
-                              currentUser,
-                              status === 'Actif' ? 'user_reactivated' : 'user_suspended',
-                              `${status === 'Actif' ? 'Réactivation' : 'Suspension'} de ${user.name} (${roleLabel(user.role)}, ${user.email})`,
-                              user.id,
-                            ),
-                            ...items,
-                          ]);
-                        }}
+                        onStatusChange={(status) => handleUserStatusChange(user, status)}
                         onDelete={async () => {
                           if (!canDelete) return;
 
@@ -5675,6 +5730,7 @@ function UserCompactRow({ onStatusChange, onDelete, user, canDelete }) {
           <select value={user.status} onChange={(event) => onStatusChange(event.target.value)}>
             <option>Actif</option>
             <option>Suspendu</option>
+            <option>Rejete</option>
           </select>
         )}
         {canDelete && (
@@ -6626,6 +6682,7 @@ function getNotificationIcon(type) {
   if (type === 'order') return ReceiptText;
   if (type === 'field-agent') return Truck;
   if (type === 'anti-waste') return Leaf;
+  if (type === 'approval_request' || type === 'account-status') return UserCheck;
   return BellRing;
 }
 
@@ -6633,6 +6690,8 @@ function getNotificationActionLabel(item) {
   if (item.type === 'message') return 'Ouvrir la conversation';
   if (item.type === 'order' || item.type === 'field-agent') return 'Voir les commandes';
   if (item.type === 'anti-waste') return 'Voir le marche';
+  if (item.type === 'approval_request') return 'Valider le compte';
+  if (item.type === 'account-status') return 'Voir mon espace';
   return item.path ? 'Ouvrir' : 'Marquer comme lu';
 }
 
@@ -6807,8 +6866,8 @@ function getHeroMetrics(user, stats, store) {
   const revenue = buildRevenueSnapshot(store);
   if (user.role === 'admin') {
     return [
-      { icon: CircleDollarSign, label: 'Valeur commandes', value: formatMoney(revenue.orderValue), tone: 'green' },
-      { icon: ShoppingCart, label: 'A convertir', value: formatMoney(revenue.openOrderValue), tone: 'blue' },
+      { icon: CircleDollarSign, label: 'Valeur catalogue', value: formatMoney(revenue.catalogValue), tone: 'green' },
+      { icon: ShoppingCart, label: 'Produits publies', value: store.products.filter((item) => item.status === 'Publie').length, tone: 'blue' },
       { icon: Store, label: 'Vendeurs actifs', value: `${revenue.activeSellerCount}/${revenue.sellerCount}`, tone: 'gold' },
       { icon: ShieldCheck, label: 'Preuves', value: stats.proofs, tone: 'coral' },
     ];
@@ -6872,30 +6931,12 @@ function buildRevenueSnapshot(store) {
 }
 
 function buildAdminOpportunities(store) {
-  const revenue = buildRevenueSnapshot(store);
-  const unanswered = store.messages.filter((item) => item.status === 'Nouveau' && !item.parentId);
   const draftProducts = store.products.filter((item) => item.status !== 'Publie');
   const sellersWithoutProducts = getSellerUsers(store).filter((seller) => !store.products.some((product) => product.ownerId === seller.id));
   const pendingDossiers = store.dossiers.filter((item) => item.status === 'Soumis' || item.status === 'En verification');
   const sellersWithoutProof = getSellerUsers(store).filter((seller) => !store.proofs.some((proof) => proof.ownerId === seller.id));
 
   return [
-    revenue.openOrderValue > 0 && {
-      id: 'open-orders',
-      icon: ShoppingCart,
-      title: 'Convertir les commandes ouvertes',
-      body: 'Chaque commande non livree est du chiffre a securiser maintenant.',
-      value: formatMoney(revenue.openOrderValue),
-      path: '/commandes',
-    },
-    unanswered.length > 0 && {
-      id: 'messages',
-      icon: MessageSquare,
-      title: 'Repondre aux demandes clients',
-      body: 'Une reponse rapide augmente les chances de commande.',
-      value: `${unanswered.length} message(s)`,
-      path: '/commandes',
-    },
     draftProducts.length > 0 && {
       id: 'draft-products',
       icon: Store,
@@ -7693,6 +7734,20 @@ async function buildUser(input) {
   };
 }
 
+function getInactiveAccountMessage(status) {
+  const normalized = normalize(status);
+  if (normalized === 'en attente') {
+    return 'Votre inscription est en attente de validation par un administrateur. Vous recevrez un acces des que votre compte sera approuve.';
+  }
+  if (normalized === 'rejete') {
+    return 'Votre demande d inscription a ete rejetee. Contactez un administrateur FresCoop pour plus d informations.';
+  }
+  if (normalized === 'suspendu' || normalized === 'inactif' || normalized === 'bloque') {
+    return 'Votre compte a ete suspendu. Contactez un administrateur FresCoop.';
+  }
+  return 'Compte non actif. Contactez un administrateur FresCoop.';
+}
+
 function emptyProductForm() {
   return { name: '', category: '', quantity: '', unit: 'kg', price: '', zone: '', description: '', status: 'Publie', imageFiles: [], existingImages: [] };
 }
@@ -7747,7 +7802,6 @@ function getMenuLinks(role) {
       '/dossiers',
       '/attestations',
       '/preuves',
-      '/commandes',
       '/operations',
       '/impact',
       '/anti-gaspi',
@@ -7836,7 +7890,7 @@ function getMenuGroups(role, menuLinks) {
   const groupsByRole = {
     admin: [
       { title: 'Espace admin', paths: ['/', '/compte'] },
-      { title: 'Gestion', paths: ['/lots', '/utilisateurs', '/produits', '/commandes', '/operations'] },
+      { title: 'Gestion', paths: ['/lots', '/utilisateurs', '/produits', '/operations'] },
       { title: 'Documents', paths: ['/dossiers', '/attestations', '/preuves', '/donnees'] },
       { title: 'POESAM - impact & inclusion', paths: ['/impact', '/anti-gaspi', '/bancabilite', '/ussd'] },
       { title: 'Secteurs', paths: ['/secteurs/agriculture', '/secteurs/commerce', '/secteurs/logistique'] },
@@ -7954,7 +8008,7 @@ function getVisibleTransactions(items, user) {
 }
 
 function getVisibleOrders(items, user) {
-  if (user.role === 'admin') return items;
+  if (user.role === 'admin') return [];
   if (isBuyerRole(user.role)) return items.filter((item) => item.clientId === user.id);
   if (isFieldAgentRole(user.role)) return items.filter((item) => item.status !== 'Annulee' && (!item.assignedAgentId || item.assignedAgentId === user.id));
   if (user.role === 'transporteur') return items.filter((item) => item.status !== 'Annulee');
