@@ -758,38 +758,38 @@ async function handleStore(request, response) {
   }
 
   if (request.method === 'PUT') {
+    const storeUrl = new URL(request.url || '/', `http://${request.headers.host}`);
+    const forceWrite = storeUrl.searchParams.get('force') === 'true';
     const body = await readBody(request);
     const parsed = JSON.parse(body || '{}');
     const incoming = normalizeStore(parsed);
 
     // === PROTECTION ANTI-RÉGRESSION ===
-    // On refuse un PUT qui supprimerait plus de 30% des utilisateurs/produits/commandes
-    // par rapport à la version actuelle. Cela évite qu'un client avec un store
-    // en mémoire périmé écrase la base avec sa version incomplète.
-    try {
-      const current = await readStore();
-      const checks = [
-        { key: 'users', min: 3 },
-        { key: 'products', min: 5 },
-        { key: 'orders', min: 2 },
-        { key: 'lots', min: 2 },
-      ];
-      for (const { key, min } of checks) {
-        const cur = (current[key] || []).length;
-        const next = (incoming[key] || []).length;
-        // Si le courant est significatif et la nouvelle version en supprime >30%
-        if (cur > min && next < cur * 0.7) {
-          console.warn(`[Store] PUT rejected: ${key} would drop from ${cur} to ${next} (-${Math.round((1 - next / cur) * 100)}%). Possible stale client.`);
-          sendJson(response, 409, {
-            ok: false,
-            error: `Sauvegarde refusée : cette opération supprimerait trop de ${key} (${cur} → ${next}). Votre version locale est probablement périmée. Rechargez la page.`,
-            code: 'stale_client',
-          });
-          return;
+    if (!forceWrite) {
+      try {
+        const current = await readStore();
+        const checks = [
+          { key: 'users', min: 3 },
+          { key: 'products', min: 5 },
+          { key: 'orders', min: 2 },
+          { key: 'lots', min: 2 },
+        ];
+        for (const { key, min } of checks) {
+          const cur = (current[key] || []).length;
+          const next = (incoming[key] || []).length;
+          if (cur > min && next < cur * 0.7) {
+            console.warn(`[Store] PUT rejected: ${key} would drop from ${cur} to ${next} (-${Math.round((1 - next / cur) * 100)}%). Possible stale client.`);
+            sendJson(response, 409, {
+              ok: false,
+              error: `Sauvegarde refusée : cette opération supprimerait trop de ${key} (${cur} → ${next}). Votre version locale est probablement périmée. Rechargez la page.`,
+              code: 'stale_client',
+            });
+            return;
+          }
         }
+      } catch {
+        // readStore failed, on continue quand même
       }
-    } catch {
-      // readStore failed, on continue quand même
     }
 
     // === BACKUP ROTATIF ===
