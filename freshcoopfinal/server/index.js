@@ -41,21 +41,35 @@ const cloudinaryApiSecret = process.env.CLOUDINARY_API_SECRET || '';
 const port = Number(process.env.FRESCOOP_API_PORT || process.env.PORT || 4174);
 const apiOnly = process.argv.includes('--api-only');
 const host = process.env.FRESCOOP_HOST || process.env.HOST || '0.0.0.0';
-const seededAdminEmail = 'amethsl2218@gmail.com';
 const seededAdminPasswordHash = '62a1a5600217bfc84fa5ac26faf898b366581f3b1512624444654b795b108a92';
-const seededAdminUser = {
-  id: 'usr-admin-poesam',
-  createdAt: '2026-04-28T00:00:00.000Z',
-  name: 'Admin FresCoop',
-  email: seededAdminEmail,
-  phone: '',
-  role: 'admin',
-  status: 'Actif',
-  organization: 'FresCoop',
-  region: '',
-  bio: '',
-  passwordHash: seededAdminPasswordHash,
-};
+const seededAdmins = [
+  {
+    id: 'usr-admin-poesam',
+    createdAt: '2026-04-28T00:00:00.000Z',
+    name: 'Admin FresCoop',
+    email: 'amethsl2218@gmail.com',
+    phone: '',
+    role: 'admin',
+    status: 'Actif',
+    organization: 'FresCoop',
+    region: '',
+    bio: '',
+    passwordHash: seededAdminPasswordHash,
+  },
+  {
+    id: 'usr-admin-papa',
+    createdAt: '2026-05-02T00:00:00.000Z',
+    name: 'Papa Lioune',
+    email: 'papalioune03@gmail.com',
+    phone: '',
+    role: 'admin',
+    status: 'Actif',
+    organization: 'FresCoop',
+    region: '',
+    bio: '',
+    passwordHash: seededAdminPasswordHash,
+  },
+];
 
 const paydunyaMode = (process.env.PAYDUNYA_MODE || 'test').toLowerCase();
 const paydunyaApiBase = paydunyaMode === 'live'
@@ -63,7 +77,7 @@ const paydunyaApiBase = paydunyaMode === 'live'
   : 'https://app.paydunya.com/sandbox-api/v1';
 
 const emptyStore = {
-  users: [seededAdminUser],
+  users: [...seededAdmins],
   products: [],
   dossiers: [],
   attestations: [],
@@ -999,14 +1013,21 @@ function sanitizeNotificationText(value) {
 }
 
 function ensureSeedAdmin(users) {
-  const normalizedEmail = seededAdminEmail.toLowerCase();
-  const hasSeed = users.some((user) => String(user?.email || '').trim().toLowerCase() === normalizedEmail);
-  if (!hasSeed) return [seededAdminUser, ...users];
-  return users.map((user) => (
-    String(user?.email || '').trim().toLowerCase() === normalizedEmail
-      ? { ...user, role: 'admin', status: 'Actif', passwordHash: seededAdminPasswordHash }
-      : user
-  ));
+  let result = [...users];
+  for (const admin of seededAdmins) {
+    const email = admin.email.toLowerCase();
+    const exists = result.some((u) => String(u?.email || '').trim().toLowerCase() === email);
+    if (!exists) {
+      result = [admin, ...result];
+    } else {
+      result = result.map((u) =>
+        String(u?.email || '').trim().toLowerCase() === email
+          ? { ...u, role: 'admin', status: 'Actif', passwordHash: admin.passwordHash }
+          : u
+      );
+    }
+  }
+  return result;
 }
 
 function readBody(request) {
