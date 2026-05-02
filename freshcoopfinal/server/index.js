@@ -1,8 +1,10 @@
 import { createServer } from 'node:http';
+import { createHash } from 'node:crypto';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { MongoClient } from 'mongodb';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
@@ -12,6 +14,29 @@ const distDir = path.join(rootDir, 'dist');
 const envPath = path.join(rootDir, '.env');
 
 await loadEnvFile(envPath);
+
+// ============================================================================
+// MONGODB
+// ============================================================================
+const mongoUri = process.env.MONGODB_URI || '';
+let mongoDb = null;
+if (mongoUri) {
+  try {
+    const client = new MongoClient(mongoUri);
+    await client.connect();
+    mongoDb = client.db(process.env.MONGODB_DB || 'frescoop');
+    console.log('[MongoDB] Connecté à Atlas');
+  } catch (err) {
+    console.error('[MongoDB] Connexion échouée, fallback sur store.json:', err.message);
+  }
+}
+
+// ============================================================================
+// CLOUDINARY
+// ============================================================================
+const cloudinaryCloudName = process.env.CLOUDINARY_CLOUD_NAME || '';
+const cloudinaryApiKey = process.env.CLOUDINARY_API_KEY || '';
+const cloudinaryApiSecret = process.env.CLOUDINARY_API_SECRET || '';
 
 const port = Number(process.env.FRESCOOP_API_PORT || process.env.PORT || 4174);
 const apiOnly = process.argv.includes('--api-only');
@@ -103,7 +128,12 @@ createServer(async (request, response) => {
 
   try {
     if (request.url?.startsWith('/api/health')) {
-      sendJson(response, 200, { ok: true, mode: apiOnly ? 'api-only' : 'static' });
+      sendJson(response, 200, { ok: true, mode: apiOnly ? 'api-only' : 'static', db: mongoDb ? 'mongodb' : 'json' });
+      return;
+    }
+
+    if (request.url?.startsWith('/api/upload')) {
+      await handleUpload(request, response);
       return;
     }
 
@@ -141,6 +171,60 @@ createServer(async (request, response) => {
   console.log(`FresCoop API listening on http://${displayHost}:${port}`);
   console.log(`PayDunya mode: ${paydunyaMode} (${paydunyaApiBase})`);
 });
+
+// ============================================================================
+// CLOUDINARY UPLOAD
+// ============================================================================
+async function handleUpload(request, response) {
+  if (request.method !== 'POST') {
+    sendJson(response, 405, { error: 'Method not allowed' });
+    return;
+  }
+  if (!cloudinaryCloudName || !cloudinaryApiKey || !cloudinaryApiSecret) {
+    sendJson(response, 500, { error: 'Cloudinary non configuré' });
+    return;
+  }
+  try {
+    const body = await readBody(request);
+    const data = JSON.parse(body || '{}');
+    const file = data.file; // base64 data URL
+    if (!file || !file.startsWith('data:')) {
+      sendJson(response, 400, { error: 'Fichier manquant (data URL attendue)' });
+      return;
+    }
+    const timestamp = Math.floor(Date.now() / 1000);
+    const folder = data.folder || 'frescoop';
+    const paramsToSign = `folder=${folder}&timestamp=${timestamp}`;
+    const signature = createHash('sha1').update(paramsToSign + cloudinaryApiSecret).digest('hex');
+
+    const formBody = new URLSearchParams({
+      file,
+      folder,
+      timestamp: String(timestamp),
+      api_key: cloudinaryApiKey,
+      signature,
+    });
+
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/upload`,
+      { method: 'POST', body: formBody },
+    );
+    const result = await res.json();
+    if (result.secure_url) {
+      sendJson(response, 200, {
+        ok: true,
+        url: result.secure_url,
+        public_id: result.public_id,
+        width: result.width,
+        height: result.height,
+      });
+    } else {
+      sendJson(response, 400, { ok: false, error: result.error?.message || 'Échec upload Cloudinary', raw: result });
+    }
+  } catch (err) {
+    sendJson(response, 500, { ok: false, error: err.message });
+  }
+}
 
 async function handlePaydunya(request, response) {
   const url = new URL(request.url || '/', `http://${request.headers.host}`);
@@ -717,7 +801,7 @@ async function handleStore(request, response) {
       }
     } catch {}
 
-    await writeFile(dbPath, JSON.stringify(incoming, null, 2), 'utf8');
+    await writeStore(incoming);
     sendJson(response, 200, { ok: true });
     return;
   }
@@ -812,6 +896,15 @@ async function serveStatic(request, response) {
 }
 
 async function ensureDatabase() {
+  if (mongoDb) {
+    const col = mongoDb.collection('store');
+    const doc = await col.findOne({ _id: 'main' });
+    if (!doc) {
+      await col.insertOne({ _id: 'main', ...emptyStore });
+      console.log('[MongoDB] Store initial créé');
+    }
+    return;
+  }
   try {
     await readFile(dbPath, 'utf8');
   } catch {
@@ -820,8 +913,22 @@ async function ensureDatabase() {
 }
 
 async function readStore() {
+  if (mongoDb) {
+    const doc = await mongoDb.collection('store').findOne({ _id: 'main' });
+    if (!doc) return normalizeStore({});
+    const { _id, ...data } = doc;
+    return normalizeStore(data);
+  }
   const raw = await readFile(dbPath, 'utf8');
   return normalizeStore(JSON.parse(raw || '{}'));
+}
+
+async function writeStore(data) {
+  if (mongoDb) {
+    await mongoDb.collection('store').replaceOne({ _id: 'main' }, { _id: 'main', ...data }, { upsert: true });
+    return;
+  }
+  await writeFile(dbPath, JSON.stringify(data, null, 2), 'utf8');
 }
 
 function normalizeStore(value) {
