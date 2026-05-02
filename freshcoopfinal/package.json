@@ -4,8 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node server/index.js --api-only",
-    "start:full": "node server/index.js"
+    "start": "node server/index.js --api-only"
   },
   "engines": {
     "node": ">=18.0.0"

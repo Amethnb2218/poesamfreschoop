@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+.git_disabled/
+*.log
+server/data/
+fusion-redesign-*.png
