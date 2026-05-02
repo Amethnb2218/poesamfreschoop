@@ -134,6 +134,7 @@ const emptyStore = {
   auditLogs: [],
   kpiAggregates: [],
   loans: [],
+  surveyLeads: [],
 };
 
 const mimeTypes = {
@@ -611,7 +612,7 @@ function generateSerereAnswer(message, context) {
 
   // USSD
   if (has(['ussd', 'telephone 2g', '384', 'sans internet', 'sans smartphone', 'simple'])) {
-    return `📞 USSD *384*FRES# — pour les téléphones 2G sans Internet\n\nMenu disponible en wolof, pulaar, français :\n1. Njeg du jour\n2. Déclarer une vente\n3. Mon solde FresCoop\n4. Alerte anti-gaspi\n5. Contacter agent terrain\n\nFrais opérateur standards. 100% couverture rurale — clé de l'inclusion pour les productrices sans smartphone.`;
+    return `📞 USSD *384*FRES# — pour les téléphones 2G sans Internet\n\nMenu disponible en wolof, pulaar, français :\n1. Njeg du jour\n2. Déclarer une vente\n3. Mon solde FresCoop\n4. Alerte anti-gaspi\n5. Contacter agent terrain\n\nFrais opérateur standards. 100% couverture rurale — clé de l'inclusion pour les productrices et producteurs sans smartphone.`;
   }
 
   // Paiement
@@ -640,7 +641,7 @@ function generateSerereAnswer(message, context) {
   // Commandes
   if (has(['order', 'commande', 'acheter', 'achat', 'panier', 'livraison', 'statut'])) {
     const n = stats.orders || 0;
-    return `🛒 Commandes FresCoop — ${n} au total\n\nCycle d'une commande :\n\n1. Client ajoute au panier depuis le Marché\n2. Validation → commande partagée avec producteur + agent terrain\n3. Paiement sécurisé PayDunya\n4. Statuts : Paiement confirmé → Préparation → Prête → En livraison → Livrée\n5. Reçu PDF automatique\n\nChaque statut déclenche une notification à l'acheteur + vendeur + admin.`;
+    return `🛒 Commandes FresCoop — ${n} au total\n\nCycle d'une commande :\n\n1. Client ajoute au panier depuis le Marché\n2. Validation → commande partagée avec producteur + agent terrain\n3. Paiement sécurisé PayDunya\n4. Statuts : Paiement confirmé → Préparation → Prête → En livraison → Livrée\n5. Reçu PDF automatique\n\nChaque statut déclenche une notification à l'acheteur, au vendeur et à l'agent terrain concerné.`;
   }
 
   // Aide / support / contact
@@ -650,7 +651,7 @@ function generateSerereAnswer(message, context) {
 
   // FresCoop c'est quoi
   if (has(['frescoop', 'c est quoi', 'cest quoi', 'plateforme', 'mission', 'presentation', 'projet'])) {
-    return `🌱 FresCoop — plateforme sénégalaise de commerce agricole (POESAM 2026)\n\n3 briques intégrées :\n\n☀️ Micro-hubs solaires — stockage froid partagé, -35% de pertes\n📊 Intelligence marché — bon prix, bon acheteur, bon délai\n🏛️ Preuve économique portable — historique de ventes → accès crédit\n\nMission : protéger le revenu des productrices sénégalaises, réduire le gaspillage, ouvrir l'inclusion financière.`;
+    return `🌱 FresCoop — plateforme sénégalaise de commerce agricole (POESAM 2026)\n\n3 briques intégrées :\n\n☀️ Micro-hubs solaires — stockage froid partagé, -35% de pertes\n📊 Intelligence marché — bon prix, bon acheteur, bon délai\n🏛️ Preuve économique portable — historique de ventes → accès crédit\n\nMission : protéger le revenu des productrices et producteurs sénégalais, réduire le gaspillage, ouvrir l'inclusion financière.`;
   }
 
   // Fallback honnête : mélange formules sérère + réponse français
@@ -691,7 +692,7 @@ ${languageDirective}
 
 
 TON RÔLE PRINCIPAL :
-Tu es un expert AGRI-FIN-TECH qui aide productrices, commerçantes, acheteurs B2B, transporteurs, agents terrain, partenaires finance et administrateurs.
+Tu es un expert AGRI-FIN-TECH qui aide productrices, producteurs, commerçantes, commerçants, acheteurs B2B, transporteurs, agents terrain, partenaires finance et administrateurs.
 
 TES DOMAINES D'EXPERTISE (tu réponds en DÉTAIL et avec SUBSTANCE) :
 - **Agriculture sénégalaise et ouest-africaine** : calendrier cultural, variétés locales, techniques, irrigation, rendements par hectare, marchés régionaux, filières (maraîchage, céréales, fruits, élevage, transformation, bissap, arachide, mil, niébé, riz de la vallée, etc.)
@@ -706,7 +707,7 @@ TES DOMAINES D'EXPERTISE (tu réponds en DÉTAIL et avec SUBSTANCE) :
 - **ODD** : 1 pauvreté, 5 genre, 8 travail décent, 12 anti-gaspi
 
 CONTEXTE ACTUEL DE LA PLATEFORME :
-- Productrices actives : ${stats.producers || 0}
+- Productrices et producteurs actifs : ${stats.producers || 0}
 - Produits publiés : ${stats.products || 0}
 - Commandes totales : ${stats.orders || 0}
 - Lots tracés : ${stats.lots || 0}
@@ -1020,6 +1021,7 @@ function normalizeNotifications(items) {
     item && typeof item === 'object'
       ? {
           ...item,
+          read: Boolean(item.read || item.readAt),
           title: sanitizeNotificationText(item.title),
           body: sanitizeNotificationText(item.body),
         }

@@ -459,6 +459,8 @@ const publicSitePaths = [
   '/public',
   '/demo-jury',
   '/contact',
+  '/sondage',
+  '/questionnaire',
 ];
 
 function App() {
@@ -540,6 +542,15 @@ function App() {
     );
   }
 
+  if (route.pathname === '/sondage' || route.pathname === '/questionnaire') {
+    return (
+      <>
+        <PublicSurveyPage actions={actions} navigate={navigate} notify={notify} store={store} />
+        {toast && <Toast toast={toast} />}
+      </>
+    );
+  }
+
   if (isPublicPath(route.pathname) || (!currentUser && route.pathname === '/')) {
     return (
       <>
@@ -611,6 +622,7 @@ function App() {
         {accessAllowed && route.pathname === '/secteurs/logistique' && <SectorPage currentUser={currentUser} kind="logistique" navigate={navigate} store={store} />}
         {accessAllowed && route.pathname === '/compte' && <AccountPage actions={actions} currentUser={currentUser} notify={notify} store={store} />}
       </main>
+      <AppFooter currentUser={currentUser} navigate={navigate} />
       <LanguageAssistant currentUser={currentUser} store={store} />
       <ConfirmModalHost />
       {toast && <Toast toast={toast} />}
@@ -736,7 +748,7 @@ function PublicSitePage({ navigate, path }) {
   ];
 
   const mvpBlocs = [
-    { Icon: FolderPlus, title: 'Creation de lot', desc: 'La productrice depose, pese et photographie son lot au hub.' },
+    { Icon: FolderPlus, title: 'Creation de lot', desc: 'La productrice ou le producteur depose, pese et photographie son lot au hub.' },
     { Icon: ClipboardCheck, title: 'QR + fiche qualite', desc: 'Un QR unique est genere. La qualite est evaluee visuellement.' },
     { Icon: ShoppingCart, title: 'Reservation B2B', desc: 'Un acheteur reserve le lot avec prix, quantite et date de retrait.' },
     { Icon: Landmark, title: 'Paiement partenaire', desc: 'Le paiement est opere par un partenaire agree, pas par FresCoop.' },
@@ -744,7 +756,7 @@ function PublicSitePage({ navigate, path }) {
   ];
 
   const parcoursSteps = [
-    'La productrice cree un lot au hub',
+    'La productrice ou le producteur cree un lot au hub',
     'Pesee et photo qualite',
     'QR code genere et imprime',
     'Evaluation qualite enregistree',
@@ -755,7 +767,7 @@ function PublicSitePage({ navigate, path }) {
   ];
 
   const objectifs = [
-    { label: 'Productrices enregistrees', target: 100 },
+    { label: 'Productrices et producteurs enregistres', target: 100 },
     { label: 'Lots traces et QR generes', target: 300 },
     { label: 'Commandes B2B confirmees', target: 150 },
     { label: 'Paiements partenaires', target: 100 },
@@ -780,6 +792,7 @@ function PublicSitePage({ navigate, path }) {
           {navItems.map(([id, label]) => <button key={id} type="button" onClick={() => scrollTo(id)}>{label}</button>)}
         </div>
         <div className="public-nav-auth">
+          <Button variant="secondary" onClick={() => navigate('/sondage')}><FileText size={17} /> Questionnaire</Button>
           <Button variant="secondary" onClick={() => navigate('/login')}><LockKeyhole size={17} /> Se connecter</Button>
           <Button onClick={() => navigate('/login')}><UserCheck size={17} /> S'inscrire</Button>
         </div>
@@ -789,9 +802,10 @@ function PublicSitePage({ navigate, path }) {
         <div>
           <span className="eyebrow">Plateforme agri-tech POESAM 2026</span>
           <h1>FresCoop transforme chaque recolte vendue en preuve economique verifiable.</h1>
-          <p>Nous aidons les productrices a vendre plus vite, reduire les pertes et construire un historique economique utile pour acceder au financement.</p>
+          <p>Nous aidons les productrices et producteurs a vendre plus vite, reduire les pertes et construire un historique economique utile pour acceder au financement.</p>
           <div className="button-row">
             <Button onClick={() => navigate('/login')}><Eye size={18} /> Voir la demo jury</Button>
+            <Button variant="secondary" onClick={() => navigate('/sondage')}><FileText size={18} /> Remplir le questionnaire</Button>
             <Button variant="secondary" onClick={() => scrollTo('mvp')}><ArrowRight size={18} /> Decouvrir le parcours d'un lot</Button>
           </div>
           <p className="public-demo-creds">Compte demo : identifiant <strong>demovisiteur@gmail.com</strong> / mot de passe <strong>demo123</strong></p>
@@ -801,7 +815,7 @@ function PublicSitePage({ navigate, path }) {
       <section id="probleme" className="public-band">
         <div>
           <span className="eyebrow">Le probleme</span>
-          <h2>Au Senegal, les productrices perdent leurs recoltes, leurs revenus et leur acces au credit.</h2>
+          <h2>Au Senegal, les productrices et producteurs perdent leurs recoltes, leurs revenus et leur acces au credit.</h2>
         </div>
         <div className="public-probleme-grid">
           <article>
@@ -817,7 +831,7 @@ function PublicSitePage({ navigate, path }) {
           <article>
             <strong>&lt; 5%</strong>
             <span>acces au credit formel</span>
-            <p>Les productrices n'ont pas d'historique economique reconnu par les institutions financieres.</p>
+            <p>Les productrices et producteurs n'ont pas d'historique economique reconnu par les institutions financieres.</p>
           </article>
         </div>
       </section>
@@ -892,7 +906,7 @@ function PublicSitePage({ navigate, path }) {
         </div>
         <div className="public-diff-list">
           {[
-            'Les productrices detiennent leurs preuves economiques, les partagent et les revoquent.',
+            'Les productrices et producteurs detiennent leurs preuves economiques, les partagent et les revoquent.',
             'Chaque lot est un actif economique trace, pas un simple enregistrement.',
             'Les donnees sont partagees par consentement explicite et revocable.',
             'Le score de bancabilite est calcule a partir de preuves reelles, pas de declarations.',
@@ -921,7 +935,7 @@ function PublicSitePage({ navigate, path }) {
       <footer id="contact" className="public-footer">
         <div>
           <div className="brand big"><span>F</span><strong>FresCoop</strong></div>
-          <p>FresCoop ne cree pas seulement un marche agricole. FresCoop cree la preuve economique qui rend les productrices visibles, fiables et financables.</p>
+          <p>FresCoop ne cree pas seulement un marche agricole. FresCoop cree la preuve economique qui rend les productrices et producteurs visibles, fiables et financables.</p>
           <p>Contact : <strong>contact@frescoop.sn</strong></p>
           <p style={{ fontSize: '0.78rem', opacity: 0.7 }}>POESAM 2026 - Dakar, Senegal</p>
         </div>
@@ -978,6 +992,236 @@ function SetupAdminPage({ actions, notify, onReady }) {
       <Field label="Mot de passe" required><input type="password" value={form.password} onChange={(event) => updateForm(setForm, 'password', event.target.value)} /></Field>
       <Button type="submit" disabled={saving}><Save size={18} /> Initialiser FresCoop</Button>
     </form>
+  );
+}
+
+function PublicSurveyPage({ actions, navigate, notify, store }) {
+  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState({
+    fullName: '',
+    phone: '',
+    email: '',
+    roleInterest: 'agriculteur',
+    region: '',
+    organization: '',
+    products: '',
+    needs: [],
+    canUseSmartphone: 'oui',
+    wantsPilot: 'oui',
+    preferredContact: 'whatsapp',
+    notes: '',
+    consent: false,
+  });
+
+  const needOptions = [
+    'Vendre mes produits',
+    'Acheter en gros',
+    'Suivre une commande',
+    'Reduire les pertes',
+    'Obtenir un financement',
+    'Transporter ou stocker',
+  ];
+
+  function toggleNeed(value) {
+    setForm((current) => {
+      const set = new Set(current.needs || []);
+      if (set.has(value)) set.delete(value);
+      else set.add(value);
+      return { ...current, needs: Array.from(set) };
+    });
+  }
+
+  function submitSurvey(event) {
+    event.preventDefault();
+    const fullName = form.fullName.trim();
+    const phone = form.phone.trim();
+    if (!fullName || !phone || !form.roleInterest) {
+      notify('Nom, telephone et profil sont obligatoires', 'error');
+      return;
+    }
+    if (!form.consent) {
+      notify('Le consentement est requis pour etre recontacte', 'error');
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const lead = {
+      id: uid('lead'),
+      createdAt: now,
+      source: 'questionnaire-public',
+      fullName,
+      phone,
+      email: form.email.trim().toLowerCase(),
+      roleInterest: form.roleInterest,
+      region: form.region.trim(),
+      organization: form.organization.trim(),
+      products: form.products.trim(),
+      needs: form.needs || [],
+      canUseSmartphone: form.canUseSmartphone,
+      wantsPilot: form.wantsPilot,
+      preferredContact: form.preferredContact,
+      notes: form.notes.trim(),
+      status: 'Nouveau',
+      consent: true,
+    };
+    actions.setSurveyLeads((items) => [lead, ...items]);
+    actions.setNotifications((items) => [
+      createAppNotification({
+        body: `${lead.fullName} (${roleLabel(lead.roleInterest)}) veut etre recontacte: ${lead.phone}`,
+        path: '/utilisateurs',
+        recipientRole: 'admin',
+        relatedId: lead.id,
+        title: 'Nouveau prospect questionnaire',
+        type: 'survey-lead',
+      }),
+      ...items,
+    ]);
+    setSubmitted(true);
+    setForm({
+      fullName: '',
+      phone: '',
+      email: '',
+      roleInterest: 'agriculteur',
+      region: '',
+      organization: '',
+      products: '',
+      needs: [],
+      canUseSmartphone: 'oui',
+      wantsPilot: 'oui',
+      preferredContact: 'whatsapp',
+      notes: '',
+      consent: false,
+    });
+    notify('Merci, votre questionnaire est enregistre.', 'success');
+  }
+
+  return (
+    <main className="survey-page">
+      <nav className="public-nav survey-nav">
+        <button className="brand" type="button" onClick={() => navigate('/public')}><span>F</span><strong>FresCoop</strong></button>
+        <div />
+        <div className="public-nav-auth">
+          <Button variant="secondary" onClick={() => navigate('/public')}><Home size={17} /> Accueil</Button>
+          <Button onClick={() => navigate('/login')}><UserCheck size={17} /> Se connecter</Button>
+        </div>
+      </nav>
+
+      <section className="survey-hero">
+        <div>
+          <span className="eyebrow">Questionnaire d'inscription</span>
+          <h1>Rejoindre le pilote FresCoop</h1>
+          <p>Ce formulaire sert a identifier les producteurs, acheteurs, transporteurs et partenaires interesses. L'equipe FresCoop vous recontacte ensuite pour l'inscription.</p>
+        </div>
+        <aside>
+          <strong>{formatNumber((store.surveyLeads || []).length)}</strong>
+          <span>reponses collectees</span>
+        </aside>
+      </section>
+
+      <section className="survey-layout">
+        <form className="survey-form panel" onSubmit={submitSurvey}>
+          <PanelTitle icon={FileText} title="Vos informations" />
+          <div className="survey-form-grid">
+            <Field label="Nom complet" required>
+              <input value={form.fullName} onChange={(event) => updateForm(setForm, 'fullName', event.target.value)} placeholder="Prenom Nom" />
+            </Field>
+            <Field label="Telephone / WhatsApp" required>
+              <input value={form.phone} onChange={(event) => updateForm(setForm, 'phone', event.target.value)} placeholder="+221 77 000 00 00" />
+            </Field>
+            <Field label="Email">
+              <input type="email" value={form.email} onChange={(event) => updateForm(setForm, 'email', event.target.value)} placeholder="nom@exemple.com" />
+            </Field>
+            <Field label="Profil" required>
+              <select value={form.roleInterest} onChange={(event) => updateForm(setForm, 'roleInterest', event.target.value)}>
+                <option value="agriculteur">Agriculteur / producteur</option>
+                <option value="acheteurB2B">Acheteur B2B</option>
+                <option value="client">Client particulier</option>
+                <option value="transporteur">Transporteur</option>
+                <option value="partenaire">Partenaire finance</option>
+                <option value="agentTerrain">Agent terrain</option>
+              </select>
+            </Field>
+            <Field label="Region / ville">
+              <input value={form.region} onChange={(event) => updateForm(setForm, 'region', event.target.value)} placeholder="Dakar, Thies, Saint-Louis..." />
+            </Field>
+            <Field label="Organisation">
+              <input value={form.organization} onChange={(event) => updateForm(setForm, 'organization', event.target.value)} placeholder="Cooperative, boutique, entreprise..." />
+            </Field>
+          </div>
+
+          <Field label="Produits ou besoins principaux">
+            <textarea rows={3} value={form.products} onChange={(event) => updateForm(setForm, 'products', event.target.value)} placeholder="Ex: oignon, tomate, riz local, transport froid, achats en gros..." />
+          </Field>
+
+          <div className="survey-question">
+            <span>Ce que vous cherchez avec FresCoop</span>
+            <div className="survey-options">
+              {needOptions.map((item) => (
+                <label key={item}>
+                  <input type="checkbox" checked={form.needs.includes(item)} onChange={() => toggleNeed(item)} />
+                  <span>{item}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="survey-form-grid compact">
+            <Field label="Smartphone / Internet">
+              <select value={form.canUseSmartphone} onChange={(event) => updateForm(setForm, 'canUseSmartphone', event.target.value)}>
+                <option value="oui">Oui, j'utilise Internet</option>
+                <option value="parfois">Parfois seulement</option>
+                <option value="non">Non, je prefere appel/SMS</option>
+              </select>
+            </Field>
+            <Field label="Interesse par le pilote ?">
+              <select value={form.wantsPilot} onChange={(event) => updateForm(setForm, 'wantsPilot', event.target.value)}>
+                <option value="oui">Oui</option>
+                <option value="peut-etre">Peut-etre</option>
+                <option value="plus-tard">Plus tard</option>
+              </select>
+            </Field>
+            <Field label="Canal prefere">
+              <select value={form.preferredContact} onChange={(event) => updateForm(setForm, 'preferredContact', event.target.value)}>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="appel">Appel</option>
+                <option value="sms">SMS</option>
+                <option value="email">Email</option>
+              </select>
+            </Field>
+          </div>
+
+          <Field label="Message libre">
+            <textarea rows={3} value={form.notes} onChange={(event) => updateForm(setForm, 'notes', event.target.value)} placeholder="Expliquez votre activite, vos volumes ou vos difficultes actuelles." />
+          </Field>
+
+          <label className="survey-consent">
+            <input type="checkbox" checked={form.consent} onChange={(event) => updateForm(setForm, 'consent', event.target.checked)} />
+            <span>J'accepte d'etre recontacte par FresCoop pour l'inscription au pilote.</span>
+          </label>
+
+          <div className="button-row">
+            <Button type="submit"><Send size={18} /> Envoyer le questionnaire</Button>
+            <Button type="button" variant="secondary" onClick={() => navigate('/login')}><UserPlus size={18} /> J'ai deja un compte</Button>
+          </div>
+        </form>
+
+        <aside className="survey-side panel">
+          <PanelTitle icon={Sprout} title="Pourquoi ce questionnaire ?" />
+          <div className="compact-list">
+            <article><strong>Identifier les besoins</strong><p>Vente, achat B2B, transport, anti-gaspi ou financement.</p></article>
+            <article><strong>Prioriser les zones</strong><p>Les regions avec plus de demandes passent en premier dans le pilote.</p></article>
+            <article><strong>Preparer l'inscription</strong><p>L'equipe peut creer ou valider les comptes plus vite.</p></article>
+          </div>
+          {submitted && (
+            <div className="survey-success">
+              <CheckCircle2 size={24} />
+              <strong>Questionnaire recu</strong>
+              <span>Nous vous recontacterons via le canal indique.</span>
+            </div>
+          )}
+        </aside>
+      </section>
+    </main>
   );
 }
 
@@ -1183,24 +1427,25 @@ function Header({ actions, activePath, currentUser, logout, menuLinks, messages 
   const [notificationOpen, setNotificationOpen] = useState(false);
   const menuGroups = getMenuGroups(currentUser.role, menuLinks);
   const userNotifications = getVisibleNotifications(notifications, currentUser);
-  const unreadCount = userNotifications.filter((item) => !item.readAt).length;
+  const unreadCount = userNotifications.filter((item) => !isNotificationRead(item)).length;
 
   function openNotification(item) {
-    actions.setNotifications((entries) => entries.map((entry) => entry.id === item.id ? { ...entry, readAt: entry.readAt || new Date().toISOString() } : entry));
-    if (item.type === 'message') {
-      navigate(getMessageNotificationPath(item, messages));
-    } else if (item.path) {
-      navigate(item.path);
+    const now = new Date().toISOString();
+    actions.setNotifications((entries) => entries.map((entry) => entry.id === item.id ? { ...entry, read: true, readAt: entry.readAt || now } : entry));
+    const path = getNotificationPath(item, messages);
+    if (path) {
+      navigate(path);
     }
     setNotificationOpen(false);
   }
 
   function markOneRead(event, notif) {
     event.stopPropagation();
-    if (notif.readAt) return;
+    if (isNotificationRead(notif)) return;
+    const now = new Date().toISOString();
     actions.setNotifications((entries) =>
       entries.map((entry) =>
-        entry.id === notif.id ? { ...entry, readAt: new Date().toISOString() } : entry,
+        entry.id === notif.id ? { ...entry, read: true, readAt: entry.readAt || now } : entry,
       ),
     );
   }
@@ -1208,11 +1453,11 @@ function Header({ actions, activePath, currentUser, logout, menuLinks, messages 
   function markAllRead() {
     const now = new Date().toISOString();
     actions.setNotifications((entries) => entries.map((entry) => {
-      if (entry.readAt) return entry;
+      if (isNotificationRead(entry)) return entry;
       const matchesUser = entry.recipientId === currentUser.id
         || (entry.recipientRole && entry.recipientRole === currentUser.role)
         || (Array.isArray(entry.recipientRoles) && entry.recipientRoles.includes(currentUser.role));
-      return matchesUser ? { ...entry, readAt: now } : entry;
+      return matchesUser ? { ...entry, read: true, readAt: entry.readAt || now } : entry;
     }));
   }
 
@@ -1258,7 +1503,7 @@ function Header({ actions, activePath, currentUser, logout, menuLinks, messages 
                     {userNotifications.slice(0, 12).map((item) => {
                       const Icon = getNotificationIcon(item.type);
                       return (
-                        <button key={item.id} className={`notification-item ${!item.readAt ? 'unread' : ''}`} type="button" onClick={() => openNotification(item)}>
+                        <button key={item.id} className={`notification-item ${!isNotificationRead(item) ? 'unread' : ''}`} type="button" onClick={() => openNotification(item)}>
                           <span className="notification-icon"><Icon size={17} /></span>
                           <span className="notification-copy">
                             <span className="notification-row">
@@ -1268,7 +1513,7 @@ function Header({ actions, activePath, currentUser, logout, menuLinks, messages 
                             <small>{item.body}</small>
                             <span className="notification-link">{getNotificationActionLabel(item)}</span>
                           </span>
-                          {!item.readAt && (
+                          {!isNotificationRead(item) && (
                             <span
                               className="notification-mark"
                               role="button"
@@ -1947,7 +2192,7 @@ function MarketplacePage({ actions, currentUser, navigate, notify, store }) {
           </div>
           <div>
             <span>{formatMoney(cartTotal)}</span>
-            <Button variant="secondary" onClick={() => navigate('/commandes')} disabled={cartCount === 0}>
+            <Button variant="secondary" onClick={() => navigate('/commandes?tab=cart')} disabled={cartCount === 0}>
               <CheckCircle2 size={17} /> {cartCount === 0 ? 'Ajoutez un produit' : 'Voir commandes'}
             </Button>
           </div>
@@ -2741,6 +2986,7 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
   const [orderPage, setOrderPage] = useState(1);
   const [conversationDrafts, setConversationDrafts] = useState({});
   const [openConversationId, setOpenConversationId] = useState('');
+  const [activeOrderTab, setActiveOrderTab] = useState(() => (isBuyerRole(currentUser.role) ? 'cart' : 'orders'));
   const orders = getVisibleOrders(store.orders, currentUser);
   const hiddenOrderSet = useMemo(() => new Set(hiddenOrderIds), [hiddenOrderIds]);
   const scopedOrders = useMemo(() => (
@@ -2751,8 +2997,34 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
   const orderTotalPages = Math.max(1, Math.ceil(filteredOrders.length / orderPageSize));
   const messages = getVisibleMessages(store.messages, currentUser);
   const conversations = useMemo(() => buildConversations(messages), [messages]);
-  const requestedConversationId = useMemo(() => new URLSearchParams(route?.search || '').get('conversation') || '', [route?.search]);
+  const routeParams = useMemo(() => new URLSearchParams(route?.search || ''), [route?.search]);
+  const requestedConversationId = routeParams.get('conversation') || '';
+  const requestedOrderId = routeParams.get('order') || '';
+  const requestedTab = routeParams.get('tab') || '';
   const selectedOrderSet = useMemo(() => new Set(selectedOrderIds), [selectedOrderIds]);
+  const cartTotal = cart.reduce((sum, item) => sum + getCartItemTotal(item), 0);
+  const cartCount = cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const orderTabs = useMemo(() => {
+    const tabs = [];
+    if (isBuyerRole(currentUser.role)) {
+      tabs.push({ id: 'cart', label: 'Panier', icon: ShoppingCart, count: cartCount });
+    }
+    tabs.push({ id: 'orders', label: isBuyerRole(currentUser.role) ? 'Commandes' : 'Reçues', icon: ReceiptText, count: orders.length });
+    tabs.push({ id: 'tracking', label: 'Suivi', icon: ClipboardCheck, count: filteredOrders.length });
+    tabs.push({ id: 'conversations', label: 'Conversations', icon: MessageSquare, count: conversations.length });
+    return tabs;
+  }, [cartCount, conversations.length, currentUser.role, filteredOrders.length, orders.length]);
+
+  useEffect(() => {
+    if (!requestedTab) return;
+    if (orderTabs.some((tab) => tab.id === requestedTab)) setActiveOrderTab(requestedTab);
+  }, [orderTabs, requestedTab]);
+
+  useEffect(() => {
+    if (!orderTabs.some((tab) => tab.id === activeOrderTab)) {
+      setActiveOrderTab(orderTabs[0]?.id || 'orders');
+    }
+  }, [activeOrderTab, orderTabs]);
 
   useEffect(() => {
     setHiddenOrderIds(readHiddenOrdersFromStorage(currentUser.id));
@@ -2788,11 +3060,20 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
 
   useEffect(() => {
     if (!requestedConversationId || !conversations.some((conversation) => conversation.id === requestedConversationId)) return;
+    setActiveOrderTab('conversations');
     setOpenConversationId(requestedConversationId);
     window.setTimeout(() => {
       document.getElementById(`conversation-${requestedConversationId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 80);
   }, [conversations, requestedConversationId]);
+
+  useEffect(() => {
+    if (!requestedOrderId || !orders.some((order) => order.id === requestedOrderId)) return;
+    setActiveOrderTab(requestedTab === 'orders' ? 'orders' : 'tracking');
+    window.setTimeout(() => {
+      document.getElementById(`order-${requestedOrderId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 120);
+  }, [orders, requestedOrderId, requestedTab]);
 
   const pagedOrders = useMemo(() => {
     const start = (orderPage - 1) * orderPageSize;
@@ -2852,6 +3133,7 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
 
   function clearCart(options = {}) {
     setCart([]);
+    writeCartToStorage([]);
     setShowCart(false);
     if (!options.silent) notify('Panier vide');
   }
@@ -2943,7 +3225,8 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
           recipientId: order.sellerId,
           title: 'Nouvelle commande reçue',
           body: `${clientName} · ${order.quantity} ${order.unit} de ${productName} · ${amount} FCFA`,
-          path: '/commandes',
+          path: `/commandes?tab=orders&order=${encodeURIComponent(order.id)}`,
+          relatedId: order.id,
           type: 'order-new',
         }));
       }
@@ -2954,7 +3237,8 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
           recipientId: order.assignedAgentId,
           title: 'Nouvelle commande à superviser',
           body: `${productName} · ${order.quantity} ${order.unit} · à coordonner avec le producteur`,
-          path: '/commandes',
+          path: `/commandes?tab=tracking&order=${encodeURIComponent(order.id)}`,
+          relatedId: order.id,
           type: 'order-assigned',
         }));
       }
@@ -2980,9 +3264,11 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
       )));
     }
     actions.setOrders((items) => items.map((item) => item.id === orderId ? { ...item, status: 'Annulee', updatedAt: new Date().toISOString() } : item));
+    const producerName = getOrderProducerName(order, store);
+    const actorName = currentUser.id === order.sellerId ? producerName : (currentUser.name || roleLabel(currentUser.role));
     broadcastOrderEvent(order, {
       title: 'Commande annulée',
-      body: `${order.productSnapshot?.name || 'Commande'} annulée`,
+      body: `${order.productSnapshot?.name || 'Commande'} annulee - producteur: ${producerName}. Annulee par ${actorName}.`,
       type: 'order-cancelled',
     });
     notify('Commande annulée. Stock restitué.', 'info');
@@ -3000,7 +3286,8 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
         recipientId: rid,
         title,
         body,
-        path: '/commandes',
+        path: `/commandes?tab=tracking&order=${encodeURIComponent(order.id)}`,
+        relatedId: order.id,
         type,
       }),
     );
@@ -3019,9 +3306,13 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
     const order = store.orders.find((item) => item.id === id);
     actions.setOrders((items) => items.map((item) => item.id === id ? { ...item, status, updatedAt: new Date().toISOString() } : item));
     if (order) {
+      const product = getOrderProduct(order, store);
+      const producerName = getOrderProducerName(order, store);
       broadcastOrderEvent({ ...order, status }, {
         title: 'Commande mise à jour',
-        body: `Statut: ${orderStatusLabel(status)}`,
+        body: status === 'En preparation'
+          ? `${product?.name || 'Commande'} est en preparation par ${producerName}.`
+          : `${product?.name || 'Commande'} - producteur: ${producerName}. Statut: ${orderStatusLabel(status)}`,
         type: 'order-status',
       });
     }
@@ -3054,9 +3345,10 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
     } : item));
     const order = store.orders.find((o) => o.id === orderId);
     if (order) {
+      const producerName = getOrderProducerName(order, store);
       broadcastOrderEvent({ ...order, status: stepToStatus[step] || order.status }, {
         title: 'Action agent terrain',
-        body: stepLabels[step] || 'Action terrain enregistrée',
+        body: `${stepLabels[step] || 'Action terrain enregistree'} - producteur: ${producerName}.`,
         type: 'agent-step',
       });
     }
@@ -3107,13 +3399,28 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
     notify('Message envoyé');
   }
 
-  const cartTotal = cart.reduce((sum, item) => sum + getCartItemTotal(item), 0);
-  const cartCount = cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  function selectOrderTab(tabId) {
+    setActiveOrderTab(tabId);
+    navigate(`/commandes?tab=${encodeURIComponent(tabId)}`);
+  }
 
   return (
     <PageFrame>
-      {isBuyerRole(currentUser.role) && (
-        <section className="orders-workspace">
+      <nav className="orders-tabbar" aria-label="Sections commandes">
+        {orderTabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button key={tab.id} className={activeOrderTab === tab.id ? 'active' : ''} type="button" onClick={() => selectOrderTab(tab.id)}>
+              <Icon size={17} />
+              <span>{tab.label}</span>
+              <strong>{formatNumber(tab.count || 0)}</strong>
+            </button>
+          );
+        })}
+      </nav>
+
+      {isBuyerRole(currentUser.role) && activeOrderTab === 'cart' && (
+        <section id="orders-cart" className="orders-workspace">
           <div className="panel cart-review-panel">
             <div className="cart-review-header">
               <PanelTitle icon={ShoppingCart} title="Panier a confirmer" />
@@ -3171,122 +3478,126 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
         </section>
       )}
 
-      <section className="panel order-list-panel">
-        <PanelTitle icon={currentUser.role === 'transporteur' ? Truck : ShoppingCart} title={getOrdersTitle(currentUser.role)} />
-        {orders.length ? (
-          <>
-            <OrderListControls
-              filter={orderFilter}
-              onFilterChange={setOrderFilter}
-              onSearchChange={setOrderSearch}
-              orders={orders}
-              search={orderSearch}
-              summary={orderSummary}
-            />
-            <OrderVisibilityToolbar
-              allPageSelected={pageFullySelected}
-              hiddenCount={orders.filter((order) => hiddenOrderSet.has(order.id)).length}
-              onHideSelected={hideSelectedOrders}
-              onPageSizeChange={setOrderPageSize}
-              onRestoreSelected={restoreSelectedOrders}
-              onToggleHidden={() => {
-                setShowHiddenOrders((value) => !value);
-                setSelectedOrderIds([]);
-              }}
-              onToggleList={() => setShowOrderList((value) => !value)}
-              onTogglePageSelection={togglePageSelection}
-              pageSize={orderPageSize}
-              rangeEnd={orderRangeEnd}
-              rangeStart={orderRangeStart}
-              selectedCount={selectedOrderIds.length}
-              showHidden={showHiddenOrders}
-              showList={showOrderList}
-              totalFiltered={filteredOrders.length}
-            />
-            {filteredOrders.length ? (
-              showOrderList ? (
-                <>
-                  {currentUser.role === 'transporteur' ? (
-                    <DeliveryMissionList onSelect={toggleOrderSelection} onStatusChange={updateOrder} orders={pagedOrders} selectedIds={selectedOrderSet} store={store} />
-                  ) : isBuyerRole(currentUser.role) ? (
-                    <ClientOrderList onCancel={cancelOrder} onPay={(orderId) => navigate(`/paiement?orders=${orderId}`)} onSelect={toggleOrderSelection} orders={pagedOrders} selectedIds={selectedOrderSet} store={store} />
-                  ) : (
-                    <OrderCardGrid currentUser={currentUser} onAgentStep={markAgentStep} onCancel={cancelOrder} onSelect={toggleOrderSelection} onStatusChange={updateOrder} orders={pagedOrders} selectedIds={selectedOrderSet} store={store} />
-                  )}
-                  <CatalogPager page={orderPage} totalPages={orderTotalPages} onPageChange={setOrderPage} />
-                </>
+      {(activeOrderTab === 'orders' || activeOrderTab === 'tracking') && (
+        <section id="orders-list" className="panel order-list-panel">
+          <PanelTitle icon={activeOrderTab === 'tracking' ? ClipboardCheck : currentUser.role === 'transporteur' ? Truck : ShoppingCart} title={activeOrderTab === 'tracking' ? 'Suivi des commandes' : getOrdersTitle(currentUser.role)} />
+          {orders.length ? (
+            <>
+              <OrderListControls
+                filter={orderFilter}
+                onFilterChange={setOrderFilter}
+                onSearchChange={setOrderSearch}
+                orders={orders}
+                search={orderSearch}
+                summary={orderSummary}
+              />
+              <OrderVisibilityToolbar
+                allPageSelected={pageFullySelected}
+                hiddenCount={orders.filter((order) => hiddenOrderSet.has(order.id)).length}
+                onHideSelected={hideSelectedOrders}
+                onPageSizeChange={setOrderPageSize}
+                onRestoreSelected={restoreSelectedOrders}
+                onToggleHidden={() => {
+                  setShowHiddenOrders((value) => !value);
+                  setSelectedOrderIds([]);
+                }}
+                onToggleList={() => setShowOrderList((value) => !value)}
+                onTogglePageSelection={togglePageSelection}
+                pageSize={orderPageSize}
+                rangeEnd={orderRangeEnd}
+                rangeStart={orderRangeStart}
+                selectedCount={selectedOrderIds.length}
+                showHidden={showHiddenOrders}
+                showList={showOrderList}
+                totalFiltered={filteredOrders.length}
+              />
+              {filteredOrders.length ? (
+                showOrderList ? (
+                  <>
+                    {currentUser.role === 'transporteur' ? (
+                      <DeliveryMissionList onSelect={toggleOrderSelection} onStatusChange={updateOrder} orders={pagedOrders} selectedIds={selectedOrderSet} store={store} />
+                    ) : isBuyerRole(currentUser.role) ? (
+                      <ClientOrderList onCancel={cancelOrder} onPay={(orderId) => navigate(`/paiement?orders=${orderId}`)} onSelect={toggleOrderSelection} orders={pagedOrders} selectedIds={selectedOrderSet} store={store} />
+                    ) : (
+                      <OrderCardGrid currentUser={currentUser} onAgentStep={markAgentStep} onCancel={cancelOrder} onSelect={toggleOrderSelection} onStatusChange={updateOrder} orders={pagedOrders} selectedIds={selectedOrderSet} store={store} />
+                    )}
+                    <CatalogPager page={orderPage} totalPages={orderTotalPages} onPageChange={setOrderPage} />
+                  </>
+                ) : (
+                  <EmptyState icon={EyeOff} title="Liste reduite" body="Les commandes sont conservees. Utilisez Developper pour les revoir." />
+                )
               ) : (
-                <EmptyState icon={EyeOff} title="Liste reduite" body="Les commandes sont conservees. Utilisez Developper pour les revoir." />
-              )
-            ) : (
-              <EmptyState icon={Search} title="Aucun resultat" body="Aucune commande ne correspond a ce filtre." />
-            )}
-          </>
-        ) : (
-          <EmptyState icon={ShoppingCart} title="Aucune commande" body="Les commandes clients apparaitront ici." />
-        )}
-      </section>
+                <EmptyState icon={Search} title="Aucun resultat" body="Aucune commande ne correspond a ce filtre." />
+              )}
+            </>
+          ) : (
+            <EmptyState icon={ShoppingCart} title="Aucune commande" body="Les commandes clients apparaitront ici." />
+          )}
+        </section>
+      )}
 
-      <section className="panel">
-        <PanelTitle icon={MessageSquare} title="Conversations produits" />
-        {conversations.length ? (
-          <div className="conversation-list">
-            {conversations.map((conversation) => {
-              const product = store.products.find((item) => item.id === conversation.root.productId);
-              const client = store.users.find((item) => item.id === conversation.root.clientId);
-              const seller = store.users.find((item) => item.id === conversation.root.sellerId);
-              const lastMessage = conversation.items[conversation.items.length - 1];
-              const draft = conversationDrafts[conversation.id] || '';
-              const isOpen = openConversationId === conversation.id;
-              return (
-                <article className={`conversation-card ${isOpen ? 'open' : ''}`} id={`conversation-${conversation.id}`} key={conversation.id}>
-                  <button
-                    aria-expanded={isOpen}
-                    className="conversation-summary"
-                    type="button"
-                    onClick={() => setOpenConversationId((current) => (current === conversation.id ? '' : conversation.id))}
-                  >
-                    <div>
-                      <Badge>{conversation.root.status}</Badge>
-                      <strong>{conversation.root.subject}</strong>
-                      <span>{product?.name || 'Produit'} - {client?.name || 'Client'} / {seller?.name || 'Vendeur'}</span>
-                      <small>{lastMessage?.body || 'Aucun message'}</small>
-                    </div>
-                    <span className="conversation-count">{conversation.items.length}</span>
-                    <small>{formatDate(lastMessage?.createdAt)}</small>
-                    {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                  </button>
-                  {isOpen && (
-                    <>
-                      <div className="conversation-messages">
-                        {conversation.items.map((message) => (
-                          <div key={message.id} className={`conversation-bubble ${isMessageFromUser(message, currentUser) ? 'mine' : ''}`}>
-                            <span>{getMessageSenderName(message, store)} - {formatDate(message.createdAt)}</span>
-                            <p>{message.body}</p>
-                          </div>
-                        ))}
+      {activeOrderTab === 'conversations' && (
+        <section id="orders-conversations" className="panel">
+          <PanelTitle icon={MessageSquare} title="Conversations produits" />
+          {conversations.length ? (
+            <div className="conversation-list">
+              {conversations.map((conversation) => {
+                const product = store.products.find((item) => item.id === conversation.root.productId);
+                const client = store.users.find((item) => item.id === conversation.root.clientId);
+                const seller = store.users.find((item) => item.id === conversation.root.sellerId);
+                const lastMessage = conversation.items[conversation.items.length - 1];
+                const draft = conversationDrafts[conversation.id] || '';
+                const isOpen = openConversationId === conversation.id;
+                return (
+                  <article className={`conversation-card ${isOpen ? 'open' : ''}`} id={`conversation-${conversation.id}`} key={conversation.id}>
+                    <button
+                      aria-expanded={isOpen}
+                      className="conversation-summary"
+                      type="button"
+                      onClick={() => setOpenConversationId((current) => (current === conversation.id ? '' : conversation.id))}
+                    >
+                      <div>
+                        <Badge>{conversation.root.status}</Badge>
+                        <strong>{conversation.root.subject}</strong>
+                        <span>{product?.name || 'Produit'} - {client?.name || 'Client'} / {seller?.name || 'Vendeur'}</span>
+                        <small>{lastMessage?.body || 'Aucun message'}</small>
                       </div>
-                      <div className="conversation-reply">
-                        <textarea
-                          rows={2}
-                          value={draft}
-                          onChange={(event) => setConversationDrafts((items) => ({ ...items, [conversation.id]: event.target.value }))}
-                          placeholder="Ecrire un message..."
-                        />
-                        <Button onClick={() => sendConversationReply(conversation)} disabled={!draft.trim()}>
-                          <MessageSquare size={16} /> Envoyer
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </article>
-              );
-            })}
-          </div>
-        ) : (
-          <EmptyState icon={MessageSquare} title="Aucun message" body="Les demandes de contact des clients seront listees ici." />
-        )}
-      </section>
+                      <span className="conversation-count">{conversation.items.length}</span>
+                      <small>{formatDate(lastMessage?.createdAt)}</small>
+                      {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    </button>
+                    {isOpen && (
+                      <>
+                        <div className="conversation-messages">
+                          {conversation.items.map((message) => (
+                            <div key={message.id} className={`conversation-bubble ${isMessageFromUser(message, currentUser) ? 'mine' : ''}`}>
+                              <span>{getMessageSenderName(message, store)} - {formatDate(message.createdAt)}</span>
+                              <p>{message.body}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="conversation-reply">
+                          <textarea
+                            rows={2}
+                            value={draft}
+                            onChange={(event) => setConversationDrafts((items) => ({ ...items, [conversation.id]: event.target.value }))}
+                            placeholder="Ecrire un message..."
+                          />
+                          <Button onClick={() => sendConversationReply(conversation)} disabled={!draft.trim()}>
+                            <MessageSquare size={16} /> Envoyer
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <EmptyState icon={MessageSquare} title="Aucun message" body="Les demandes de contact des clients seront listees ici." />
+          )}
+        </section>
+      )}
     </PageFrame>
   );
 }
@@ -3347,7 +3658,8 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
         notifications.push(createAppNotification({
           actor: currentUser,
           body: `${formatNumber(order.quantity)} ${order.unit || product?.unit || 'kg'} de ${product?.name || 'produit'} paye(s). Preparerez le stock.`,
-          path: '/commandes',
+          path: `/commandes?tab=orders&order=${encodeURIComponent(order.id)}`,
+          relatedId: order.id,
           recipientId: farmer.id,
           title: 'Commande payee a preparer',
           type: 'order',
@@ -3357,7 +3669,8 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
         notifications.push(createAppNotification({
           actor: currentUser,
           body: `Appeler ${farmer?.name || 'l agriculteur'}, confirmer le stock et contacter le transporteur.`,
-          path: '/commandes',
+          path: `/commandes?tab=tracking&order=${encodeURIComponent(order.id)}`,
+          relatedId: order.id,
           recipientId: agent.id,
           title: 'Action terrain requise',
           type: 'field-agent',
@@ -3510,11 +3823,26 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
             <div><em>Articles</em><b>{receipt.orders.length} produit{receipt.orders.length > 1 ? 's' : ''}</b></div>
             <div><em>Mode</em><b>{receipt.token?.startsWith('DEMO') ? 'Simulation démo' : 'PayDunya'}</b></div>
           </div>
+          <div className="payment-success-qr">
+            <img
+              alt="QR code de verification du recu"
+              src={getQrImageUrl(getReceiptVerifyUrl(receipt.code), 180)}
+              onError={(event) => {
+                event.currentTarget.onerror = null;
+                event.currentTarget.src = getQrFallbackDataUrl(receipt.code);
+              }}
+            />
+            <div>
+              <strong>Verification du recu</strong>
+              <span>{receipt.code}</span>
+              <a href={getReceiptVerifyUrl(receipt.code)} target="_blank" rel="noreferrer">Ouvrir la preuve</a>
+            </div>
+          </div>
           <div className="payment-success-actions">
             <Button onClick={() => downloadHtml(`recu-${receipt.code}.html`, renderPaymentReceiptHtml(receipt, store, currentUser))}>
               <Download size={17} /> Télécharger le reçu
             </Button>
-            <Button variant="secondary" onClick={() => navigate('/commandes')}>
+            <Button variant="secondary" onClick={() => navigate('/commandes?tab=orders')}>
               <ShoppingCart size={17} /> Voir mes commandes
             </Button>
           </div>
@@ -3522,7 +3850,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
         </section>
       ) : (
         <section className="panel payment-panel partner-powered">
-          <PanelToolbar icon={ReceiptText} title="Paiement sécurisé" action={<Button variant="secondary" onClick={() => navigate('/commandes')}><ShoppingCart size={16} /> Retour commandes</Button>} />
+          <PanelToolbar icon={ReceiptText} title="Paiement sécurisé" action={<Button variant="secondary" onClick={() => navigate('/commandes?tab=cart')}><ShoppingCart size={16} /> Retour commandes</Button>} />
           <NoticeCard icon={ShieldCheck} title="Paiement via PayDunya" body="Orange Money, Wave, Free Money, carte bancaire. Aucun reçu n'est émis tant que le paiement n'est pas confirmé." />
           {pendingToken && (
             <NoticeCard icon={CircleAlert} title="Paiement en cours de vérification" body={`Référence: ${pendingToken}. Cliquez ci-dessous pour vérifier le statut.`} />
@@ -3780,6 +4108,7 @@ function UsersPage({ actions, currentUser, notify, store }) {
   const filteredUsers = filterUsersForAdmin(store.users, roleFilter, search);
   const groupedUsers = groupUsersByRole(filteredUsers);
   const roleCounts = countUsersByRole(store.users);
+  const surveyLeads = [...(store.surveyLeads || [])].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
   async function handleAddUser(e) {
     e.preventDefault();
@@ -3984,6 +4313,40 @@ function UsersPage({ actions, currentUser, notify, store }) {
             </section>
           );
         })()}
+
+        <section className="survey-leads-panel">
+          <div className="user-role-heading">
+            <strong>Prospects questionnaire</strong>
+            <span>{surveyLeads.length} reponse(s)</span>
+          </div>
+          {surveyLeads.length ? (
+            <>
+              <div className="button-row">
+                <Button variant="secondary" onClick={() => downloadCsv('frescoop-questionnaire-prospects.csv', surveyLeadsToRows(surveyLeads))}><Download size={16} /> Export prospects</Button>
+              </div>
+              <div className="survey-leads-grid">
+                {surveyLeads.slice(0, 12).map((lead) => (
+                  <article key={lead.id} className={lead.status === 'Contacte' ? 'is-contacted' : ''}>
+                    <div>
+                      <Badge>{lead.status || 'Nouveau'}</Badge>
+                      <strong>{lead.fullName}</strong>
+                      <span>{roleLabel(lead.roleInterest)} - {lead.region || 'Region non renseignee'}</span>
+                    </div>
+                    <p>{lead.products || lead.notes || 'Aucun detail fourni.'}</p>
+                    <small>{lead.phone}{lead.email ? ` - ${lead.email}` : ''}</small>
+                    <div className="button-row">
+                      <Button variant="secondary" onClick={() => actions.setSurveyLeads((items) => items.map((item) => item.id === lead.id ? { ...item, status: 'Contacte', contactedAt: new Date().toISOString(), contactedBy: currentUser.id } : item))}>
+                        <CheckCircle2 size={16} /> Marquer contacte
+                      </Button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </>
+          ) : (
+            <EmptyState icon={FileText} title="Aucun prospect" body="Les reponses au formulaire public apparaitront ici." />
+          )}
+        </section>
 
         {filteredUsers.length ? (
           <div className="user-groups">
@@ -4225,6 +4588,20 @@ function AntiWastePage({ actions, currentUser, navigate, notify, store }) {
     navigate(`/marche?flash=${alert.productId}`);
   }
 
+  function loadAntiWasteFixtures() {
+    const fixtures = createAntiWasteFixtureProducts(store, currentUser);
+    if (!fixtures.length) {
+      notify('Les lots fictifs anti-gaspi sont deja disponibles.');
+      return;
+    }
+    actions.setProducts((items) => [...fixtures, ...items]);
+    actions.setAuditLogs((items) => [
+      createAuditLog(currentUser, 'anti_waste_fixtures_loaded', `${fixtures.length} lots fictifs anti-gaspi ajoutes`, 'anti-gaspi'),
+      ...items,
+    ]);
+    notify('Lots fictifs anti-gaspi ajoutes pour les tests.', 'success');
+  }
+
   const heroCopy = {
     agriculteur: {
       title: 'Vos lots proches de péremption',
@@ -4306,7 +4683,10 @@ function AntiWastePage({ actions, currentUser, navigate, notify, store }) {
           </div>
         </section>
       ) : (
-        <EmptyState icon={CheckCircle2} title="Aucun lot en alerte" body="Tous les lots sont encore dans leur fenêtre optimale. Parfait !" />
+        <section className="panel anti-waste-empty">
+          <EmptyState icon={CheckCircle2} title="Aucun lot en alerte" body="Tous les lots sont encore dans leur fenêtre optimale. Chargez des lots fictifs pour tester l'onglet anti-gaspi." />
+          <Button variant="secondary" onClick={loadAntiWasteFixtures}><RefreshCcw size={16} /> Charger des lots fictifs</Button>
+        </section>
       )}
     </PageFrame>
   );
@@ -4346,6 +4726,40 @@ function buildAntiWasteAlerts(store) {
     });
   }
   return alerts.sort((a, b) => a.daysLeft - b.daysLeft);
+}
+
+function createAntiWasteFixtureProducts(store, currentUser) {
+  const existingIds = new Set((store.products || []).map((product) => product.id));
+  const owner = (store.users || []).find((user) => user.role === 'agriculteur' && user.status === 'Actif')
+    || (store.users || []).find((user) => user.role === 'agriculteur')
+    || currentUser;
+  const now = Date.now();
+  const fixtures = [
+    { id: 'demo-antigaspi-tomates', name: 'Tomates cerises test anti-gaspi', category: 'Legumes', quantity: 42, unit: 'kg', price: 950, daysAgo: 4, shelfLifeDays: 5, zone: 'Dakar' },
+    { id: 'demo-antigaspi-mangues', name: 'Mangues Kent fin de date', category: 'Fruits', quantity: 65, unit: 'kg', price: 1200, daysAgo: 6, shelfLifeDays: 8, zone: 'Thies' },
+    { id: 'demo-antigaspi-salade', name: 'Laitue fraiche a ecouler', category: 'Legumes', quantity: 28, unit: 'kg', price: 700, daysAgo: 3, shelfLifeDays: 5, zone: 'Rufisque' },
+  ];
+
+  return fixtures
+    .filter((item) => !existingIds.has(item.id))
+    .map((item) => ({
+      id: item.id,
+      createdAt: new Date(now - item.daysAgo * 86400000).toISOString(),
+      updatedAt: new Date().toISOString(),
+      ownerId: owner?.id || currentUser.id,
+      name: item.name,
+      category: item.category,
+      quantity: item.quantity,
+      unit: item.unit,
+      price: item.price,
+      zone: item.zone || owner?.region || 'Senegal',
+      description: 'Lot fictif ajoute pour verifier les alertes anti-gaspi et les ventes eclair.',
+      status: 'Publie',
+      shelfLifeDays: item.shelfLifeDays,
+      images: [],
+      flashSaleStartedAt: '',
+      flashSaleDiscountPct: 0,
+    }));
 }
 
 function estimateShelfLife(key) {
@@ -5578,7 +5992,7 @@ function ClientOrderList({ onCancel, onPay, onSelect, orders, selectedIds, store
         const seller = store.users.find((item) => item.id === order.sellerId);
         const cancellable = order.status !== 'Annulee' && order.status !== 'Livree';
         return (
-          <article key={order.id} className="compact-order-row">
+          <article id={`order-${order.id}`} key={order.id} className="compact-order-row">
             <label className="order-row-check" title="Selectionner cette commande">
               <input type="checkbox" checked={selectedIds.has(order.id)} onChange={() => onSelect(order.id)} />
             </label>
@@ -5613,7 +6027,7 @@ function DeliveryMissionList({ onSelect, onStatusChange, orders, selectedIds, st
         const seller = store.users.find((item) => item.id === order.sellerId);
         const client = store.users.find((item) => item.id === order.clientId);
         return (
-          <article key={order.id} className="delivery-row">
+          <article id={`order-${order.id}`} key={order.id} className="delivery-row">
             <label className="order-row-check" title="Selectionner cette livraison">
               <input type="checkbox" checked={selectedIds.has(order.id)} onChange={() => onSelect(order.id)} />
             </label>
@@ -5650,7 +6064,7 @@ function OrderCardGrid({ currentUser, onAgentStep = () => {}, onCancel, onSelect
         const totalPrice = getOrderTotal(order, store);
         const unit = order.unit || product?.unit || 'unite';
         return (
-          <article className={`order-activity-row ${agentMode ? 'agent-order-card' : ''}`} key={order.id}>
+          <article id={`order-${order.id}`} className={`order-activity-row ${agentMode ? 'agent-order-card' : ''}`} key={order.id}>
             <label className="order-card-check order-activity-check" title="Selectionner cette commande">
               <input type="checkbox" checked={selectedIds.has(order.id)} onChange={() => onSelect(order.id)} />
             </label>
@@ -6045,6 +6459,34 @@ function AccessDenied({ navigate = () => {}, user = { role: 'client' } }) {
         </div>
       </section>
     </PageFrame>
+  );
+}
+
+function AppFooter({ currentUser, navigate }) {
+  const quickLinks = [
+    { label: 'Accueil', path: getRoleHomePath(currentUser.role) },
+    { label: 'Commandes', path: '/commandes' },
+    { label: 'Anti-gaspi', path: '/anti-gaspi' },
+    { label: 'Compte', path: '/compte' },
+  ].filter((item) => canAccessPath(currentUser.role, item.path));
+
+  return (
+    <footer className="app-footer">
+      <div>
+        <div className="brand"><span>F</span><strong>FresCoop</strong></div>
+        <p>Commerce agricole, suivi des commandes, preuves de paiement et alertes anti-gaspi pour les acteurs de la chaine.</p>
+      </div>
+      <nav aria-label="Liens rapides pied de page">
+        {quickLinks.map((item) => (
+          <button key={item.path} type="button" onClick={() => navigate(item.path)}>{item.label}</button>
+        ))}
+      </nav>
+      <div className="app-footer-contact">
+        <span>Support</span>
+        <a href="mailto:contact@frescoop.sn">contact@frescoop.sn</a>
+        <small>POESAM 2026 - Dakar, Senegal</small>
+      </div>
+    </footer>
   );
 }
 
@@ -6506,6 +6948,7 @@ function makeActions(setStore) {
     setConsentRecords: (updater) => setStore((store) => ({ ...store, consentRecords: resolveUpdate(store.consentRecords || [], updater) })),
     setAuditLogs: (updater) => setStore((store) => ({ ...store, auditLogs: resolveUpdate(store.auditLogs || [], updater) })),
     setLoans: (updater) => setStore((store) => ({ ...store, loans: resolveUpdate(store.loans || [], updater) })),
+    setSurveyLeads: (updater) => setStore((store) => ({ ...store, surveyLeads: resolveUpdate(store.surveyLeads || [], updater) })),
     replaceStore: (next) => setStore(normalizeStore(next)),
   };
 }
@@ -6542,6 +6985,7 @@ function createEmptyStore() {
     auditLogs: [],
     kpiAggregates: [],
     loans: [],
+    surveyLeads: [],
   };
 }
 
@@ -6590,6 +7034,7 @@ function normalizeNotifications(items) {
     item && typeof item === 'object'
       ? {
           ...item,
+          read: Boolean(item.read || item.readAt),
           title: sanitizeNotificationText(item.title),
           body: sanitizeNotificationText(item.body),
         }
@@ -6638,23 +7083,27 @@ function createMessageNotification({ actor, body, message, recipientId, title })
     type: 'message',
     title,
     body,
-    path: `/commandes?conversation=${encodeURIComponent(conversationId)}`,
+    path: `/commandes?tab=conversations&conversation=${encodeURIComponent(conversationId)}`,
     relatedId: conversationId,
+    read: false,
     readAt: '',
   };
 }
 
-function createAppNotification({ actor, body, path = '/', recipientId, title, type = 'system' }) {
+function createAppNotification({ actor, body, path = '/', recipientId = '', recipientRole = '', recipientRoles = null, relatedId = '', title, type = 'system' }) {
   return {
     id: uid('ntf'),
     createdAt: new Date().toISOString(),
     recipientId,
+    recipientRole,
+    ...(Array.isArray(recipientRoles) ? { recipientRoles } : {}),
     actorId: actor?.id || '',
     type,
     title,
     body,
     path,
-    relatedId: '',
+    relatedId,
+    read: false,
     readAt: '',
   };
 }
@@ -6662,6 +7111,7 @@ function createAppNotification({ actor, body, path = '/', recipientId, title, ty
 function getVisibleNotifications(items, user) {
   if (!user) return [];
   return (Array.isArray(items) ? items : [])
+    .filter((item) => !(user.role === 'admin' && isOperationalNotification(item)))
     .filter((item) => (
       item.recipientId === user.id
       || (item.recipientRole && item.recipientRole === user.role)
@@ -6670,11 +7120,37 @@ function getVisibleNotifications(items, user) {
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 }
 
+function isNotificationRead(item) {
+  return Boolean(item?.readAt || item?.read);
+}
+
+function isOperationalNotification(item) {
+  return [
+    'message',
+    'order',
+    'order-new',
+    'order-assigned',
+    'order-cancelled',
+    'order-status',
+    'agent-step',
+    'field-agent',
+  ].includes(item?.type);
+}
+
+function getNotificationPath(item, messages = []) {
+  if (item.type === 'message') return getMessageNotificationPath(item, messages);
+  if (item.path) return item.path;
+  if (item.relatedId && (String(item.type || '').startsWith('order') || item.type === 'field-agent' || item.type === 'agent-step')) {
+    return `/commandes?tab=tracking&order=${encodeURIComponent(item.relatedId)}`;
+  }
+  return '';
+}
+
 function getMessageNotificationPath(item, messages = []) {
   if (item.path?.includes('conversation=')) return item.path;
   const message = messages.find((entry) => entry.id === item.relatedId);
   const conversationId = message?.parentId || message?.id || item.relatedId;
-  return conversationId ? `/commandes?conversation=${encodeURIComponent(conversationId)}` : '/commandes';
+  return conversationId ? `/commandes?tab=conversations&conversation=${encodeURIComponent(conversationId)}` : '/commandes?tab=conversations';
 }
 
 function getNotificationIcon(type) {
@@ -6683,15 +7159,17 @@ function getNotificationIcon(type) {
   if (type === 'field-agent') return Truck;
   if (type === 'anti-waste') return Leaf;
   if (type === 'approval_request' || type === 'account-status') return UserCheck;
+  if (type === 'survey-lead') return UserPlus;
   return BellRing;
 }
 
 function getNotificationActionLabel(item) {
   if (item.type === 'message') return 'Ouvrir la conversation';
-  if (item.type === 'order' || item.type === 'field-agent') return 'Voir les commandes';
+  if (item.type === 'order' || item.type === 'field-agent' || item.type === 'agent-step' || String(item.type || '').startsWith('order-')) return 'Voir la commande';
   if (item.type === 'anti-waste') return 'Voir le marche';
   if (item.type === 'approval_request') return 'Valider le compte';
   if (item.type === 'account-status') return 'Voir mon espace';
+  if (item.type === 'survey-lead') return 'Voir les prospects';
   return item.path ? 'Ouvrir' : 'Marquer comme lu';
 }
 
@@ -7596,6 +8074,11 @@ function getOrderProduct(order, store) {
   return store.products.find((item) => item.id === order.productId) || order.productSnapshot || null;
 }
 
+function getOrderProducerName(order, store) {
+  const seller = store.users.find((user) => user.id === order.sellerId);
+  return seller?.name || order.productSnapshot?.ownerName || order.productSnapshot?.sellerName || 'Producteur';
+}
+
 function buildConversations(messages) {
   const sorted = [...messages].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
   const byId = new Map(sorted.map((message) => [message.id, message]));
@@ -8271,6 +8754,50 @@ function renderProofHtml(proof) {
   `);
 }
 
+function getReceiptVerifyUrl(code) {
+  const origin = typeof window !== 'undefined' && window.location ? window.location.origin : 'https://frescoop.sn';
+  return `${origin}/verifier?code=${encodeURIComponent(code || '')}`;
+}
+
+function getQrImageUrl(value, size = 220) {
+  const dimension = Math.max(96, Math.min(420, Number(size) || 220));
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${dimension}x${dimension}&margin=0&ecc=M&data=${encodeURIComponent(value || '')}`;
+}
+
+function getQrFallbackDataUrl(label = 'FRESCOOP') {
+  const seed = String(label || 'FRESCOOP');
+  const cells = 29;
+  const cell = 6;
+  const size = cells * cell;
+  const hash = Array.from(seed).reduce((acc, char) => ((acc * 31) + char.charCodeAt(0)) >>> 0, 2166136261);
+
+  function inFinder(x, y, fx, fy) {
+    return x >= fx && x < fx + 7 && y >= fy && y < fy + 7;
+  }
+
+  function finderOn(x, y, fx, fy) {
+    const dx = x - fx;
+    const dy = y - fy;
+    return dx === 0 || dy === 0 || dx === 6 || dy === 6 || (dx >= 2 && dx <= 4 && dy >= 2 && dy <= 4);
+  }
+
+  function cellOn(x, y) {
+    if (inFinder(x, y, 1, 1)) return finderOn(x, y, 1, 1);
+    if (inFinder(x, y, cells - 8, 1)) return finderOn(x, y, cells - 8, 1);
+    if (inFinder(x, y, 1, cells - 8)) return finderOn(x, y, 1, cells - 8);
+    return ((x * 11 + y * 17 + hash + ((x ^ y) * 7)) % 5) < 2;
+  }
+
+  const rects = [];
+  for (let y = 0; y < cells; y += 1) {
+    for (let x = 0; x < cells; x += 1) {
+      if (cellOn(x, y)) rects.push(`<rect x="${x * cell}" y="${y * cell}" width="${cell}" height="${cell}" />`);
+    }
+  }
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}"><rect width="${size}" height="${size}" fill="#fff"/><g fill="#0a4b3e">${rects.join('')}</g></svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
 function renderPaymentReceiptHtml(receipt, store, user) {
   const rows = receipt.orders.map((order) => {
     const product = getOrderProduct(order, store);
@@ -8293,10 +8820,9 @@ function renderPaymentReceiptHtml(receipt, store, user) {
   const invoiceNum = `FC-${paidDate.getFullYear()}-${receipt.code.slice(-8)}`;
   const method = receipt.token?.startsWith('DEMO') ? 'Simulation démo' : 'PayDunya';
 
-  const origin = typeof window !== 'undefined' && window.location ? window.location.origin : 'https://frescoop.sn';
-  const verifyUrl = `${origin}/verifier?code=${encodeURIComponent(receipt.code)}`;
-  const qrData = encodeURIComponent(verifyUrl);
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=0&ecc=M&data=${qrData}`;
+  const verifyUrl = getReceiptVerifyUrl(receipt.code);
+  const qrUrl = getQrImageUrl(verifyUrl, 220);
+  const qrFallbackUrl = getQrFallbackDataUrl(receipt.code);
 
   return `<!doctype html>
 <html lang="fr">
@@ -8585,7 +9111,7 @@ function renderPaymentReceiptHtml(receipt, store, user) {
     </div>
 
     <div class="qr-block">
-      <img src="${qrUrl}" alt="QR code de vérification FresCoop" />
+      <img src="${qrUrl}" alt="QR code de vérification FresCoop" onerror="this.onerror=null;this.src='${qrFallbackUrl}'" />
       <div class="qr-info">
         <strong>Preuve officielle vérifiable</strong>
         Scannez ce QR code ou ouvrez le lien pour confirmer que ce paiement est bien enregistré dans le système FresCoop.
@@ -8669,6 +9195,29 @@ function transactionsToRows(items) {
 
 function usersToRows(users) {
   return [['ID', 'Date', 'Nom', 'Email', 'Role', 'Statut', 'Telephone', 'Organisation', 'Region'], ...users.map((user) => [user.id, user.createdAt, user.name, user.email, user.role, user.status, user.phone, user.organization, user.region])];
+}
+
+function surveyLeadsToRows(leads) {
+  return [
+    ['ID', 'Date', 'Nom', 'Telephone', 'Email', 'Profil', 'Region', 'Organisation', 'Produits', 'Besoins', 'Smartphone', 'Pilote', 'Canal', 'Statut', 'Notes'],
+    ...leads.map((lead) => [
+      lead.id,
+      lead.createdAt,
+      lead.fullName,
+      lead.phone,
+      lead.email,
+      lead.roleInterest,
+      lead.region,
+      lead.organization,
+      lead.products,
+      (lead.needs || []).join(', '),
+      lead.canUseSmartphone,
+      lead.wantsPilot,
+      lead.preferredContact,
+      lead.status,
+      lead.notes,
+    ]),
+  ];
 }
 
 function downloadCsv(filename, rows) {

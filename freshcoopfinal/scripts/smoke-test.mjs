@@ -18,6 +18,12 @@ const checks = [
   ['admin approval notification', app.includes("type: 'approval_request'") && app.includes("path: '/utilisateurs'")],
   ['inactive account lock', app.includes('getInactiveAccountMessage') && app.includes("status !== 'actif'")],
   ['partner-powered wording', app.includes('Partner-powered') || app.includes('partner-powered')],
+  ['orders tab navigation', app.includes('orders-tabbar') && app.includes("tab=conversations") && app.includes("id={`order-${order.id}`}")],
+  ['notification read persistence', app.includes('isNotificationRead') && app.includes('read: Boolean(item.read || item.readAt)') && server.includes('read: Boolean(item.read || item.readAt)')],
+  ['receipt qr fallback', app.includes('getQrFallbackDataUrl') && app.includes('onerror="this.onerror=null;this.src=')],
+  ['anti waste fixtures', app.includes('createAntiWasteFixtureProducts') && app.includes('Charger des lots fictifs')],
+  ['authenticated footer', app.includes('AppFooter') && app.includes('app-footer')],
+  ['public survey form', app.includes('PublicSurveyPage') && app.includes('/sondage') && app.includes('setSurveyLeads') && server.includes('surveyLeads: []')],
   ['server lots persistence', server.includes('lots: []')],
   ['server consent persistence', server.includes('consentRecords: []')],
 ];
