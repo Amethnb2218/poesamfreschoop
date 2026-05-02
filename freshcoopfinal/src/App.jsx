@@ -70,6 +70,8 @@ import {
   YAxis,
 } from 'recharts';
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 const STORAGE_KEY = 'frescoop.production.roles.v2';
 const SESSION_KEY = 'frescoop.session.user';
 const CART_KEY = 'frescoop.cart';
@@ -846,7 +848,7 @@ function LoginPage({ actions, notify, onLogin, store }) {
     // (cas où le compte a été créé sur mobile entretemps, ou suspendu par admin)
     let usersToCheck = store.users;
     try {
-      const resp = await fetch('/api/store');
+      const resp = await fetch(API_BASE + '/api/store');
       if (resp.ok) {
         const data = await resp.json();
         if (Array.isArray(data.users)) usersToCheck = data.users;
@@ -887,7 +889,7 @@ function LoginPage({ actions, notify, onLogin, store }) {
     // 1) Récupère le store frais pour éviter les écrasements dûs au cache
     let freshStore = null;
     try {
-      const resp = await fetch('/api/store');
+      const resp = await fetch(API_BASE + '/api/store');
       if (resp.ok) freshStore = await resp.json();
     } catch {
       // offline — on continuera avec le store local
@@ -3272,7 +3274,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
     if (!token) return;
     setProcessing(true);
     try {
-      const res = await fetch(`/api/paydunya/confirm/${encodeURIComponent(token)}`);
+      const res = await fetch(`${API_BASE}/api/paydunya/confirm/${encodeURIComponent(token)}`);
       const data = await res.json();
       if (data?.confirmed) {
         finalizePayment(token, data);
@@ -3319,7 +3321,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
     setProcessing(true);
     try {
       const description = `Commande FresCoop - ${payableOrders.length} article(s)`;
-      const res = await fetch('/api/paydunya/create-invoice', {
+      const res = await fetch(API_BASE + '/api/paydunya/create-invoice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -5624,7 +5626,7 @@ function LanguageAssistant({ currentUser, store }) {
     };
 
     try {
-      const res = await fetch('/api/yaay/chat', {
+      const res = await fetch(API_BASE + '/api/yaay/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -6062,7 +6064,7 @@ function useProductionStore() {
       // Mutation locale en cours → on attend qu'elle se termine
       if (pendingMutation.current) return;
       try {
-        const response = await fetch('/api/store');
+        const response = await fetch(API_BASE + '/api/store');
         if (!response.ok) return;
         const remote = await response.json();
         if (cancelled || !remote) return;
@@ -6125,7 +6127,7 @@ function useProductionStore() {
     pendingMutation.current = true;
     const handle = setTimeout(async () => {
       try {
-        const res = await fetch('/api/store', {
+        const res = await fetch(API_BASE + '/api/store', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: payload,
@@ -6135,7 +6137,7 @@ function useProductionStore() {
         } else if (res.status === 409) {
           // Le serveur a refusé (anti-régression) : on re-sync pour récupérer l'état réel
           try {
-            const freshRes = await fetch('/api/store');
+            const freshRes = await fetch(API_BASE + '/api/store');
             if (freshRes.ok) {
               const remote = await freshRes.json();
               const normalized = normalizeStore(remote);
