@@ -7864,21 +7864,29 @@ async function filesToAttachments(files) {
   return Promise.all((files || []).map(fileToAttachment));
 }
 
-function fileToAttachment(file) {
-  return new Promise((resolve, reject) => {
-    if (!file) {
-      resolve(null);
-      return;
-    }
-    if (file.size > MAX_FILE_SIZE) {
-      reject(new Error(`Fichier trop lourd: ${file.name}. Limite 2 Mo.`));
-      return;
-    }
+async function fileToAttachment(file) {
+  if (!file) return null;
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(`Fichier trop lourd: ${file.name}. Limite 2 Mo.`);
+  }
+  const dataUrl = await new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve({ id: uid('file'), name: file.name, type: file.type || 'application/octet-stream', size: file.size, dataUrl: reader.result, uploadedAt: new Date().toISOString() });
+    reader.onload = () => resolve(reader.result);
     reader.onerror = () => reject(new Error(`Lecture impossible: ${file.name}`));
     reader.readAsDataURL(file);
   });
+  try {
+    const res = await fetch(API_BASE + '/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file: dataUrl, folder: 'frescoop' }),
+    });
+    const result = await res.json();
+    if (result.ok && result.url) {
+      return { id: uid('file'), name: file.name, type: file.type || 'application/octet-stream', size: file.size, url: result.url, uploadedAt: new Date().toISOString() };
+    }
+  } catch { /* Cloudinary indisponible — fallback base64 */ }
+  return { id: uid('file'), name: file.name, type: file.type || 'application/octet-stream', size: file.size, dataUrl, uploadedAt: new Date().toISOString() };
 }
 
 function renderAttestationHtml(attestation) {
