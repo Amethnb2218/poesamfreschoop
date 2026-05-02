@@ -84,13 +84,27 @@ const seededAdmins = [
   },
 ];
 
+const seededDemoUser = {
+  id: 'usr-demo',
+  createdAt: '2026-05-02T00:00:00.000Z',
+  name: 'Visiteur Demo',
+  email: 'demo',
+  phone: '',
+  role: 'agriculteur',
+  status: 'Actif',
+  organization: 'FresCoop Demo',
+  region: 'Dakar',
+  bio: 'Compte de démonstration pour découvrir FresCoop.',
+  passwordHash: 'd3ad9315b7be5dd53b31a273b3b3aba5defe700808305aa16a3062b76658a791',
+};
+
 const paydunyaMode = (process.env.PAYDUNYA_MODE || 'test').toLowerCase();
 const paydunyaApiBase = paydunyaMode === 'live'
   ? 'https://app.paydunya.com/api/v1'
   : 'https://app.paydunya.com/sandbox-api/v1';
 
 const emptyStore = {
-  users: [...seededAdmins],
+  users: [...seededAdmins, seededDemoUser],
   products: [],
   dossiers: [],
   attestations: [],
@@ -1035,6 +1049,10 @@ function ensureSeedAdmin(users) {
           : u
       );
     }
+  }
+  const demoExists = result.some((u) => u.id === seededDemoUser.id || String(u?.email || '').trim().toLowerCase() === seededDemoUser.email);
+  if (!demoExists) {
+    result = [...result, seededDemoUser];
   }
   return result;
 }
