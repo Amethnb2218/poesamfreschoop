@@ -908,8 +908,8 @@ function LoginPage({ actions, notify, onLogin, store }) {
       notify('Nom, email et mot de passe sont obligatoires', 'error');
       return;
     }
-    if (password.length < 4) {
-      notify('Le mot de passe doit faire au moins 4 caractères', 'error');
+    if (password.length < 6) {
+      notify('Le mot de passe doit faire au moins 6 caractères', 'error');
       return;
     }
 
@@ -977,23 +977,6 @@ function LoginPage({ actions, notify, onLogin, store }) {
           <Field label="Email" required><input type="email" value={loginForm.email} onChange={(event) => updateForm(setLoginForm, 'email', event.target.value)} /></Field>
           <Field label="Mot de passe" required><input type="password" value={loginForm.password} onChange={(event) => updateForm(setLoginForm, 'password', event.target.value)} /></Field>
           <Button type="submit"><LockKeyhole size={18} /> Se connecter</Button>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => {
-              const admin = store.users.find((u) => u.role === 'admin' && u.status === 'Actif');
-              if (admin) {
-                onLogin(admin.id);
-              } else {
-                notify('Aucun compte admin disponible pour la démo.');
-              }
-            }}
-          >
-            <Sprout size={18} /> Démo invité (admin)
-          </Button>
-          <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: '4px 0 0', lineHeight: 1.5 }}>
-            💡 Démo POESAM : les comptes seedés (50 productrices, acheteurs B2B, transporteurs) utilisent le mot de passe <strong>demo1234</strong>.
-          </p>
         </form>
       ) : (
         <form className="stack-form" onSubmit={register}>
@@ -3685,7 +3668,7 @@ function UsersPage({ actions, currentUser, notify, store }) {
     const email = newUser.email.trim().toLowerCase();
     const password = newUser.password;
     if (!name || !email || !password) { notify('Nom, email et mot de passe obligatoires', 'error'); return; }
-    if (password.length < 4) { notify('Mot de passe: 4 caractères minimum', 'error'); return; }
+    if (password.length < 6) { notify('Mot de passe: 6 caractères minimum', 'error'); return; }
     if (store.users.some((u) => u.email?.toLowerCase() === email)) { notify('Cet email existe déjà', 'error'); return; }
     setAddingUser(true);
     try {
@@ -3736,7 +3719,7 @@ function UsersPage({ actions, currentUser, notify, store }) {
               <input type="email" value={newUser.email} onChange={(e) => setNewUser((p) => ({ ...p, email: e.target.value }))} placeholder="email@exemple.com" />
             </Field>
             <Field label="Mot de passe" required>
-              <input type="password" value={newUser.password} onChange={(e) => setNewUser((p) => ({ ...p, password: e.target.value }))} placeholder="4 caractères min." />
+              <input type="password" value={newUser.password} onChange={(e) => setNewUser((p) => ({ ...p, password: e.target.value }))} placeholder="6 caractères min." />
             </Field>
             <Field label="Rôle" required>
               <select value={newUser.role} onChange={(e) => setNewUser((p) => ({ ...p, role: e.target.value }))}>
@@ -7594,8 +7577,8 @@ function emptyHubForm() {
 function getPrimaryNavLinks(role) {
   const links = {
     admin: ['/', '/lots', '/utilisateurs', '/impact'],
-    agriculteur: ['/', '/produits', '/commandes', '/anti-gaspi', '/bancabilite'],
-    agentTerrain: ['/', '/commandes', '/anti-gaspi', '/operations'],
+    agriculteur: ['/', '/produits', '/marche', '/commandes', '/anti-gaspi', '/bancabilite'],
+    agentTerrain: ['/', '/commandes', '/anti-gaspi', '/operations', '/impact'],
     transporteur: ['/', '/lots', '/operations', '/commandes'],
     client: ['/', '/marche', '/anti-gaspi', '/commandes'],
     acheteurB2B: ['/', '/marche', '/anti-gaspi', '/commandes'],
@@ -7630,6 +7613,7 @@ function getMenuLinks(role) {
     agriculteur: [
       '/',
       '/produits',
+      '/marche',
       '/lots',
       '/commandes',
       '/anti-gaspi',
@@ -7649,6 +7633,7 @@ function getMenuLinks(role) {
       '/anti-gaspi',
       '/operations',
       '/lots',
+      '/impact',
       '/ussd',
       '/compte',
     ],
@@ -7708,13 +7693,13 @@ function getMenuGroups(role, menuLinks) {
       { title: 'Secteurs', paths: ['/secteurs/agriculture', '/secteurs/commerce', '/secteurs/logistique'] },
     ],
     agriculteur: [
-      { title: 'Mon activité', paths: ['/', '/produits', '/lots', '/commandes', '/compte'] },
+      { title: 'Mon activité', paths: ['/', '/produits', '/marche', '/lots', '/commandes', '/compte'] },
       { title: 'POESAM - vendre mieux', paths: ['/anti-gaspi', '/bancabilite', '/impact', '/ussd'] },
       { title: 'Dossiers et preuves', paths: ['/dossiers', '/attestations', '/preuves', '/secteurs/agriculture'] },
     ],
     agentTerrain: [
       { title: 'Terrain', paths: ['/', '/commandes', '/produits', '/operations', '/lots', '/compte'] },
-      { title: 'Alertes & inclusion', paths: ['/anti-gaspi', '/ussd'] },
+      { title: 'Alertes & inclusion', paths: ['/anti-gaspi', '/impact', '/ussd'] },
     ],
     transporteur: [
       { title: 'Espace transporteur', paths: ['/', '/operations', '/lots', '/commandes', '/compte'] },
