@@ -4,10 +4,13 @@ import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const serverFilePath = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(serverFilePath);
 const rootDir = path.resolve(__dirname, '..');
-const dataDir = path.join(__dirname, 'data');
+const dataDir = process.env.FRESCOOP_DATA_DIR ||
+  (process.env.VERCEL ? path.join('/tmp', 'frescoop-data') : path.join(__dirname, 'data'));
 const dbPath = path.join(dataDir, 'store.json');
+const backupsDir = path.join(dataDir, 'backups');
 const distDir = path.join(rootDir, 'dist');
 const envPath = path.join(rootDir, '.env');
 
@@ -16,6 +19,7 @@ await loadEnvFile(envPath);
 const port = Number(process.env.FRESCOOP_API_PORT || process.env.PORT || 4174);
 const apiOnly = process.argv.includes('--api-only');
 const host = process.env.FRESCOOP_HOST || process.env.HOST || '0.0.0.0';
+const isDirectRun = Boolean(process.argv[1]) && path.resolve(process.argv[1]) === serverFilePath;
 const seededAdminEmail = 'amethsl2218@gmail.com';
 const seededAdminPasswordHash = '62a1a5600217bfc84fa5ac26faf898b366581f3b1512624444654b795b108a92';
 const seededAdminUser = {
@@ -84,33 +88,12 @@ const mimeTypes = {
 
 await mkdir(dataDir, { recursive: true });
 await ensureDatabase();
+await mkdir(backupsDir, { recursive: true });
 
-createServer(async (request, response) => {
-  try {
-    if (request.url?.startsWith('/api/health')) {
-      sendJson(response, 200, { ok: true, mode: apiOnly ? 'api-only' : 'static' });
-      return;
-    }
-
-    if (request.url?.startsWith('/api/paydunya/')) {
-      await handlePaydunya(request, response);
-      return;
-    }
-
-    if (request.url?.startsWith('/api/yaay/chat')) {
-      await handleYaayChat(request, response);
-      return;
-    }
-
-    if (request.url?.startsWith('/api/store/backups') || request.url?.startsWith('/api/store/restore')) {
-      await handleStoreBackups(request, response);
-      return;
-    }
-
-    if (request.url?.startsWith('/api/store')) {
-      await handleStore(request, response);
-      return;
-    }
+if (isDirectRun) {
+  createServer(async (request, response) => {
+    const handled = await handleApiRequest(request, response);
+    if (handled) return;
 
     if (apiOnly) {
       sendJson(response, 404, { error: 'Not found' });
@@ -118,17 +101,56 @@ createServer(async (request, response) => {
     }
 
     await serveStatic(request, response);
+  }).listen(port, host, () => {
+    const displayHost = host === '0.0.0.0' ? 'localhost' : host;
+    console.log(`FresCoop API listening on http://${displayHost}:${port}`);
+    console.log(`PayDunya mode: ${paydunyaMode} (${paydunyaApiBase})`);
+  });
+}
+
+export async function handleApiRequest(request, response) {
+  try {
+    const pathname = getRequestPathname(request);
+
+    if (pathname.startsWith('/api/health')) {
+      sendJson(response, 200, { ok: true, mode: apiOnly ? 'api-only' : 'static' });
+      return true;
+    }
+
+    if (pathname.startsWith('/api/paydunya/')) {
+      await handlePaydunya(request, response);
+      return true;
+    }
+
+    if (pathname.startsWith('/api/yaay/chat')) {
+      await handleYaayChat(request, response);
+      return true;
+    }
+
+    if (pathname.startsWith('/api/store/backups') || pathname.startsWith('/api/store/restore')) {
+      await handleStoreBackups(request, response);
+      return true;
+    }
+
+    if (pathname.startsWith('/api/store')) {
+      await handleStore(request, response);
+      return true;
+    }
+
+    if (pathname.startsWith('/api/')) {
+      sendJson(response, 404, { error: 'Not found' });
+      return true;
+    }
+
+    return false;
   } catch (error) {
     sendJson(response, 500, { error: error.message || 'Server error' });
+    return true;
   }
-}).listen(port, host, () => {
-  const displayHost = host === '0.0.0.0' ? 'localhost' : host;
-  console.log(`FresCoop API listening on http://${displayHost}:${port}`);
-  console.log(`PayDunya mode: ${paydunyaMode} (${paydunyaApiBase})`);
-});
+}
 
 async function handlePaydunya(request, response) {
-  const url = new URL(request.url || '/', `http://${request.headers.host}`);
+  const url = getRequestUrl(request);
   const endpoint = url.pathname.replace('/api/paydunya/', '');
 
   if (!process.env.PAYDUNYA_MASTER_KEY) {
@@ -639,9 +661,6 @@ function callOpenRouter(apiKey, model, messages, options = {}) {
   });
 }
 
-const backupsDir = path.join(dataDir, 'backups');
-await mkdir(backupsDir, { recursive: true });
-
 async function handleStore(request, response) {
   if (request.method === 'GET') {
     sendJson(response, 200, await readStore());
@@ -714,7 +733,7 @@ async function handleStore(request, response) {
 // POST /api/store/restore?name=xxx restaure une version précédente
 async function handleStoreBackups(request, response) {
   const fsMod = await import('node:fs/promises');
-  const url = new URL(request.url || '/', `http://${request.headers.host}`);
+  const url = getRequestUrl(request);
 
   if (request.method === 'GET' && url.pathname.endsWith('/backups')) {
     const files = (await fsMod.readdir(backupsDir).catch(() => []))
@@ -780,7 +799,7 @@ async function handleStoreBackups(request, response) {
 }
 
 async function serveStatic(request, response) {
-  const url = new URL(request.url || '/', `http://${request.headers.host}`);
+  const url = getRequestUrl(request);
   const safePath = decodeURIComponent(url.pathname).replace(/^\/+/, '');
   let filePath = path.join(distDir, safePath);
 
@@ -908,6 +927,16 @@ function sendJson(response, statusCode, payload) {
     'Cache-Control': 'no-store',
   });
   response.end(JSON.stringify(payload));
+}
+
+function getRequestUrl(request) {
+  const proto = request.headers['x-forwarded-proto'] || 'http';
+  const hostHeader = request.headers.host || 'localhost';
+  return new URL(request.url || '/', `${proto}://${hostHeader}`);
+}
+
+function getRequestPathname(request) {
+  return getRequestUrl(request).pathname;
 }
 
 async function loadEnvFile(filePath) {

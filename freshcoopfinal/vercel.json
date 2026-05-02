@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/health.js": { "maxDuration": 30 },
+    "api/store.js": { "maxDuration": 30 },
+    "api/store/backups.js": { "maxDuration": 30 },
+    "api/store/restore.js": { "maxDuration": 30 },
+    "api/yaay/chat.js": { "maxDuration": 30 },
+    "api/paydunya/create-invoice.js": { "maxDuration": 30 },
+    "api/paydunya/ipn.js": { "maxDuration": 30 },
+    "api/paydunya/confirm/[token].js": { "maxDuration": 30 }
+  },
+  "rewrites": [
+    {
+      "source": "/:path((?!api/).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
