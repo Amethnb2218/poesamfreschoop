@@ -51,6 +51,7 @@ import {
   Truck,
   Upload,
   UserCheck,
+  UserPlus,
   Users,
   Warehouse,
   X,
@@ -566,7 +567,7 @@ function App() {
         {accessAllowed && route.pathname === '/paiement' && <PaymentPage actions={actions} currentUser={currentUser} navigate={navigate} notify={notify} route={route} store={store} />}
         {accessAllowed && route.pathname === '/operations' && <OperationsPage actions={actions} currentUser={currentUser} notify={notify} store={store} />}
         {accessAllowed && route.pathname === '/lots' && <LotIntelligencePage actions={actions} currentUser={currentUser} notify={notify} store={store} />}
-        {accessAllowed && route.pathname === '/utilisateurs' && <UsersPage actions={actions} currentUser={currentUser} store={store} />}
+        {accessAllowed && route.pathname === '/utilisateurs' && <UsersPage actions={actions} currentUser={currentUser} notify={notify} store={store} />}
         {accessAllowed && route.pathname === '/impact' && <ImpactPage stats={stats} store={store} />}
         {accessAllowed && route.pathname === '/anti-gaspi' && <AntiWastePage actions={actions} currentUser={currentUser} navigate={navigate} notify={notify} store={store} />}
         {accessAllowed && route.pathname === '/bancabilite' && <BancabilitePage actions={actions} currentUser={currentUser} notify={notify} store={store} />}
@@ -3641,13 +3642,52 @@ function LotIntelligencePage({ actions, currentUser, notify, store }) {
   );
 }
 
-function UsersPage({ actions, currentUser, store }) {
+function UsersPage({ actions, currentUser, notify, store }) {
   const [roleFilter, setRoleFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'agriculteur' });
+  const [addingUser, setAddingUser] = useState(false);
   if (currentUser.role !== 'admin') return <AccessDenied />;
   const filteredUsers = filterUsersForAdmin(store.users, roleFilter, search);
   const groupedUsers = groupUsersByRole(filteredUsers);
   const roleCounts = countUsersByRole(store.users);
+
+  async function handleAddUser(e) {
+    e.preventDefault();
+    const name = newUser.name.trim();
+    const email = newUser.email.trim().toLowerCase();
+    const password = newUser.password;
+    if (!name || !email || !password) { notify('Nom, email et mot de passe obligatoires', 'error'); return; }
+    if (password.length < 4) { notify('Mot de passe: 4 caractères minimum', 'error'); return; }
+    if (store.users.some((u) => u.email?.toLowerCase() === email)) { notify('Cet email existe déjà', 'error'); return; }
+    setAddingUser(true);
+    try {
+      const passwordHash = await hashPassword(password);
+      const user = {
+        id: uid('usr'),
+        createdAt: new Date().toISOString(),
+        name,
+        email,
+        phone: '',
+        role: newUser.role,
+        status: 'Actif',
+        organization: '',
+        region: '',
+        bio: '',
+        passwordHash,
+      };
+      actions.setUsers((items) => [user, ...items]);
+      actions.setAuditLogs((items) => [createAuditLog(currentUser, 'user_created', `Création du compte ${name} (${roleLabel(newUser.role)}, ${email})`, user.id), ...items]);
+      notify(`${name} ajouté comme ${roleLabel(newUser.role)}`, 'success');
+      setNewUser({ name: '', email: '', password: '', role: 'agriculteur' });
+      setShowAddUser(false);
+    } catch (err) {
+      notify(err.message || 'Erreur', 'error');
+    } finally {
+      setAddingUser(false);
+    }
+  }
 
   return (
     <PageFrame>
@@ -3655,8 +3695,34 @@ function UsersPage({ actions, currentUser, store }) {
         <PanelToolbar
           icon={Users}
           title="Utilisateurs"
-          action={<Button variant="secondary" onClick={() => downloadCsv('frescoop-utilisateurs.csv', usersToRows(store.users))}><Download size={16} /> Export CSV</Button>}
+          action={<div style={{ display: 'flex', gap: '0.5rem' }}>
+            <Button variant="primary" onClick={() => setShowAddUser((v) => !v)}><UserPlus size={16} /> Ajouter</Button>
+            <Button variant="secondary" onClick={() => downloadCsv('frescoop-utilisateurs.csv', usersToRows(store.users))}><Download size={16} /> Export CSV</Button>
+          </div>}
         />
+
+        {showAddUser && (
+          <form className="add-user-form" onSubmit={handleAddUser} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', padding: '1rem', background: 'var(--surface-alt, #f8faf9)', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+            <Field label="Nom complet" required>
+              <input value={newUser.name} onChange={(e) => setNewUser((p) => ({ ...p, name: e.target.value }))} placeholder="Prénom Nom" />
+            </Field>
+            <Field label="Email" required>
+              <input type="email" value={newUser.email} onChange={(e) => setNewUser((p) => ({ ...p, email: e.target.value }))} placeholder="email@exemple.com" />
+            </Field>
+            <Field label="Mot de passe" required>
+              <input type="password" value={newUser.password} onChange={(e) => setNewUser((p) => ({ ...p, password: e.target.value }))} placeholder="4 caractères min." />
+            </Field>
+            <Field label="Rôle" required>
+              <select value={newUser.role} onChange={(e) => setNewUser((p) => ({ ...p, role: e.target.value }))}>
+                {roles.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
+              </select>
+            </Field>
+            <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+              <Button type="button" variant="secondary" onClick={() => setShowAddUser(false)}>Annuler</Button>
+              <Button type="submit" variant="primary" disabled={addingUser}>{addingUser ? 'Ajout...' : 'Créer le compte'}</Button>
+            </div>
+          </form>
+        )}
         <div className="users-admin-tools">
           <div className="role-filter-bar" aria-label="Catégories utilisateurs">
             <button className={roleFilter === 'all' ? 'active' : ''} type="button" onClick={() => setRoleFilter('all')}>Tous <span>{store.users.length}</span></button>
