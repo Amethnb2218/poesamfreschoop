@@ -1650,9 +1650,9 @@ button:disabled {
 
 .product-card {
   display: grid;
+  grid-template-rows: auto 1fr;
   width: 100%;
   min-width: 0;
-  min-height: 100%;
   border: 0;
   box-shadow: 0 10px 28px rgba(7, 27, 20, 0.07);
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
@@ -1682,8 +1682,9 @@ button:disabled {
 .product-image {
   position: relative;
   width: 100%;
-  min-height: 200px;
-  aspect-ratio: 4 / 3;
+  min-height: 180px;
+  max-height: 220px;
+  aspect-ratio: 16 / 9;
   background-color: #eaf5ee;
   background-size: cover;
   background-repeat: no-repeat;
@@ -1739,6 +1740,7 @@ button:disabled {
   display: block;
   width: 100%;
   height: 100%;
+  max-height: 220px;
   object-fit: cover;
   object-position: center;
 }
