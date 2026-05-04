@@ -11,7 +11,7 @@ import {
 } from 'react';
 import { AppState } from 'react-native';
 
-import { api, EMPTY_STORE, hashPassword, loadApiOverride, Store } from '@/lib/api';
+import { api, EMPTY_STORE, loadApiOverride, loadAuthToken, setAuthToken, Store } from '@/lib/api';
 import { flushOutbox } from '@/lib/outbox';
 import { pushLocalNotification, setupNotifications } from '@/lib/notifications';
 import { readCachedStore, writeCachedStore } from '@/lib/offline';
@@ -27,7 +27,6 @@ export type User = {
   region?: string;
   bio?: string;
   avatar?: string;
-  passwordHash?: string;
   createdAt?: string;
 };
 
@@ -58,7 +57,7 @@ export type RegisterInput = {
 };
 
 const SESSION_KEY = 'frescoop.mobile.session.v1';
-const POLL_INTERVAL_MS = 4000;
+const POLL_INTERVAL_MS = 30_000;
 
 const SessionContext = createContext<SessionState | null>(null);
 
@@ -71,7 +70,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [lastSyncAt, setLastSyncAt] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  // snapshot des IDs pour détecter les nouveautés à chaque sync
   const seenRef = useRef<{
     orders: Set<string>;
     products: Set<string>;
@@ -108,7 +106,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       await writeCachedStore(fresh);
       setCachedAt(Date.now());
 
-      // Déconnexion forcée si le compte courant vient d'être suspendu par l'admin
       const me = userRef.current;
       if (me) {
         const current = (fresh.users || []).find((u: any) => u.id === me.id);
@@ -116,6 +113,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           const s = String(current.status || 'Actif').toLowerCase();
           if (s === 'suspendu' || s === 'inactif' || s === 'bloque' || s === 'bloqué') {
             await AsyncStorage.removeItem(SESSION_KEY);
+            await setAuthToken(null);
             setUser(null);
           }
         }
@@ -125,11 +123,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   }, [applyStore]);
 
-  // Bootstrap: charger session + cache avant d'essayer l'API
   useEffect(() => {
     let cancelled = false;
     (async () => {
       await loadApiOverride();
+      await loadAuthToken();
       await setupNotifications();
       try {
         const saved = await AsyncStorage.getItem(SESSION_KEY);
@@ -160,7 +158,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     };
   }, [applyStore]);
 
-  // Écoute NetInfo pour refléter l'état de connexion
   useEffect(() => {
     const unsub = NetInfo.addEventListener((state) => {
       const next = !!state.isConnected && state.isInternetReachable !== false;
@@ -174,13 +171,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return unsub;
   }, [refresh]);
 
-  // Polling quand en ligne + app active
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
+    let mounted = true;
+
     function start() {
-      if (interval || !online) return;
+      if (interval || !online || !mounted) return;
       interval = setInterval(() => {
-        refresh();
+        if (mounted) refresh();
       }, POLL_INTERVAL_MS);
     }
     function stop() {
@@ -201,6 +199,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => {
+      mounted = false;
       stop();
       sub.remove();
     };
@@ -217,97 +216,97 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string): Promise<User> => {
-      // Essaie d'abord en ligne pour avoir le store le plus frais
-      let source: Store = store;
+      if (!email || !password) throw new Error('Email et mot de passe requis');
+
       try {
-        source = await api.getStore();
-        applyStore(source, { notify: false });
-        await writeCachedStore(source);
-      } catch {
-        // en mode hors-ligne, on tente avec le cache
+        const res = await api.login(email.trim(), password);
+        if (!res.ok || !res.token || !res.user) {
+          throw new Error(res.error || 'Échec de connexion');
+        }
+        await setAuthToken(res.token);
+        const sessionUser: User = {
+          id: res.user.id,
+          name: res.user.name,
+          email: res.user.email,
+          phone: res.user.phone,
+          role: res.user.role,
+          status: res.user.status,
+          organization: res.user.organization,
+          region: res.user.region,
+          bio: res.user.bio,
+          createdAt: res.user.createdAt,
+        };
+        await persistUser(sessionUser);
+        await refresh();
+        return sessionUser;
+      } catch (err: any) {
+        // Fallback offline: try local cache if server unreachable
         const cached = await readCachedStore();
-        if (cached) source = cached.store;
+        if (!cached) throw err;
+        const source = cached.store;
+        const target = source.users.find(
+          (u: any) => String(u?.email || '').trim().toLowerCase() === email.trim().toLowerCase(),
+        );
+        if (!target) throw new Error('Aucun compte avec cet e-mail');
+        throw new Error('Connexion impossible — vérifiez votre connexion internet');
       }
-      const target = source.users.find(
-        (u: any) => String(u?.email || '').trim().toLowerCase() === email.trim().toLowerCase(),
-      );
-      if (!target) throw new Error('Aucun compte avec cet e-mail');
-      const hash = await hashPassword(password);
-      if (hash !== target.passwordHash) throw new Error('Mot de passe incorrect');
-      // Refus de connexion si le compte est suspendu / inactif
-      const status = String(target.status || 'Actif').toLowerCase();
-      if (status === 'suspendu' || status === 'inactif' || status === 'bloque' || status === 'bloqué') {
-        throw new Error('Votre compte est suspendu. Contactez un administrateur.');
-      }
-      const sessionUser: User = {
-        id: target.id,
-        name: target.name,
-        email: target.email,
-        phone: target.phone,
-        role: target.role,
-        status: target.status,
-        organization: target.organization,
-        region: target.region,
-        bio: target.bio,
-        createdAt: target.createdAt,
-      };
-      await persistUser(sessionUser);
-      return sessionUser;
     },
-    [applyStore, persistUser, store],
+    [persistUser, refresh],
   );
 
   const register = useCallback(
     async (input: RegisterInput): Promise<User> => {
-      const fresh = await api.getStore();
-      const normalized = input.email.trim().toLowerCase();
-      if (fresh.users.some((u: any) => String(u?.email || '').toLowerCase() === normalized)) {
-        throw new Error('Un compte existe déjà avec cet e-mail');
+      if (!input.name || !input.email || !input.password) {
+        throw new Error('Nom, email et mot de passe requis');
       }
-      const hash = await hashPassword(input.password);
-      const now = new Date().toISOString();
-      const newUser = {
-        id: `usr-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
-        createdAt: now,
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email.trim())) {
+        throw new Error('Format email invalide');
+      }
+      if (input.password.length < 6) {
+        throw new Error('Le mot de passe doit faire au moins 6 caractères');
+      }
+
+      const res = await api.register({
         name: input.name.trim(),
         email: input.email.trim(),
-        phone: input.phone || '',
-        role: input.role,
-        status: 'Actif',
-        organization: input.organization || '',
-        region: input.region || '',
-        bio: '',
-        passwordHash: hash,
-      };
-      const updated = { ...fresh, users: [...fresh.users, newUser] };
-      await api.putStore(updated);
-      applyStore(updated, { notify: false });
-      await writeCachedStore(updated);
+        password: input.password,
+        role: input.role || 'agriculteur',
+        phone: input.phone,
+        organization: input.organization,
+        region: input.region,
+      });
+
+      if (!res.ok || !res.token || !res.user) {
+        throw new Error(res.error || "Échec de l'inscription");
+      }
+
+      await setAuthToken(res.token);
       const sessionUser: User = {
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        phone: newUser.phone,
-        role: newUser.role,
-        status: newUser.status,
-        organization: newUser.organization,
-        region: newUser.region,
-        bio: newUser.bio,
-        createdAt: newUser.createdAt,
+        id: res.user.id,
+        name: res.user.name,
+        email: res.user.email,
+        phone: res.user.phone,
+        role: res.user.role,
+        status: res.user.status,
+        organization: res.user.organization,
+        region: res.user.region,
+        bio: res.user.bio,
+        createdAt: res.user.createdAt,
       };
       await persistUser(sessionUser);
+      await refresh();
       return sessionUser;
     },
-    [applyStore, persistUser],
+    [persistUser, refresh],
   );
 
   const logout = useCallback(async () => {
+    await setAuthToken(null);
     await persistUser(null);
   }, [persistUser]);
 
   const mutateStore = useCallback(
     async (mutate: (store: Store) => Store): Promise<Store> => {
-      // Lit le store à jour pour éviter d'écraser des modifs concurrentes
       const fresh = await api.getStore();
       const next = mutate(fresh);
       await api.putStore(next);
@@ -382,7 +381,6 @@ function emitNotifications(
     (m: any) => !seen.messages.has(String(m.id)),
   );
 
-  // Anti-spam : un seul push par (titre + body + jour) pour éviter les répétitions
   const pushedKeys = new Set<string>();
   const tryPush = (title: string, body: string, data: Record<string, unknown>) => {
     const key = `${title}|${body}`;
@@ -391,7 +389,6 @@ function emitNotifications(
     pushLocalNotification({ title, body, data });
   };
 
-  // Nouvelle commande : notifier SEULEMENT si l'user est concerné (vendeur/agent/admin)
   const isAdmin = currentUser.role === 'admin';
   for (const order of newOrders.slice(0, 3)) {
     const concerned =
@@ -411,7 +408,6 @@ function emitNotifications(
     );
   }
 
-  // Notifications broadcast créées côté site ou mobile
   for (const notif of newNotifications.slice(0, 5)) {
     const target = notif.recipientId || notif.userId;
     const roleMatch =
@@ -426,7 +422,6 @@ function emitNotifications(
     );
   }
 
-  // Messages reçus
   for (const msg of newMessages.slice(0, 3)) {
     const target = msg.toUserId || msg.toId;
     if (target && target !== currentUser.id) continue;

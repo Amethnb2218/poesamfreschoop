@@ -808,7 +808,7 @@ function PublicSitePage({ navigate, path }) {
             <Button variant="secondary" onClick={() => navigate('/sondage')}><FileText size={18} /> Remplir le questionnaire</Button>
             <Button variant="secondary" onClick={() => scrollTo('mvp')}><ArrowRight size={18} /> Decouvrir le parcours d'un lot</Button>
           </div>
-          <p className="public-demo-creds">Compte demo : identifiant <strong>demovisiteur@gmail.com</strong> / mot de passe <strong>demo123</strong></p>
+          <p className="public-demo-creds">Cliquez pour tester la plateforme avec un compte visiteur.</p>
         </div>
       </section>
 
@@ -860,8 +860,7 @@ function PublicSitePage({ navigate, path }) {
           <h2>Testez le parcours complet d'un lot en 3 minutes.</h2>
           <p>Connectez-vous avec le compte demo et suivez un lot de la creation a la preuve economique.</p>
           <div className="public-demo-creds-box">
-            <span><LockKeyhole size={16} /> Identifiant : <strong>demovisiteur@gmail.com</strong></span>
-            <span><LockKeyhole size={16} /> Mot de passe : <strong>demo123</strong></span>
+            <span><LockKeyhole size={16} /> Compte visiteur disponible sur la page de connexion</span>
           </div>
           <Button onClick={() => navigate('/login')}><Eye size={18} /> Lancer la demo</Button>
         </div>
@@ -1240,28 +1239,24 @@ function LoginPage({ actions, notify, onLogin, store }) {
 
   async function login(event) {
     event.preventDefault();
-    // Récupère le store frais pour éviter de checker sur une copie périmée
-    // (cas où le compte a été créé sur mobile entretemps, ou suspendu par admin)
-    let usersToCheck = store.users;
     try {
-      const resp = await fetch(API_BASE + '/api/store');
-      if (resp.ok) {
-        const data = await resp.json();
-        if (Array.isArray(data.users)) usersToCheck = data.users;
+      const resp = await fetch(API_BASE + '/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginForm.email, password: loginForm.password }),
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.ok) {
+        notify(data.error || 'Identifiants incorrects', 'error');
+        return;
       }
+      if (data.token) {
+        sessionStorage.setItem('frescoop.auth.token', data.token);
+      }
+      onLogin(data.user.id);
     } catch {
-      // offline — on tente avec le cache local
+      notify('Erreur réseau. Vérifiez votre connexion.', 'error');
     }
-    const user = usersToCheck.find((item) => normalize(item.email) === normalize(loginForm.email));
-    if (!user || user.passwordHash !== await hashPassword(loginForm.password)) {
-      notify('Identifiants incorrects', 'error');
-      return;
-    }
-    if (user.status !== 'Actif') {
-      notify(getInactiveAccountMessage(user.status), 'error');
-      return;
-    }
-    onLogin(user.id);
   }
 
   async function register(event) {
@@ -1278,68 +1273,32 @@ function LoginPage({ actions, notify, onLogin, store }) {
       return;
     }
 
-    // 1) Récupère le store frais pour éviter les écrasements dûs au cache
-    let freshStore = null;
     try {
-      const resp = await fetch(API_BASE + '/api/store');
-      if (resp.ok) freshStore = await resp.json();
+      const resp = await fetch(API_BASE + '/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email: emailInput,
+          password,
+          role: registerForm.role || 'agriculteur',
+          phone: registerForm.phone || '',
+          organization: registerForm.organization || '',
+          region: registerForm.region || '',
+        }),
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.ok) {
+        notify(data.error || "Erreur lors de l'inscription", 'error');
+        return;
+      }
+      if (data.token) {
+        sessionStorage.setItem('frescoop.auth.token', data.token);
+      }
+      notify(`Bienvenue ${data.user.name} !`, 'success');
+      onLogin(data.user.id);
     } catch {
-      // offline — on continuera avec le store local
-    }
-    const existingUsers = Array.isArray(freshStore?.users) ? freshStore.users : store.users;
-
-    // 2) Empêche les doublons d'email
-    if (existingUsers.some((item) => normalize(item.email) === normalize(emailInput))) {
-      notify('Cet email est déjà utilisé. Connectez-vous plutôt.', 'error');
-      return;
-    }
-
-    // 3) Construit le nouvel utilisateur
-    let user;
-    try {
-      const needsApproval = registerForm.role === 'agriculteur';
-      user = await buildUser({
-        ...registerForm,
-        name,
-        email: emailInput,
-        password,
-        status: needsApproval ? 'En attente' : 'Actif',
-      });
-    } catch (err) {
-      notify('Impossible de sécuriser le mot de passe. Réessayez.', 'error');
-      console.error('[register] buildUser failed:', err);
-      return;
-    }
-
-    const notification = user.status === 'En attente' ? {
-      id: uid('notif'),
-      createdAt: new Date().toISOString(),
-      type: 'approval_request',
-      title: 'Nouvelle inscription agriculteur',
-      body: `${user.name} (${user.email}) demande a etre valide comme agriculteur.`,
-      path: '/utilisateurs',
-      recipientRole: 'admin',
-      targetUserId: user.id,
-      readAt: '',
-    } : null;
-
-    if (freshStore) {
-      const merged = normalizeStore({
-        ...freshStore,
-        users: [user, ...(freshStore.users || [])],
-        notifications: notification ? [notification, ...(freshStore.notifications || [])] : (freshStore.notifications || []),
-      });
-      actions.replaceStore(merged);
-    } else {
-      actions.setUsers((items) => [user, ...items]);
-      if (notification) actions.setNotifications((items) => [notification, ...items]);
-    }
-
-    if (user.status === 'En attente') {
-      notify('Inscription envoyee ! Un administrateur doit valider votre compte avant que vous puissiez vous connecter.', 'success');
-    } else {
-      notify(`Bienvenue ${user.name} !`, 'success');
-      onLogin(user.id);
+      notify('Erreur réseau. Vérifiez votre connexion.', 'error');
     }
   }
 
@@ -6891,9 +6850,12 @@ function useProductionStore() {
     pendingMutation.current = true;
     const handle = setTimeout(async () => {
       try {
+        const authHeaders = { 'Content-Type': 'application/json' };
+        const savedToken = sessionStorage.getItem('frescoop.auth.token');
+        if (savedToken) authHeaders['Authorization'] = `Bearer ${savedToken}`;
         const res = await fetch(API_BASE + '/api/store', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeaders,
           body: payload,
         });
         if (res.ok) {

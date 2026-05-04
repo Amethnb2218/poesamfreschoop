@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import path from 'node:path';
@@ -14,6 +14,82 @@ const distDir = path.join(rootDir, 'dist');
 const envPath = path.join(rootDir, '.env');
 
 await loadEnvFile(envPath);
+
+// ============================================================================
+// AUTH TOKEN SYSTEM
+// ============================================================================
+const TOKEN_SECRET = process.env.TOKEN_SECRET || randomBytes(32).toString('hex');
+const TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+function createToken(userId, role) {
+  const payload = JSON.stringify({ uid: userId, role, exp: Date.now() + TOKEN_EXPIRY_MS });
+  const sig = createHash('sha256').update(payload + TOKEN_SECRET).digest('hex');
+  return Buffer.from(payload).toString('base64url') + '.' + sig;
+}
+
+function verifyToken(token) {
+  if (!token || typeof token !== 'string') return null;
+  const dot = token.lastIndexOf('.');
+  if (dot === -1) return null;
+  const payloadB64 = token.slice(0, dot);
+  const sig = token.slice(dot + 1);
+  let payload;
+  try {
+    payload = Buffer.from(payloadB64, 'base64url').toString('utf8');
+  } catch { return null; }
+  const expected = createHash('sha256').update(payload + TOKEN_SECRET).digest('hex');
+  if (sig.length !== expected.length) return null;
+  try {
+    if (!timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expected, 'hex'))) return null;
+  } catch { return null; }
+  try {
+    const data = JSON.parse(payload);
+    if (!data.uid || !data.exp || Date.now() > data.exp) return null;
+    return data;
+  } catch { return null; }
+}
+
+function getTokenFromRequest(request) {
+  const auth = request.headers.authorization || '';
+  if (auth.startsWith('Bearer ')) return auth.slice(7);
+  return null;
+}
+
+function requireAuth(request) {
+  const token = getTokenFromRequest(request);
+  const data = verifyToken(token);
+  return data; // null if invalid
+}
+
+// ============================================================================
+// RATE LIMITER
+// ============================================================================
+const rateBuckets = new Map();
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX_REQUESTS = 120;
+const AUTH_RATE_MAX = 10;
+
+function checkRateLimit(ip, isAuthEndpoint = false) {
+  const now = Date.now();
+  const key = isAuthEndpoint ? `auth:${ip}` : ip;
+  const max = isAuthEndpoint ? AUTH_RATE_MAX : RATE_MAX_REQUESTS;
+  let bucket = rateBuckets.get(key);
+  if (!bucket || now - bucket.start > RATE_WINDOW_MS) {
+    bucket = { start: now, count: 0 };
+    rateBuckets.set(key, bucket);
+  }
+  bucket.count++;
+  if (bucket.count > max) return false;
+  return true;
+}
+
+// Cleanup stale buckets every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, bucket] of rateBuckets) {
+    if (now - bucket.start > RATE_WINDOW_MS * 2) rateBuckets.delete(key);
+  }
+}, 300_000);
 
 // ============================================================================
 // MONGODB
@@ -154,13 +230,25 @@ await ensureDatabase();
 
 createServer(async (request, response) => {
   const origin = request.headers.origin || '*';
-  response.setHeader('Access-Control-Allow-Origin', origin);
+  const allowedOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()) : null;
+  const corsOrigin = allowedOrigins ? (allowedOrigins.includes(origin) ? origin : allowedOrigins[0]) : origin;
+  response.setHeader('Access-Control-Allow-Origin', corsOrigin);
   response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
-  response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  response.setHeader('X-Content-Type-Options', 'nosniff');
+  response.setHeader('X-Frame-Options', 'DENY');
 
   if (request.method === 'OPTIONS') {
     response.writeHead(204);
     response.end();
+    return;
+  }
+
+  // Rate limiting
+  const clientIp = request.headers['x-forwarded-for']?.split(',')[0]?.trim() || request.socket.remoteAddress || '0.0.0.0';
+  const isAuthRoute = request.url?.startsWith('/api/auth/');
+  if (!checkRateLimit(clientIp, isAuthRoute)) {
+    sendJson(response, 429, { error: 'Trop de requêtes. Réessayez dans une minute.' });
     return;
   }
 
@@ -170,7 +258,14 @@ createServer(async (request, response) => {
       return;
     }
 
+    if (request.url?.startsWith('/api/auth/')) {
+      await handleAuth(request, response);
+      return;
+    }
+
     if (request.url?.startsWith('/api/upload')) {
+      const authData = requireAuth(request);
+      if (!authData) { sendJson(response, 401, { error: 'Non autorisé' }); return; }
       await handleUpload(request, response);
       return;
     }
@@ -186,6 +281,11 @@ createServer(async (request, response) => {
     }
 
     if (request.url?.startsWith('/api/store/backups') || request.url?.startsWith('/api/store/restore')) {
+      const authData = requireAuth(request);
+      if (!authData || authData.role !== 'admin') {
+        sendJson(response, 403, { error: 'Accès réservé aux administrateurs' });
+        return;
+      }
       await handleStoreBackups(request, response);
       return;
     }
@@ -209,6 +309,142 @@ createServer(async (request, response) => {
   console.log(`FresCoop API listening on http://${displayHost}:${port}`);
   console.log(`PayDunya mode: ${paydunyaMode} (${paydunyaApiBase})`);
 });
+
+// ============================================================================
+// AUTH ENDPOINTS
+// ============================================================================
+async function handleAuth(request, response) {
+  const url = new URL(request.url || '/', `http://${request.headers.host}`);
+  const endpoint = url.pathname.replace('/api/auth/', '');
+
+  if (endpoint === 'login' && request.method === 'POST') {
+    const body = await readBody(request);
+    const { email, password } = JSON.parse(body || '{}');
+    if (!email || !password) {
+      sendJson(response, 400, { error: 'Email et mot de passe requis' });
+      return;
+    }
+    const store = await readStore();
+    const normalized = String(email).trim().toLowerCase();
+    const target = store.users.find((u) => String(u?.email || '').trim().toLowerCase() === normalized);
+    if (!target) {
+      sendJson(response, 401, { error: 'Aucun compte avec cet e-mail' });
+      return;
+    }
+    const status = String(target.status || 'Actif').toLowerCase();
+    if (status === 'suspendu' || status === 'inactif' || status === 'bloque' || status === 'bloqué') {
+      sendJson(response, 403, { error: 'Votre compte est suspendu. Contactez un administrateur.' });
+      return;
+    }
+    const hash = createHash('sha256').update(password).digest('hex');
+    if (hash !== target.passwordHash) {
+      sendJson(response, 401, { error: 'Mot de passe incorrect' });
+      return;
+    }
+    const token = createToken(target.id, target.role);
+    sendJson(response, 200, {
+      ok: true,
+      token,
+      user: sanitizeUser(target),
+    });
+    return;
+  }
+
+  if (endpoint === 'register' && request.method === 'POST') {
+    const body = await readBody(request);
+    const data = JSON.parse(body || '{}');
+    const { name, email, password, role, phone, organization, region } = data;
+
+    if (!name || !email || !password) {
+      sendJson(response, 400, { error: 'Nom, email et mot de passe requis' });
+      return;
+    }
+    if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      sendJson(response, 400, { error: 'Format email invalide' });
+      return;
+    }
+    if (password.length < 6) {
+      sendJson(response, 400, { error: 'Le mot de passe doit faire au moins 6 caractères' });
+      return;
+    }
+    const allowedRoles = ['agriculteur', 'acheteur', 'acheteurB2B', 'transporteur', 'agent', 'agentTerrain', 'client', 'partenaire'];
+    if (role && !allowedRoles.includes(role)) {
+      sendJson(response, 400, { error: 'Rôle invalide' });
+      return;
+    }
+
+    const store = await readStore();
+    const normalized = email.trim().toLowerCase();
+    if (store.users.some((u) => String(u?.email || '').trim().toLowerCase() === normalized)) {
+      sendJson(response, 409, { error: 'Un compte existe déjà avec cet e-mail' });
+      return;
+    }
+
+    const hash = createHash('sha256').update(password).digest('hex');
+    const now = new Date().toISOString();
+    const newUser = {
+      id: `usr-${Date.now().toString(36)}-${randomBytes(4).toString('hex')}`,
+      createdAt: now,
+      name: String(name).trim().slice(0, 100),
+      email: email.trim().slice(0, 200),
+      phone: String(phone || '').trim().slice(0, 30),
+      role: role || 'agriculteur',
+      status: (role || 'agriculteur') === 'agriculteur' ? 'En attente' : 'Actif',
+      organization: String(organization || '').trim().slice(0, 100),
+      region: String(region || '').trim().slice(0, 100),
+      bio: '',
+      passwordHash: hash,
+    };
+
+    const updates = { ...store, users: [...store.users, newUser] };
+    if (newUser.status === 'En attente') {
+      const notif = {
+        id: `notif-${Date.now().toString(36)}-${randomBytes(4).toString('hex')}`,
+        createdAt: now,
+        type: 'approval_request',
+        title: 'Nouvelle inscription agriculteur',
+        body: `${newUser.name} (${newUser.email}) demande à être validé comme agriculteur.`,
+        recipientRole: 'admin',
+        targetUserId: newUser.id,
+        read: false,
+      };
+      updates.notifications = [notif, ...(store.notifications || [])];
+    }
+    await writeStore(updates);
+    const token = createToken(newUser.id, newUser.role);
+    sendJson(response, 201, {
+      ok: true,
+      token,
+      user: sanitizeUser(newUser),
+    });
+    return;
+  }
+
+  if (endpoint === 'me' && request.method === 'GET') {
+    const authData = requireAuth(request);
+    if (!authData) { sendJson(response, 401, { error: 'Non autorisé' }); return; }
+    const store = await readStore();
+    const user = store.users.find((u) => u.id === authData.uid);
+    if (!user) { sendJson(response, 404, { error: 'Utilisateur introuvable' }); return; }
+    sendJson(response, 200, { ok: true, user: sanitizeUser(user) });
+    return;
+  }
+
+  sendJson(response, 404, { error: 'Endpoint auth inconnu' });
+}
+
+function sanitizeUser(user) {
+  if (!user || typeof user !== 'object') return user;
+  const { passwordHash, ...safe } = user;
+  return safe;
+}
+
+function sanitizeStoreForClient(store) {
+  return {
+    ...store,
+    users: (store.users || []).map(sanitizeUser),
+  };
+}
 
 // ============================================================================
 // CLOUDINARY UPLOAD
@@ -367,9 +603,28 @@ async function handlePaydunya(request, response) {
   }
 
   if (endpoint === 'ipn' && request.method === 'POST') {
-    // Instant Payment Notification — PayDunya envoie ici apres paiement
     const body = await readBody(request);
-    console.log('[PayDunya IPN]', body.slice(0, 500));
+    let ipnData;
+    try { ipnData = JSON.parse(body || '{}'); } catch { ipnData = {}; }
+    console.log('[PayDunya IPN]', JSON.stringify(ipnData).slice(0, 500));
+    // Verify IPN by checking the payment status with PayDunya API
+    const ipnToken = ipnData?.data?.hash || ipnData?.token || '';
+    if (ipnToken && process.env.PAYDUNYA_MASTER_KEY) {
+      try {
+        const verifyRes = await fetch(`${paydunyaApiBase}/checkout-invoice/confirm/${encodeURIComponent(ipnToken)}`, {
+          method: 'GET',
+          headers,
+        });
+        const verifyResult = await verifyRes.json();
+        if (verifyResult?.status === 'completed') {
+          console.log('[PayDunya IPN] Paiement vérifié:', ipnToken);
+        } else {
+          console.warn('[PayDunya IPN] Statut non confirmé:', verifyResult?.status);
+        }
+      } catch (err) {
+        console.error('[PayDunya IPN] Erreur vérification:', err.message);
+      }
+    }
     sendJson(response, 200, { ok: true });
     return;
   }
@@ -782,15 +1037,38 @@ await mkdir(backupsDir, { recursive: true });
 
 async function handleStore(request, response) {
   if (request.method === 'GET') {
-    sendJson(response, 200, await readStore());
+    const store = await readStore();
+    sendJson(response, 200, sanitizeStoreForClient(store));
     return;
   }
 
   if (request.method === 'PUT') {
+    const authData = requireAuth(request);
+    if (!authData) {
+      sendJson(response, 401, { error: 'Non autorisé. Connectez-vous pour modifier les données.' });
+      return;
+    }
     const storeUrl = new URL(request.url || '/', `http://${request.headers.host}`);
     const forceWrite = storeUrl.searchParams.get('force') === 'true';
     const body = await readBody(request);
-    const parsed = JSON.parse(body || '{}');
+    let parsed;
+    try {
+      parsed = JSON.parse(body || '{}');
+    } catch {
+      sendJson(response, 400, { error: 'JSON invalide' });
+      return;
+    }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      sendJson(response, 400, { error: 'Le store doit être un objet' });
+      return;
+    }
+    // Validate that known keys are arrays
+    for (const key of Object.keys(emptyStore)) {
+      if (key in parsed && !Array.isArray(parsed[key])) {
+        sendJson(response, 400, { error: `Le champ "${key}" doit être un tableau` });
+        return;
+      }
+    }
     const incoming = normalizeStore(parsed);
 
     // === PROTECTION ANTI-RÉGRESSION ===
@@ -919,14 +1197,28 @@ async function handleStoreBackups(request, response) {
 
 async function serveStatic(request, response) {
   const url = new URL(request.url || '/', `http://${request.headers.host}`);
-  const safePath = decodeURIComponent(url.pathname).replace(/^\/+/, '');
-  let filePath = path.join(distDir, safePath);
+  const decoded = decodeURIComponent(url.pathname).replace(/^\/+/, '');
+  let filePath = path.resolve(distDir, decoded);
+
+  // Path traversal protection: ensure resolved path stays within distDir
+  if (!filePath.startsWith(distDir + path.sep) && filePath !== distDir) {
+    response.writeHead(403, { 'Content-Type': 'text/plain' });
+    response.end('Forbidden');
+    return;
+  }
 
   try {
     const info = await stat(filePath);
     if (info.isDirectory()) filePath = path.join(filePath, 'index.html');
   } catch {
     filePath = path.join(distDir, 'index.html');
+  }
+
+  // Double-check after fallback
+  if (!filePath.startsWith(distDir + path.sep) && filePath !== distDir) {
+    response.writeHead(403, { 'Content-Type': 'text/plain' });
+    response.end('Forbidden');
+    return;
   }
 
   const ext = path.extname(filePath);

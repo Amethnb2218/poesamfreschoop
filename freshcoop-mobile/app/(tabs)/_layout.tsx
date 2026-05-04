@@ -33,6 +33,8 @@ export default function TabLayout() {
 
   if (loading) return null;
   if (!user) return <Redirect href="/auth" />;
+  const userStatus = String(user.status || 'Actif').toLowerCase();
+  if (userStatus === 'en attente') return <Redirect href="/pending" />;
 
   const visible = getMobileTabs(user.role);
   const showCart = visible.includes('cart');

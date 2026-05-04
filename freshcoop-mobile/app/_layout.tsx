@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 
 import { AppBoot } from '@/components/AppBoot';
 import { DialogProvider } from '@/components/AppDialog';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Yaay } from '@/components/Yaay';
 import { CartProvider } from '@/context/CartContext';
 import { SessionProvider } from '@/context/SessionContext';
@@ -20,6 +21,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <ErrorBoundary>
       <SessionProvider>
         <CartProvider>
          <DialogProvider>
@@ -68,6 +70,7 @@ export default function RootLayout() {
               />
               <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
               <Stack.Screen name="pitch" options={{ animation: 'fade' }} />
+              <Stack.Screen name="pending" options={{ animation: 'fade', gestureEnabled: false }} />
             </Stack>
             <StatusBar style="auto" />
             <Yaay />
@@ -76,6 +79,7 @@ export default function RootLayout() {
          </DialogProvider>
         </CartProvider>
       </SessionProvider>
+      </ErrorBoundary>
     </GestureHandlerRootView>
   );
 }

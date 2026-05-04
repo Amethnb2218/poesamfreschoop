@@ -50,8 +50,12 @@ export default function RegisterScreen() {
     }
     setSubmitting(true);
     try {
-      await register({ name, email, password, role, phone, organization, region });
-      router.replace('/onboarding');
+      const user = await register({ name, email, password, role, phone, organization, region });
+      if (user.status === 'En attente') {
+        router.replace('/pending');
+      } else {
+        router.replace('/onboarding');
+      }
     } catch (err: any) {
       setError(err?.message || 'Création impossible');
     } finally {

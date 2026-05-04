@@ -4,6 +4,28 @@ import { Platform } from 'react-native';
 import { sha256Js } from './sha256';
 
 const API_OVERRIDE_KEY = 'frescoop.mobile.api-override.v1';
+const AUTH_TOKEN_KEY = 'frescoop.mobile.auth-token.v1';
+
+let authToken: string | null = null;
+
+export async function loadAuthToken(): Promise<void> {
+  try {
+    authToken = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+  } catch {}
+}
+
+export async function setAuthToken(token: string | null): Promise<void> {
+  authToken = token;
+  if (token) {
+    await AsyncStorage.setItem(AUTH_TOKEN_KEY, token);
+  } else {
+    await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
+  }
+}
+
+export function getAuthToken(): string | null {
+  return authToken;
+}
 
 function resolveAutoApiBase(): string {
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
@@ -23,14 +45,12 @@ function resolveAutoApiBase(): string {
 
 export const API_BASE_AUTO = resolveAutoApiBase();
 
-// Base API courante — modifiable à chaud depuis l'écran Données
 let currentBase = API_BASE_AUTO;
 
 export function getApiBase(): string {
   return currentBase;
 }
 
-// Rétro-compat
 export const API_BASE = currentBase;
 
 export async function loadApiOverride(): Promise<void> {
@@ -118,16 +138,41 @@ export const EMPTY_STORE: Store = {
 };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${currentBase}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`API ${res.status}: ${body || res.statusText}`);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    const res = await fetch(`${currentBase}${path}`, {
+      headers,
+      signal: controller.signal,
+      ...init,
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      let message = `API ${res.status}: ${body || res.statusText}`;
+      try {
+        const parsed = JSON.parse(body);
+        if (parsed.error) message = parsed.error;
+      } catch {}
+      throw new Error(message);
+    }
+    return res.json() as Promise<T>;
+  } finally {
+    clearTimeout(timeout);
   }
-  return res.json() as Promise<T>;
 }
+
+export type AuthResponse = {
+  ok: boolean;
+  token?: string;
+  user?: any;
+  error?: string;
+};
 
 export const api = {
   health: () => request<{ ok: boolean; mode: string }>('/api/health'),
@@ -137,6 +182,29 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify(store),
     }),
+
+  login: (email: string, password: string) =>
+    request<AuthResponse>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    }),
+
+  register: (input: {
+    name: string;
+    email: string;
+    password: string;
+    role: string;
+    phone?: string;
+    organization?: string;
+    region?: string;
+  }) =>
+    request<AuthResponse>('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+
+  getMe: () => request<{ ok: boolean; user: any }>('/api/auth/me'),
+
   createPaydunyaInvoice: (input: {
     amount: number;
     description: string;
@@ -172,9 +240,6 @@ export const api = {
     ),
 };
 
-// Hash SHA-256 hex du mot de passe — doit matcher le calcul du site web.
-// React Native n'expose pas crypto.subtle donc on passe par le fallback JS pur,
-// qui est exactement celui utilisé par le site (sha256Js dans App.jsx).
 export async function hashPassword(password: string): Promise<string> {
   try {
     const digest = await globalThis.crypto?.subtle?.digest?.(
@@ -186,8 +251,6 @@ export async function hashPassword(password: string): Promise<string> {
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('');
     }
-  } catch {
-    // continue sur le fallback
-  }
+  } catch {}
   return sha256Js(password);
 }
