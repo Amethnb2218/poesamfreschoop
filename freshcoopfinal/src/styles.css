@@ -7319,3 +7319,174 @@ input:disabled {
   }
 }
 
+/* ─── Pending Approval Page ─── */
+.pending-approval {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.pending-hero {
+  text-align: center;
+  padding: 0.5rem 0 1.5rem;
+}
+
+.pending-icon-ring {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 1rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--green-100), var(--gold-100));
+  color: var(--green-700);
+  box-shadow: 0 0 0 6px rgba(31, 131, 93, 0.08);
+}
+
+.pending-hero .eyebrow {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.pending-hero h2 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+.pending-hero p {
+  max-width: 440px;
+  margin: 0 auto;
+  color: var(--muted);
+  font-weight: 500;
+  line-height: 1.65;
+}
+
+.pending-steps {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  margin: 1.5rem 0 2rem;
+  position: relative;
+}
+
+.pending-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  position: relative;
+}
+
+.pending-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: calc(50% + 18px);
+  width: calc(100% - 36px);
+  height: 2px;
+  background: var(--line);
+}
+
+.pending-step.done:not(:last-child)::after {
+  background: var(--green-700);
+}
+
+.pending-step-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--wash);
+  border: 2px solid var(--line);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+}
+
+.pending-step.done .pending-step-dot {
+  background: var(--green-700);
+  border-color: var(--green-700);
+  color: #fff;
+}
+
+.pending-step.active .pending-step-dot {
+  border-color: var(--gold-600);
+  background: var(--gold-100);
+  color: var(--gold-600);
+  box-shadow: 0 0 0 4px rgba(217, 153, 18, 0.12);
+  animation: pending-pulse 2s ease-in-out infinite;
+}
+
+@keyframes pending-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(217, 153, 18, 0.10); }
+  50% { box-shadow: 0 0 0 8px rgba(217, 153, 18, 0.18); }
+}
+
+.pending-step-label {
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--muted);
+  text-align: center;
+}
+
+.pending-step.done .pending-step-label {
+  color: var(--green-700);
+}
+
+.pending-step.active .pending-step-label {
+  color: var(--gold-600);
+  font-weight: 800;
+}
+
+.pending-info-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.pending-info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.pending-info-card svg {
+  color: var(--green-700);
+}
+
+.pending-info-card strong {
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+
+.pending-info-card span {
+  font-size: 0.76rem;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+@media (max-width: 600px) {
+  .pending-info-cards {
+    grid-template-columns: 1fr;
+  }
+  .pending-steps {
+    gap: 0;
+  }
+  .pending-step:not(:last-child)::after {
+    left: calc(50% + 14px);
+    width: calc(100% - 28px);
+  }
+}
+

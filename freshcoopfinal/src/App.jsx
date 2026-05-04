@@ -6431,17 +6431,47 @@ function AccessDenied({ navigate = () => {}, user = { role: 'client' } }) {
 }
 
 function PendingApprovalPage({ user, logout }) {
+  const steps = [
+    { label: 'Compte cree', done: true },
+    { label: 'Validation admin', done: false, active: true },
+    { label: 'Acces complet', done: false },
+  ];
   return (
-    <div className="auth-card">
-      <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
-        <CircleAlert size={48} style={{ color: 'var(--warning, #e6a817)', marginBottom: '1rem' }} />
-        <h2 style={{ marginBottom: '0.5rem' }}>Inscription en attente</h2>
-        <p style={{ marginBottom: '1.5rem', lineHeight: 1.6 }}>
-          Bonjour <strong>{user.name}</strong>, votre demande d'inscription en tant que <strong>{roleLabel(user.role)}</strong> est en cours de validation par un administrateur FresCoop.
-        </p>
-        <p style={{ marginBottom: '2rem', color: 'var(--muted, #888)' }}>
-          Vous recevrez un acces complet des que votre compte sera approuve. Merci de votre patience.
-        </p>
+    <div className="pending-approval">
+      <div className="pending-hero">
+        <div className="pending-icon-ring">
+          <ShieldCheck size={36} />
+        </div>
+        <span className="eyebrow">Verification en cours</span>
+        <h2>Bienvenue {user.name}</h2>
+        <p>Votre inscription en tant que <strong>{roleLabel(user.role)}</strong> a bien ete enregistree. Un administrateur FresCoop doit valider votre compte avant de vous donner acces a la plateforme.</p>
+      </div>
+      <div className="pending-steps">
+        {steps.map((step, i) => (
+          <div key={i} className={'pending-step' + (step.done ? ' done' : '') + (step.active ? ' active' : '')}>
+            <span className="pending-step-dot">{step.done ? <CheckCircle2 size={20} /> : <span>{i + 1}</span>}</span>
+            <span className="pending-step-label">{step.label}</span>
+          </div>
+        ))}
+      </div>
+      <div className="pending-info-cards">
+        <div className="pending-info-card">
+          <Activity size={20} />
+          <strong>Delai de validation</strong>
+          <span>Les demandes sont generalement traitees sous 24 a 48 heures par l'equipe FresCoop.</span>
+        </div>
+        <div className="pending-info-card">
+          <BellRing size={20} />
+          <strong>Notification</strong>
+          <span>Vous serez notifie des que votre compte sera approuve. Reconnectez-vous a ce moment.</span>
+        </div>
+        <div className="pending-info-card">
+          <MessageSquare size={20} />
+          <strong>Besoin d'aide ?</strong>
+          <span>Contactez l'equipe a support@frescoop.sn ou via WhatsApp +221 77 000 00 00.</span>
+        </div>
+      </div>
+      <div className="button-row centered" style={{ marginTop: '1.5rem' }}>
         <Button variant="secondary" onClick={logout}><LogOut size={18} /> Se deconnecter</Button>
       </div>
     </div>
