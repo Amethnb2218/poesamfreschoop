@@ -1005,6 +1005,7 @@ function SetupAdminPage({ actions, notify, onReady }) {
 
 function PublicSurveyPage({ actions, navigate, notify, store }) {
   const [submitted, setSubmitted] = useState(false);
+  const [step, setStep] = useState(0);
   const [form, setForm] = useState({
     fullName: '',
     phone: '',
@@ -1022,13 +1023,15 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
   });
 
   const needOptions = [
-    'Vendre mes produits',
-    'Acheter en gros',
-    'Suivre une commande',
-    'Reduire les pertes',
-    'Obtenir un financement',
-    'Transporter ou stocker',
+    { label: 'Vendre mes produits', icon: Store, desc: 'Publier et vendre sur le marche FresCoop' },
+    { label: 'Acheter en gros', icon: ShoppingCart, desc: 'Sourcing B2B direct producteurs' },
+    { label: 'Suivre une commande', icon: ClipboardCheck, desc: 'Tracabilite champ-a-client' },
+    { label: 'Reduire les pertes', icon: Leaf, desc: 'Alertes DLC et ventes eclair' },
+    { label: 'Obtenir un financement', icon: Landmark, desc: 'Score bancabilite et dossier credit' },
+    { label: 'Transporter ou stocker', icon: Truck, desc: 'Hubs froids et livraison' },
   ];
+
+  const stepLabels = ['Identite', 'Activite', 'Preferences'];
 
   function toggleNeed(value) {
     setForm((current) => {
@@ -1039,12 +1042,23 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
     });
   }
 
+  function nextStep() {
+    if (step === 0) {
+      if (!form.fullName.trim() || !form.phone.trim() || !form.roleInterest) {
+        notify('Nom, telephone et profil sont obligatoires', 'error');
+        return;
+      }
+    }
+    setStep((s) => Math.min(s + 1, 2));
+  }
+
   function submitSurvey(event) {
     event.preventDefault();
     const fullName = form.fullName.trim();
     const phone = form.phone.trim();
     if (!fullName || !phone || !form.roleInterest) {
       notify('Nom, telephone et profil sont obligatoires', 'error');
+      setStep(0);
       return;
     }
     if (!form.consent) {
@@ -1103,6 +1117,8 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
     notify('Merci, votre questionnaire est enregistre.', 'success');
   }
 
+  const respondentCount = (store.surveyLeads || []).length;
+
   return (
     <main className="survey-page">
       <nav className="public-nav survey-nav">
@@ -1116,119 +1132,194 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
 
       <section className="survey-hero">
         <div>
-          <span className="eyebrow">Questionnaire d'inscription</span>
+          <span className="eyebrow">POESAM 2026 — Questionnaire officiel</span>
           <h1>Rejoindre le pilote FresCoop</h1>
-          <p>Ce formulaire sert a identifier les producteurs, acheteurs, transporteurs et partenaires interesses. L'equipe FresCoop vous recontacte ensuite pour l'inscription.</p>
+          <p>Identifiez-vous pour que l'equipe FresCoop vous integre au programme pilote. Producteurs, acheteurs, transporteurs et partenaires finance sont les bienvenus.</p>
         </div>
         <aside>
-          <strong>{formatNumber((store.surveyLeads || []).length)}</strong>
+          <strong>{formatNumber(respondentCount)}</strong>
           <span>reponses collectees</span>
         </aside>
       </section>
 
-      <section className="survey-layout">
-        <form className="survey-form panel" onSubmit={submitSurvey}>
-          <PanelTitle icon={FileText} title="Vos informations" />
-          <div className="survey-form-grid">
-            <Field label="Nom complet" required>
-              <input value={form.fullName} onChange={(event) => updateForm(setForm, 'fullName', event.target.value)} placeholder="Prenom Nom" />
-            </Field>
-            <Field label="Telephone / WhatsApp" required>
-              <input value={form.phone} onChange={(event) => updateForm(setForm, 'phone', event.target.value)} placeholder="+221 77 000 00 00" />
-            </Field>
-            <Field label="Email">
-              <input type="email" value={form.email} onChange={(event) => updateForm(setForm, 'email', event.target.value)} placeholder="nom@exemple.com" />
-            </Field>
-            <Field label="Profil" required>
-              <select value={form.roleInterest} onChange={(event) => updateForm(setForm, 'roleInterest', event.target.value)}>
-                <option value="agriculteur">Agriculteur / producteur</option>
-                <option value="acheteurB2B">Acheteur B2B</option>
-                <option value="client">Client particulier</option>
-                <option value="transporteur">Transporteur</option>
-                <option value="partenaire">Partenaire finance</option>
-                <option value="agentTerrain">Agent terrain</option>
-              </select>
-            </Field>
-            <Field label="Region / ville">
-              <input value={form.region} onChange={(event) => updateForm(setForm, 'region', event.target.value)} placeholder="Dakar, Thies, Saint-Louis..." />
-            </Field>
-            <Field label="Organisation">
-              <input value={form.organization} onChange={(event) => updateForm(setForm, 'organization', event.target.value)} placeholder="Cooperative, boutique, entreprise..." />
-            </Field>
+      {submitted ? (
+        <section className="survey-layout">
+          <div className="survey-success-full panel">
+            <div className="survey-success-icon"><CheckCircle2 size={44} /></div>
+            <h2>Questionnaire enregistre</h2>
+            <p>Merci pour votre interet. L'equipe FresCoop vous recontactera sous 24 a 48h via le canal que vous avez indique.</p>
+            <div className="survey-success-steps">
+              <div className="survey-success-step"><span>1</span><strong>Reponse recue</strong></div>
+              <div className="survey-success-step"><span>2</span><strong>Equipe vous contacte</strong></div>
+              <div className="survey-success-step"><span>3</span><strong>Compte active</strong></div>
+            </div>
+            <div className="button-row centered">
+              <Button onClick={() => { setSubmitted(false); setStep(0); }}><Send size={18} /> Nouvelle reponse</Button>
+              <Button variant="secondary" onClick={() => navigate('/login')}><UserCheck size={18} /> Se connecter</Button>
+              <Button variant="secondary" onClick={() => navigate('/public')}><Home size={18} /> Accueil</Button>
+            </div>
           </div>
-
-          <Field label="Produits ou besoins principaux">
-            <textarea rows={3} value={form.products} onChange={(event) => updateForm(setForm, 'products', event.target.value)} placeholder="Ex: oignon, tomate, riz local, transport froid, achats en gros..." />
-          </Field>
-
-          <div className="survey-question">
-            <span>Ce que vous cherchez avec FresCoop</span>
-            <div className="survey-options">
-              {needOptions.map((item) => (
-                <label key={item}>
-                  <input type="checkbox" checked={form.needs.includes(item)} onChange={() => toggleNeed(item)} />
-                  <span>{item}</span>
-                </label>
+        </section>
+      ) : (
+        <section className="survey-layout">
+          <form className="survey-form panel" onSubmit={submitSurvey}>
+            <div className="survey-stepper">
+              {stepLabels.map((label, i) => (
+                <button key={i} type="button" className={'survey-stepper-item' + (i === step ? ' active' : '') + (i < step ? ' done' : '')} onClick={() => i < step ? setStep(i) : undefined}>
+                  <span className="survey-stepper-dot">{i < step ? <CheckCircle2 size={16} /> : i + 1}</span>
+                  <span className="survey-stepper-label">{label}</span>
+                </button>
               ))}
+              <div className="survey-stepper-bar"><div style={{ width: `${(step / 2) * 100}%` }} /></div>
             </div>
-          </div>
 
-          <div className="survey-form-grid compact">
-            <Field label="Smartphone / Internet">
-              <select value={form.canUseSmartphone} onChange={(event) => updateForm(setForm, 'canUseSmartphone', event.target.value)}>
-                <option value="oui">Oui, j'utilise Internet</option>
-                <option value="parfois">Parfois seulement</option>
-                <option value="non">Non, je prefere appel/SMS</option>
-              </select>
-            </Field>
-            <Field label="Interesse par le pilote ?">
-              <select value={form.wantsPilot} onChange={(event) => updateForm(setForm, 'wantsPilot', event.target.value)}>
-                <option value="oui">Oui</option>
-                <option value="peut-etre">Peut-etre</option>
-                <option value="plus-tard">Plus tard</option>
-              </select>
-            </Field>
-            <Field label="Canal prefere">
-              <select value={form.preferredContact} onChange={(event) => updateForm(setForm, 'preferredContact', event.target.value)}>
-                <option value="whatsapp">WhatsApp</option>
-                <option value="appel">Appel</option>
-                <option value="sms">SMS</option>
-                <option value="email">Email</option>
-              </select>
-            </Field>
-          </div>
+            {step === 0 && (
+              <div className="survey-section">
+                <div className="survey-section-header">
+                  <Users size={20} />
+                  <div><strong>Vos coordonnees</strong><span>Informations de base pour vous identifier et vous recontacter.</span></div>
+                </div>
+                <div className="survey-form-grid">
+                  <Field label="Nom complet" required>
+                    <input value={form.fullName} onChange={(event) => updateForm(setForm, 'fullName', event.target.value)} placeholder="Prenom Nom" />
+                  </Field>
+                  <Field label="Telephone / WhatsApp" required>
+                    <input value={form.phone} onChange={(event) => updateForm(setForm, 'phone', event.target.value)} placeholder="+221 77 000 00 00" />
+                  </Field>
+                  <Field label="Email">
+                    <input type="email" value={form.email} onChange={(event) => updateForm(setForm, 'email', event.target.value)} placeholder="nom@exemple.com" />
+                  </Field>
+                  <Field label="Profil" required>
+                    <select value={form.roleInterest} onChange={(event) => updateForm(setForm, 'roleInterest', event.target.value)}>
+                      <option value="agriculteur">Agriculteur / producteur</option>
+                      <option value="acheteurB2B">Acheteur B2B</option>
+                      <option value="client">Client particulier</option>
+                      <option value="transporteur">Transporteur</option>
+                      <option value="partenaire">Partenaire finance</option>
+                      <option value="agentTerrain">Agent terrain</option>
+                    </select>
+                  </Field>
+                  <Field label="Region / ville">
+                    <input value={form.region} onChange={(event) => updateForm(setForm, 'region', event.target.value)} placeholder="Dakar, Thies, Saint-Louis..." />
+                  </Field>
+                  <Field label="Organisation">
+                    <input value={form.organization} onChange={(event) => updateForm(setForm, 'organization', event.target.value)} placeholder="Cooperative, boutique, entreprise..." />
+                  </Field>
+                </div>
+                <div className="button-row">
+                  <Button type="button" onClick={nextStep}><ArrowRight size={18} /> Etape suivante</Button>
+                </div>
+              </div>
+            )}
 
-          <Field label="Message libre">
-            <textarea rows={3} value={form.notes} onChange={(event) => updateForm(setForm, 'notes', event.target.value)} placeholder="Expliquez votre activite, vos volumes ou vos difficultes actuelles." />
-          </Field>
+            {step === 1 && (
+              <div className="survey-section">
+                <div className="survey-section-header">
+                  <PackageCheck size={20} />
+                  <div><strong>Votre activite</strong><span>Decrivez ce que vous produisez, vendez ou recherchez.</span></div>
+                </div>
+                <Field label="Produits ou besoins principaux">
+                  <textarea rows={3} value={form.products} onChange={(event) => updateForm(setForm, 'products', event.target.value)} placeholder="Ex: oignon, tomate, riz local, transport froid, achats en gros..." />
+                </Field>
+                <div className="survey-question">
+                  <span>Ce que vous cherchez avec FresCoop</span>
+                  <div className="survey-needs-grid">
+                    {needOptions.map((item) => {
+                      const Icon = item.icon;
+                      const checked = form.needs.includes(item.label);
+                      return (
+                        <label key={item.label} className={'survey-need-card' + (checked ? ' selected' : '')}>
+                          <input type="checkbox" checked={checked} onChange={() => toggleNeed(item.label)} />
+                          <Icon size={22} />
+                          <strong>{item.label}</strong>
+                          <span>{item.desc}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="button-row">
+                  <Button type="button" variant="secondary" onClick={() => setStep(0)}><ChevronLeft size={18} /> Retour</Button>
+                  <Button type="button" onClick={nextStep}><ArrowRight size={18} /> Etape suivante</Button>
+                </div>
+              </div>
+            )}
 
-          <label className="survey-consent">
-            <input type="checkbox" checked={form.consent} onChange={(event) => updateForm(setForm, 'consent', event.target.checked)} />
-            <span>J'accepte d'etre recontacte par FresCoop pour l'inscription au pilote.</span>
-          </label>
+            {step === 2 && (
+              <div className="survey-section">
+                <div className="survey-section-header">
+                  <Settings size={20} />
+                  <div><strong>Preferences et validation</strong><span>Derniere etape avant l'envoi de votre questionnaire.</span></div>
+                </div>
+                <div className="survey-form-grid compact">
+                  <Field label="Smartphone / Internet">
+                    <select value={form.canUseSmartphone} onChange={(event) => updateForm(setForm, 'canUseSmartphone', event.target.value)}>
+                      <option value="oui">Oui, j'utilise Internet</option>
+                      <option value="parfois">Parfois seulement</option>
+                      <option value="non">Non, je prefere appel/SMS</option>
+                    </select>
+                  </Field>
+                  <Field label="Interesse par le pilote ?">
+                    <select value={form.wantsPilot} onChange={(event) => updateForm(setForm, 'wantsPilot', event.target.value)}>
+                      <option value="oui">Oui</option>
+                      <option value="peut-etre">Peut-etre</option>
+                      <option value="plus-tard">Plus tard</option>
+                    </select>
+                  </Field>
+                  <Field label="Canal prefere">
+                    <select value={form.preferredContact} onChange={(event) => updateForm(setForm, 'preferredContact', event.target.value)}>
+                      <option value="whatsapp">WhatsApp</option>
+                      <option value="appel">Appel</option>
+                      <option value="sms">SMS</option>
+                      <option value="email">Email</option>
+                    </select>
+                  </Field>
+                </div>
+                <Field label="Message libre">
+                  <textarea rows={3} value={form.notes} onChange={(event) => updateForm(setForm, 'notes', event.target.value)} placeholder="Expliquez votre activite, vos volumes ou vos difficultes actuelles." />
+                </Field>
+                <label className="survey-consent">
+                  <input type="checkbox" checked={form.consent} onChange={(event) => updateForm(setForm, 'consent', event.target.checked)} />
+                  <span>J'accepte d'etre recontacte par FresCoop pour l'inscription au pilote.</span>
+                </label>
+                <div className="button-row">
+                  <Button type="button" variant="secondary" onClick={() => setStep(1)}><ChevronLeft size={18} /> Retour</Button>
+                  <Button type="submit"><Send size={18} /> Envoyer le questionnaire</Button>
+                </div>
+              </div>
+            )}
+          </form>
 
-          <div className="button-row">
-            <Button type="submit"><Send size={18} /> Envoyer le questionnaire</Button>
-            <Button type="button" variant="secondary" onClick={() => navigate('/login')}><UserPlus size={18} /> J'ai deja un compte</Button>
-          </div>
-        </form>
-
-        <aside className="survey-side panel">
-          <PanelTitle icon={Sprout} title="Pourquoi ce questionnaire ?" />
-          <div className="compact-list">
-            <article><strong>Identifier les besoins</strong><p>Vente, achat B2B, transport, anti-gaspi ou financement.</p></article>
-            <article><strong>Prioriser les zones</strong><p>Les regions avec plus de demandes passent en premier dans le pilote.</p></article>
-            <article><strong>Preparer l'inscription</strong><p>L'equipe peut creer ou valider les comptes plus vite.</p></article>
-          </div>
-          {submitted && (
-            <div className="survey-success">
-              <CheckCircle2 size={24} />
-              <strong>Questionnaire recu</strong>
-              <span>Nous vous recontacterons via le canal indique.</span>
+          <aside className="survey-side">
+            <div className="survey-side-card panel">
+              <PanelTitle icon={Sprout} title="Pourquoi ce questionnaire ?" />
+              <div className="survey-why-list">
+                <article>
+                  <span className="survey-why-num">1</span>
+                  <div><strong>Identifier les besoins</strong><p>Vente, achat B2B, transport, anti-gaspi ou financement.</p></div>
+                </article>
+                <article>
+                  <span className="survey-why-num">2</span>
+                  <div><strong>Prioriser les zones</strong><p>Les regions avec plus de demandes passent en premier dans le pilote.</p></div>
+                </article>
+                <article>
+                  <span className="survey-why-num">3</span>
+                  <div><strong>Preparer l'inscription</strong><p>L'equipe peut creer ou valider les comptes plus vite.</p></div>
+                </article>
+              </div>
             </div>
-          )}
-        </aside>
-      </section>
+            <div className="survey-side-card panel">
+              <PanelTitle icon={ShieldCheck} title="Confidentialite" />
+              <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--muted)', lineHeight: 1.6 }}>Vos donnees sont uniquement utilisees pour vous recontacter dans le cadre du pilote FresCoop. Aucune information n'est partagee avec des tiers.</p>
+            </div>
+            <div className="survey-side-stats">
+              <div><strong>{formatNumber(respondentCount)}</strong><span>Reponses</span></div>
+              <div><strong>{formatNumber(store.users.length)}</strong><span>Utilisateurs</span></div>
+              <div><strong>{formatNumber(store.products.length)}</strong><span>Produits</span></div>
+            </div>
+          </aside>
+        </section>
+      )}
     </main>
   );
 }
