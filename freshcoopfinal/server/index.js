@@ -1309,7 +1309,8 @@ function isAcceptedPasswordHash(user, hash) {
     'manediop945@gmail.com',
   ]);
 
-  if ((seededAdminEmails.has(email) || legacyAdminEmails.has(email)) && [seededAdminPasswordHash, mobileDemoPasswordHash].includes(hash)) {
+  if ((seededAdminEmails.has(email) || legacyAdminEmails.has(email))
+    && [seededAdminPasswordHash, seededDemoPasswordHash, mobileDemoPasswordHash].includes(hash)) {
     return true;
   }
 
