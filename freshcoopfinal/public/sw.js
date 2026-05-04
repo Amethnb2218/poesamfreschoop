@@ -5,13 +5,14 @@ const CACHE_VERSION = 'frescoop-v3';
 const APP_SHELL = [
   '/',
   '/index.html',
-  '/manifest.webmanifest',
   '/favicon.svg',
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_VERSION).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting())
+    caches.open(CACHE_VERSION)
+      .then((cache) => Promise.allSettled(APP_SHELL.map((asset) => cache.add(asset))))
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -57,8 +58,10 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => cached);
-      return cached || networkFetch;
+        .catch(() => null);
+      return cached || networkFetch.then((response) => (
+        response || new Response('Offline', { status: 503, statusText: 'Offline' })
+      ));
     })
   );
 });
