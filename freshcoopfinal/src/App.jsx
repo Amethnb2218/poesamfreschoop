@@ -486,11 +486,11 @@ function App() {
     else window.localStorage.removeItem(SESSION_KEY);
   }, [sessionUserId]);
 
-  // Deconnexion forcee si le compte courant n'est plus valide par l'admin
+  // Deconnexion forcee si le compte courant est suspendu/rejete/bloque (mais pas "En attente")
   useEffect(() => {
     if (!currentUser) return;
     const status = normalize(currentUser.status || 'Actif');
-    if (status !== 'actif') {
+    if (status !== 'actif' && status !== 'en attente') {
       setSessionUserId('');
       setToast({ message: getInactiveAccountMessage(currentUser.status), type: 'error' });
       navigate('/login');
@@ -573,6 +573,15 @@ function App() {
     return (
       <AuthShell meta={basePageMeta['/login']}>
         <LoginPage actions={actions} notify={notify} onLogin={(id) => { setSessionUserId(id); navigate(getRoleHomePath(store.users.find((u) => u.id === id)?.role || 'client')); }} store={store} />
+        {toast && <Toast toast={toast} />}
+      </AuthShell>
+    );
+  }
+
+  if (normalize(currentUser.status) === 'en attente') {
+    return (
+      <AuthShell meta={{ title: 'Inscription en attente', description: 'Votre compte est en cours de validation.', image: publicImages.auth }}>
+        <PendingApprovalPage user={currentUser} logout={logout} />
         {toast && <Toast toast={toast} />}
       </AuthShell>
     );
@@ -6418,6 +6427,24 @@ function AccessDenied({ navigate = () => {}, user = { role: 'client' } }) {
         </div>
       </section>
     </PageFrame>
+  );
+}
+
+function PendingApprovalPage({ user, logout }) {
+  return (
+    <div className="auth-card">
+      <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
+        <CircleAlert size={48} style={{ color: 'var(--warning, #e6a817)', marginBottom: '1rem' }} />
+        <h2 style={{ marginBottom: '0.5rem' }}>Inscription en attente</h2>
+        <p style={{ marginBottom: '1.5rem', lineHeight: 1.6 }}>
+          Bonjour <strong>{user.name}</strong>, votre demande d'inscription en tant que <strong>{roleLabel(user.role)}</strong> est en cours de validation par un administrateur FresCoop.
+        </p>
+        <p style={{ marginBottom: '2rem', color: 'var(--muted, #888)' }}>
+          Vous recevrez un acces complet des que votre compte sera approuve. Merci de votre patience.
+        </p>
+        <Button variant="secondary" onClick={logout}><LogOut size={18} /> Se deconnecter</Button>
+      </div>
+    </div>
   );
 }
 
