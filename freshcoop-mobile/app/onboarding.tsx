@@ -64,7 +64,7 @@ export default function OnboardingScreen() {
       body: 'En bas à gauche, le bouton vert 💬 ouvre FresCoop AI, votre assistant intelligent en 4 langues : français, wolof, pulaar, sérère. Posez-lui toutes vos questions.',
       icon: 'sparkles',
       cta: 'Lancer FresCoop',
-      action: () => router.replace('/(tabs)'),
+      action: () => router.replace('/(tabs)/index'),
     },
   ];
 
@@ -73,7 +73,7 @@ export default function OnboardingScreen() {
   function next() {
     if (step.action) return step.action();
     if (idx >= steps.length - 1) {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/index');
     } else {
       setIdx((i) => i + 1);
     }
@@ -84,7 +84,7 @@ export default function OnboardingScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <LinearGradient colors={[Palette.green950, Palette.green850]} style={styles.bg}>
         <View style={styles.skip}>
-          <Pressable onPress={() => router.replace('/(tabs)')} hitSlop={10}>
+          <Pressable onPress={() => router.replace('/(tabs)/index')} hitSlop={10}>
             <Text style={styles.skipText}>Passer</Text>
           </Pressable>
         </View>
