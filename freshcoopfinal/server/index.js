@@ -405,6 +405,8 @@ async function handleAuth(request, response) {
         title: 'Nouvelle inscription agriculteur',
         body: `${newUser.name} (${newUser.email}) demande à être validé comme agriculteur.`,
         recipientRole: 'admin',
+        path: '/utilisateurs',
+        relatedId: newUser.id,
         targetUserId: newUser.id,
         read: false,
       };
@@ -1069,12 +1071,14 @@ async function handleStore(request, response) {
         return;
       }
     }
-    const incoming = normalizeStore(parsed);
+    let incoming = normalizeStore(parsed);
+    let currentStoreForMerge = null;
 
     // === PROTECTION ANTI-RÉGRESSION ===
     if (!forceWrite) {
       try {
         const current = await readStore();
+        currentStoreForMerge = current;
         const checks = [
           { key: 'users', min: 3 },
           { key: 'products', min: 5 },
@@ -1098,6 +1102,10 @@ async function handleStore(request, response) {
         // readStore failed, on continue quand même
       }
     }
+    if (!currentStoreForMerge) {
+      currentStoreForMerge = await readStore().catch(() => null);
+    }
+    incoming = preservePrivateUserFields(incoming, currentStoreForMerge);
 
     // === BACKUP ROTATIF ===
     // On garde les 10 dernières versions pour pouvoir restaurer en cas d'incident.
@@ -1268,6 +1276,20 @@ function normalizeStore(value) {
   store.orders = dedupeOrders(store.orders);
   store.notifications = normalizeNotifications(store.notifications);
   return store;
+}
+
+function preservePrivateUserFields(incoming, current) {
+  if (!current || !Array.isArray(incoming?.users) || !Array.isArray(current?.users)) return incoming;
+  const currentById = new Map(current.users.map((user) => [user.id, user]));
+  const currentByEmail = new Map(current.users.map((user) => [String(user.email || '').trim().toLowerCase(), user]));
+  return {
+    ...incoming,
+    users: incoming.users.map((user) => {
+      if (!user || typeof user !== 'object' || user.passwordHash) return user;
+      const previous = currentById.get(user.id) || currentByEmail.get(String(user.email || '').trim().toLowerCase());
+      return previous?.passwordHash ? { ...user, passwordHash: previous.passwordHash } : user;
+    }),
+  };
 }
 
 function dedupeOrders(orders) {

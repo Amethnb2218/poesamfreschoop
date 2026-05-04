@@ -1,16 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { useMemo } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { Card } from '@/components/Card';
 import { Palette, Radius } from '@/constants/theme';
+import { useCart } from '@/context/CartContext';
 import { useSession } from '@/context/SessionContext';
 import { AntiWasteAlert, buildAntiWasteAlerts } from '@/lib/analytics';
 import { isAdminRole, isBuyerRole, isSellerRole } from '@/lib/roles';
 
 export default function AntiGaspiScreen() {
   const { user, store, refresh, loading, mutateStore } = useSession();
+  const { add } = useCart();
   const role = user?.role;
   const alerts = useMemo(() => buildAntiWasteAlerts(store), [store]);
   const scoped = useMemo(() => {
@@ -19,6 +21,7 @@ export default function AntiGaspiScreen() {
   }, [alerts, role, user]);
 
   const canApply = isSellerRole(role) || isAdminRole(role);
+  const canBuy = isBuyerRole(role);
 
   async function applyDiscount(alert: AntiWasteAlert) {
     Alert.alert(
@@ -61,6 +64,16 @@ export default function AntiGaspiScreen() {
         },
       ],
     );
+  }
+
+  async function buyAlert(alert: AntiWasteAlert) {
+    const product = (store.products || []).find((p: any) => p.id === alert.productId);
+    if (!product) {
+      Alert.alert('Produit indisponible');
+      return;
+    }
+    await add(product, 1);
+    router.push('/(tabs)/cart');
   }
 
   const heroTitle = isSellerRole(role)
@@ -108,7 +121,9 @@ export default function AntiGaspiScreen() {
           <AlertRow
             alert={item}
             canApply={canApply}
+            canBuy={canBuy}
             onApply={() => applyDiscount(item)}
+            onBuy={() => buyAlert(item)}
           />
         )}
       />
@@ -119,11 +134,15 @@ export default function AntiGaspiScreen() {
 function AlertRow({
   alert,
   canApply,
+  canBuy,
   onApply,
+  onBuy,
 }: {
   alert: AntiWasteAlert;
   canApply: boolean;
+  canBuy: boolean;
   onApply: () => void;
+  onBuy: () => void;
 }) {
   const tint =
     alert.urgency === 'critical'
@@ -177,6 +196,12 @@ function AlertRow({
         <Pressable onPress={onApply} style={[styles.applyBtn, { backgroundColor: tint }]}>
           <Ionicons name="flash" size={16} color="#ffffff" />
           <Text style={styles.applyText}>Appliquer la remise</Text>
+        </Pressable>
+      ) : null}
+      {canBuy ? (
+        <Pressable onPress={onBuy} style={[styles.applyBtn, { backgroundColor: Palette.green700 }]}>
+          <Ionicons name="cart" size={16} color="#ffffff" />
+          <Text style={styles.applyText}>Ajouter au panier</Text>
         </Pressable>
       ) : null}
     </Card>

@@ -59,7 +59,10 @@ export default function HomeScreen() {
     products: scopedProducts.length,
   };
 
-  const recentOrders = scopedOrders.slice(-15).reverse();
+  const recentOrders = (isBuyerRole(role)
+    ? scopedOrders.filter(isClientHomeOrderVisible)
+    : scopedOrders
+  ).slice(-15).reverse();
   // pour les acheteurs on montre la VITRINE (tous les produits), pas seulement les scoped
   const marketProducts = isBuyerRole(role) ? store.products || [] : scopedProducts;
   const recentProducts = marketProducts.slice(-20).reverse();
@@ -638,6 +641,12 @@ function QuickAction({
 function formatMoney(value: number): string {
   if (!value && value !== 0) return '—';
   return `${Number(value).toLocaleString('fr-FR')} FCFA`;
+}
+
+function isClientHomeOrderVisible(order: any): boolean {
+  const status = String(order?.status || '').toLowerCase();
+  const payment = String(order?.paymentStatus || '').toLowerCase();
+  return status.includes('paiement') || payment.includes('attente');
 }
 
 function formatRelative(ts: number): string {

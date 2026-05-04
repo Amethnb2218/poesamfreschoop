@@ -32,6 +32,7 @@ export default function NewProductScreen() {
   const [unit, setUnit] = useState('kg');
   const [price, setPrice] = useState('');
   const [zone, setZone] = useState(user?.region || '');
+  const [expiryDate, setExpiryDate] = useState('');
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -84,6 +85,7 @@ export default function NewProductScreen() {
             unit,
             price: Number(price),
             zone: zone.trim(),
+            expiryDate: expiryDate.trim(),
             description: description.trim(),
             status: 'Publie',
             images,
@@ -189,6 +191,12 @@ export default function NewProductScreen() {
             placeholder="Niayes, Thiès…"
             value={zone}
             onChangeText={setZone}
+          />
+          <Input
+            label="Date de peremption"
+            placeholder="AAAA-MM-JJ"
+            value={expiryDate}
+            onChangeText={setExpiryDate}
           />
           <Input
             label="Description"

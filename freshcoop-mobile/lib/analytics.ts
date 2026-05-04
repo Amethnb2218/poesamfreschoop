@@ -36,16 +36,21 @@ export function buildAntiWasteAlerts(store: any): AntiWasteAlert[] {
   const alerts: AntiWasteAlert[] = [];
   for (const product of products) {
     const createdAt = new Date(product.createdAt || now).getTime();
+    const explicitExpiry = product.expiryDate
+      ? new Date(`${product.expiryDate}T23:59:59`).getTime()
+      : Number.NaN;
     const shelfLifeDays = Number(
       product.shelfLifeDays ||
         product.daysToExpire ||
         estimateShelfLife(product.category || product.name),
     );
-    const expireAt = createdAt + shelfLifeDays * 86400000;
+    const expireAt = Number.isFinite(explicitExpiry)
+      ? explicitExpiry
+      : createdAt + shelfLifeDays * 86400000;
     const daysLeft = Math.round((expireAt - now) / 86400000);
     const qty = Number(product.quantity || 0);
     if (qty <= 0) continue;
-    if (daysLeft > 6) continue;
+    if (daysLeft > 2) continue;
     const seller = users.find((u: any) => u.id === product.ownerId);
     const urgency: 'critical' | 'high' | 'medium' =
       daysLeft <= 1 ? 'critical' : daysLeft <= 3 ? 'high' : 'medium';

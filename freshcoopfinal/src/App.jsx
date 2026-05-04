@@ -514,11 +514,15 @@ function App() {
     }
   }, [currentUser, route.pathname]);
 
-  function navigate(path) {
+  function navigate(path, options = {}) {
+    const nextUrl = new URL(path, window.location.href);
+    const samePage = nextUrl.pathname === route.pathname;
     window.history.pushState({}, '', path);
     setRoute(getCurrentRoute());
     setMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (!options.preserveScroll && !samePage) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   function notify(message, type = 'info') {
@@ -1990,7 +1994,7 @@ function SellerHomePage({ currentUser, navigate, store }) {
 function ClientHomePage({ currentUser, navigate, store }) {
   const products = store.products.filter((item) => item.status === 'Publie');
   const orders = getVisibleOrders(store.orders, currentUser);
-  const activeOrders = orders.filter((item) => item.status !== 'Livree' && item.status !== 'Annulee');
+  const clientHomeOrders = orders.filter(isClientHomeOrderVisible);
   const messages = getVisibleMessages(store.messages, currentUser);
   const cart = readCartFromStorage(store.products);
   const cartCount = cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
@@ -2016,7 +2020,7 @@ function ClientHomePage({ currentUser, navigate, store }) {
 
       <div className="status-grid">
         <StatCard icon={Store} label="Produits disponibles" value={products.length} tone="green" />
-        <StatCard icon={ShoppingCart} label="Commandes actives" value={activeOrders.length} tone="blue" />
+        <StatCard icon={ShoppingCart} label="Commandes actives" value={clientHomeOrders.length} tone="blue" />
         <StatCard icon={MessageSquare} label="Conversations" value={buildConversations(messages).length} tone="gold" />
         <StatCard icon={ShieldCheck} label="Parcours" value="Client" tone="coral" />
       </div>
@@ -2041,9 +2045,9 @@ function ClientHomePage({ currentUser, navigate, store }) {
         </section>
         <section className="panel">
           <PanelTitle icon={ClipboardCheck} title="Suivi commande" />
-          {orders.length ? (
+          {clientHomeOrders.length ? (
             <div className="compact-list">
-              {orders.slice(0, 4).map((order) => <OrderLine key={order.id} order={order} store={store} withProgress />)}
+              {clientHomeOrders.slice(0, 4).map((order) => <OrderLine key={order.id} order={order} store={store} withProgress />)}
             </div>
           ) : (
             <EmptyState icon={ShoppingCart} title="Aucune commande" body="Ajoutez des produits au panier puis confirmez votre commande." />
@@ -2405,6 +2409,7 @@ function ProductsPage({ actions, currentUser, notify, store }) {
                 priceMargin: priceControl.margin || 0,
                 marketPriceSource: priceControl.reference?.source || item.marketPriceSource || '',
                 zone: form.zone.trim(),
+                expiryDate: form.expiryDate || '',
                 description: form.description.trim(),
                 status: form.status,
                 image: primaryImage,
@@ -2429,6 +2434,7 @@ function ProductsPage({ actions, currentUser, notify, store }) {
           priceMargin: priceControl.margin || 0,
           marketPriceSource: priceControl.reference?.source || '',
           zone: form.zone.trim(),
+          expiryDate: form.expiryDate || '',
           description: form.description.trim(),
           status: form.status,
           image: primaryImage,
@@ -2457,6 +2463,7 @@ function ProductsPage({ actions, currentUser, notify, store }) {
       unit: product.unit,
       price: String(product.price),
       zone: product.zone,
+      expiryDate: product.expiryDate || '',
       description: product.description || '',
       status: product.status,
       imageFiles: [],
@@ -2572,6 +2579,7 @@ function ProductsPage({ actions, currentUser, notify, store }) {
             <Field label="Prix FCFA/unite" required><input inputMode="decimal" value={form.price} onChange={(event) => updateForm(setForm, 'price', event.target.value)} /></Field>
             <Field label="Zone" required><input value={form.zone} onChange={(event) => updateForm(setForm, 'zone', event.target.value)} /></Field>
           </div>
+          <Field label="Date de peremption"><input type="date" value={form.expiryDate} onChange={(event) => updateForm(setForm, 'expiryDate', event.target.value)} /></Field>
           <MarketPriceNotice form={form} />
           <Field label="Statut"><select value={form.status} onChange={(event) => updateForm(setForm, 'status', event.target.value)}>{productStatuses.map((item) => <option key={item}>{item}</option>)}</select></Field>
           <ProductImagesUploader
@@ -3460,7 +3468,7 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
 
   function selectOrderTab(tabId) {
     setActiveOrderTab(tabId);
-    navigate(`/commandes?tab=${encodeURIComponent(tabId)}`);
+    navigate(`/commandes?tab=${encodeURIComponent(tabId)}`, { preserveScroll: true });
   }
 
   return (
@@ -4644,7 +4652,15 @@ function AntiWastePage({ actions, currentUser, navigate, notify, store }) {
       notify('Réservez depuis le marché comme acheteur B2B');
       return;
     }
-    navigate(`/marche?flash=${alert.productId}`);
+    const product = store.products.find((item) => item.id === alert.productId);
+    if (!product) {
+      notify('Produit indisponible', 'error');
+      return;
+    }
+    const nextCart = addProductToCart(readCartFromStorage(store.products), product, 1);
+    writeCartToStorage(nextCart);
+    notify(`${product.name} ajoute au panier anti-gaspi`, 'success');
+    navigate('/commandes?tab=cart');
   }
 
   function loadAntiWasteFixtures() {
@@ -4758,12 +4774,13 @@ function buildAntiWasteAlerts(store) {
   const alerts = [];
   for (const product of products) {
     const createdAt = new Date(product.createdAt || now).getTime();
+    const explicitExpiry = product.expiryDate ? new Date(`${product.expiryDate}T23:59:59`).getTime() : NaN;
     const shelfLifeDays = Number(product.shelfLifeDays || product.daysToExpire || estimateShelfLife(product.category || product.name));
-    const expireAt = createdAt + shelfLifeDays * 86400000;
+    const expireAt = Number.isFinite(explicitExpiry) ? explicitExpiry : createdAt + shelfLifeDays * 86400000;
     const daysLeft = Math.round((expireAt - now) / 86400000);
     const qty = Number(product.quantity || 0);
     if (qty <= 0) continue;
-    if (daysLeft > 6) continue;
+    if (daysLeft > 2) continue;
     const seller = users.find((user) => user.id === product.ownerId);
     const urgency = daysLeft <= 1 ? 'critical' : daysLeft <= 3 ? 'high' : 'medium';
     const discount = urgency === 'critical' ? 40 : urgency === 'high' ? 25 : 15;
@@ -4815,6 +4832,7 @@ function createAntiWasteFixtureProducts(store, currentUser) {
       description: 'Lot fictif ajoute pour verifier les alertes anti-gaspi et les ventes eclair.',
       status: 'Publie',
       shelfLifeDays: item.shelfLifeDays,
+      expiryDate: new Date(now + Math.max(0, item.shelfLifeDays - item.daysAgo) * 86400000).toISOString().slice(0, 10),
       images: [],
       flashSaleStartedAt: '',
       flashSaleDiscountPct: 0,
@@ -7249,6 +7267,7 @@ function isOperationalNotification(item) {
 
 function getNotificationPath(item, messages = []) {
   if (item.type === 'message') return getMessageNotificationPath(item, messages);
+  if (item.type === 'approval_request') return '/utilisateurs';
   if (item.path) return item.path;
   if (item.relatedId && (String(item.type || '').startsWith('order') || item.type === 'field-agent' || item.type === 'agent-step')) {
     return `/commandes?tab=tracking&order=${encodeURIComponent(item.relatedId)}`;
@@ -8342,7 +8361,7 @@ function getInactiveAccountMessage(status) {
 }
 
 function emptyProductForm() {
-  return { name: '', category: '', quantity: '', unit: 'kg', price: '', zone: '', description: '', status: 'Publie', imageFiles: [], existingImages: [] };
+  return { name: '', category: '', quantity: '', unit: 'kg', price: '', zone: '', expiryDate: '', description: '', status: 'Publie', imageFiles: [], existingImages: [] };
 }
 
 function emptyDossierForm() {
@@ -8451,7 +8470,6 @@ function getMenuLinks(role) {
       '/anti-gaspi',
       '/commandes',
       '/paiement',
-      '/impact',
       '/compte',
     ],
     acheteurB2B: [
@@ -8504,7 +8522,7 @@ function getMenuGroups(role, menuLinks) {
     ],
     client: [
       { title: 'Mon espace', paths: ['/', '/marche', '/commandes', '/paiement', '/compte'] },
-      { title: 'Consommation responsable', paths: ['/anti-gaspi', '/impact'] },
+      { title: 'Consommation responsable', paths: ['/anti-gaspi'] },
     ],
     acheteurB2B: [
       { title: 'Sourcing B2B', paths: ['/', '/marche', '/lots', '/commandes', '/paiement', '/compte'] },
@@ -8606,6 +8624,12 @@ function getVisibleOrders(items, user) {
   if (isFieldAgentRole(user.role)) return items.filter((item) => item.status !== 'Annulee' && (!item.assignedAgentId || item.assignedAgentId === user.id));
   if (user.role === 'transporteur') return items.filter((item) => item.status !== 'Annulee');
   return items.filter((item) => item.sellerId === user.id);
+}
+
+function isClientHomeOrderVisible(order) {
+  const status = normalize(order?.status);
+  const payment = normalize(order?.paymentStatus);
+  return status === 'paiement en attente' || payment === 'en attente';
 }
 
 function getVisibleMessages(items, user) {
