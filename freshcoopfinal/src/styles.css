@@ -819,6 +819,28 @@ button:disabled {
   100% { background: transparent; }
 }
 
+.verification-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.verification-badge.verified-ok {
+  color: #166534;
+  background: #dcfce7;
+  border: 1px solid #86efac;
+}
+
+.verification-badge.verified-ko {
+  color: #9a3412;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+}
+
 .survey-page {
   min-height: 100vh;
   color: var(--ink);

@@ -5777,7 +5777,13 @@ function ProductCard({ clientMode, managerMode, onContact, onAddToCart, onDelete
 
         {(verifierMode || managerMode) && (
           <div className="button-row">
-            {verifierMode && <Button onClick={() => onVerify?.('Fiable')}><ShieldCheck size={16} /> Produit fiable</Button>}
+            {verifierMode && product.fieldVerificationStatus && (
+              <span className={`verification-badge ${product.fieldVerificationStatus === 'Fiable' ? 'verified-ok' : 'verified-ko'}`}>
+                {product.fieldVerificationStatus === 'Fiable' ? <ShieldCheck size={14} /> : <CircleAlert size={14} />}
+                {product.fieldVerificationStatus}
+              </span>
+            )}
+            {verifierMode && <Button onClick={() => onVerify?.('Fiable')}><ShieldCheck size={16} /> Fiable</Button>}
             {verifierMode && <Button variant="secondary" onClick={() => onVerify?.('A revoir')}><CircleAlert size={16} /> A revoir</Button>}
             {managerMode && onEdit && <Button variant="secondary" onClick={onEdit}><Settings size={16} /> Modifier</Button>}
             {managerMode && <button className="icon-danger" type="button" onClick={onDelete} aria-label="Supprimer produit"><Trash2 size={16} /></button>}
