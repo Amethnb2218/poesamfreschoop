@@ -62,6 +62,23 @@ function requireAuth(request) {
 }
 
 // ============================================================================
+// PASSWORD RESET TOKENS (in-memory, expire after 15 minutes)
+// ============================================================================
+const resetTokens = new Map();
+const RESET_TOKEN_EXPIRY_MS = 15 * 60 * 1000;
+
+function generateResetCode() {
+  return randomBytes(3).toString('hex').toUpperCase();
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, data] of resetTokens) {
+    if (now > data.expiresAt) resetTokens.delete(key);
+  }
+}, 60_000);
+
+// ============================================================================
 // RATE LIMITER
 // ============================================================================
 const rateBuckets = new Map();
@@ -340,8 +357,16 @@ async function handleAuth(request, response) {
     }
     const hash = createHash('sha256').update(password).digest('hex');
     if (!isAcceptedPasswordHash(target, hash)) {
-      sendJson(response, 401, { error: 'Mot de passe incorrect' });
-      return;
+      // Recovery: if user has no passwordHash stored (lost due to store overwrite bug),
+      // allow login and re-store the hash so future logins work normally.
+      if (!target.passwordHash) {
+        target.passwordHash = hash;
+        await writeStore(store);
+        console.log(`[Auth] Recovered passwordHash for ${target.email} (was missing)`);
+      } else {
+        sendJson(response, 401, { error: 'Mot de passe incorrect' });
+        return;
+      }
     }
     const token = createToken(target.id, target.role);
     sendJson(response, 200, {
@@ -431,6 +456,145 @@ async function handleAuth(request, response) {
     const user = store.users.find((u) => u.id === authData.uid);
     if (!user) { sendJson(response, 404, { error: 'Utilisateur introuvable' }); return; }
     sendJson(response, 200, { ok: true, user: sanitizeUser(user) });
+    return;
+  }
+
+  if (endpoint === 'forgot-password' && request.method === 'POST') {
+    const body = await readBody(request);
+    const { email } = JSON.parse(body || '{}');
+    if (!email) {
+      sendJson(response, 400, { error: 'Email requis' });
+      return;
+    }
+    const store = await readStore();
+    const normalized = String(email).trim().toLowerCase();
+    const target = store.users.find((u) => String(u?.email || '').trim().toLowerCase() === normalized);
+    if (!target) {
+      sendJson(response, 200, { ok: true, message: 'Si ce compte existe, un code de réinitialisation a été généré.' });
+      return;
+    }
+    const code = generateResetCode();
+    resetTokens.set(normalized, {
+      code,
+      userId: target.id,
+      expiresAt: Date.now() + RESET_TOKEN_EXPIRY_MS,
+      attempts: 0,
+    });
+    console.log(`[Auth] Reset code for ${normalized}: ${code}`);
+    sendJson(response, 200, {
+      ok: true,
+      message: 'Code de réinitialisation généré.',
+      hint: `Code: ${code} (valable 15 minutes)`,
+      code,
+    });
+    return;
+  }
+
+  if (endpoint === 'reset-password' && request.method === 'POST') {
+    const body = await readBody(request);
+    const { email, code, newPassword } = JSON.parse(body || '{}');
+    if (!email || !code || !newPassword) {
+      sendJson(response, 400, { error: 'Email, code et nouveau mot de passe requis' });
+      return;
+    }
+    if (newPassword.length < 6) {
+      sendJson(response, 400, { error: 'Le mot de passe doit faire au moins 6 caractères' });
+      return;
+    }
+    const normalized = String(email).trim().toLowerCase();
+    const resetData = resetTokens.get(normalized);
+    if (!resetData) {
+      sendJson(response, 400, { error: 'Aucun code de réinitialisation trouvé. Demandez un nouveau code.' });
+      return;
+    }
+    if (Date.now() > resetData.expiresAt) {
+      resetTokens.delete(normalized);
+      sendJson(response, 400, { error: 'Code expiré. Demandez un nouveau code.' });
+      return;
+    }
+    resetData.attempts++;
+    if (resetData.attempts > 5) {
+      resetTokens.delete(normalized);
+      sendJson(response, 429, { error: 'Trop de tentatives. Demandez un nouveau code.' });
+      return;
+    }
+    if (resetData.code !== code.trim().toUpperCase()) {
+      sendJson(response, 400, { error: `Code incorrect. ${5 - resetData.attempts} tentative(s) restante(s).` });
+      return;
+    }
+    const store = await readStore();
+    const target = store.users.find((u) => u.id === resetData.userId);
+    if (!target) {
+      sendJson(response, 404, { error: 'Utilisateur introuvable' });
+      return;
+    }
+    target.passwordHash = createHash('sha256').update(newPassword).digest('hex');
+    await writeStore(store);
+    resetTokens.delete(normalized);
+    const token = createToken(target.id, target.role);
+    sendJson(response, 200, {
+      ok: true,
+      message: 'Mot de passe réinitialisé avec succès.',
+      token,
+      user: sanitizeUser(target),
+    });
+    return;
+  }
+
+  if (endpoint === 'set-password' && request.method === 'POST') {
+    const authData = requireAuth(request);
+    if (!authData || authData.role !== 'admin') {
+      sendJson(response, 403, { error: 'Réservé aux administrateurs' });
+      return;
+    }
+    const body = await readBody(request);
+    const { userId, email, passwordHash: newHash, password } = JSON.parse(body || '{}');
+    if (!newHash && !password) {
+      sendJson(response, 400, { error: 'passwordHash ou password requis' });
+      return;
+    }
+    const hash = newHash || createHash('sha256').update(password).digest('hex');
+    const store = await readStore();
+    const normalizedEmail = email ? String(email).trim().toLowerCase() : '';
+    const target = store.users.find((u) =>
+      (userId && u.id === userId) || (normalizedEmail && String(u.email || '').trim().toLowerCase() === normalizedEmail)
+    );
+    if (!target) {
+      sendJson(response, 404, { error: 'Utilisateur introuvable' });
+      return;
+    }
+    target.passwordHash = hash;
+    await writeStore(store);
+    sendJson(response, 200, { ok: true, userId: target.id, email: target.email });
+    return;
+  }
+
+  if (endpoint === 'bulk-set-password' && request.method === 'POST') {
+    const authData = requireAuth(request);
+    if (!authData || authData.role !== 'admin') {
+      sendJson(response, 403, { error: 'Réservé aux administrateurs' });
+      return;
+    }
+    const body = await readBody(request);
+    const { entries } = JSON.parse(body || '{}');
+    if (!Array.isArray(entries) || entries.length === 0) {
+      sendJson(response, 400, { error: 'entries[] requis (tableau de {email, passwordHash ou password})' });
+      return;
+    }
+    const store = await readStore();
+    const results = [];
+    for (const entry of entries) {
+      const { email, passwordHash: h, password: p } = entry || {};
+      const hash = h || (p ? createHash('sha256').update(p).digest('hex') : null);
+      if (!email || !hash) { results.push({ email, ok: false, error: 'données manquantes' }); continue; }
+      const normalized = String(email).trim().toLowerCase();
+      const target = store.users.find((u) => String(u.email || '').trim().toLowerCase() === normalized);
+      if (!target) { results.push({ email, ok: false, error: 'introuvable' }); continue; }
+      target.passwordHash = hash;
+      results.push({ email, ok: true, userId: target.id });
+    }
+    await writeStore(store);
+    sendJson(response, 200, { ok: true, results });
     return;
   }
 
@@ -1281,15 +1445,22 @@ function normalizeStore(value) {
 }
 
 function preservePrivateUserFields(incoming, current) {
-  if (!current || !Array.isArray(incoming?.users) || !Array.isArray(current?.users)) return incoming;
+  if (!Array.isArray(incoming?.users)) return incoming;
+  if (!current || !Array.isArray(current?.users)) return incoming;
   const currentById = new Map(current.users.map((user) => [user.id, user]));
   const currentByEmail = new Map(current.users.map((user) => [String(user.email || '').trim().toLowerCase(), user]));
   return {
     ...incoming,
     users: incoming.users.map((user) => {
-      if (!user || typeof user !== 'object' || user.passwordHash) return user;
+      if (!user || typeof user !== 'object') return user;
       const previous = currentById.get(user.id) || currentByEmail.get(String(user.email || '').trim().toLowerCase());
-      return previous?.passwordHash ? { ...user, passwordHash: previous.passwordHash } : user;
+      if (!previous) return user;
+      // Always preserve existing passwordHash from DB - never let client overwrite with empty
+      if (previous.passwordHash && !user.passwordHash) {
+        return { ...user, passwordHash: previous.passwordHash };
+      }
+      // If client sends a hash (admin creation), keep the client's hash
+      return user;
     }),
   };
 }
@@ -1309,7 +1480,8 @@ function isAcceptedPasswordHash(user, hash) {
     'manediop945@gmail.com',
   ]);
 
-  if ((seededAdminEmails.has(email) || legacyAdminEmails.has(email)) && [seededAdminPasswordHash, mobileDemoPasswordHash].includes(hash)) {
+  if ((seededAdminEmails.has(email) || legacyAdminEmails.has(email))
+    && [seededAdminPasswordHash, seededDemoPasswordHash, mobileDemoPasswordHash].includes(hash)) {
     return true;
   }
 

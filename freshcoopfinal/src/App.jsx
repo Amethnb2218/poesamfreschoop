@@ -520,8 +520,8 @@ function App() {
     window.history.pushState({}, '', path);
     setRoute(getCurrentRoute());
     setMenuOpen(false);
-    if (!options.preserveScroll && !samePage) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (!options.preserveScroll && !samePage && !nextUrl.search) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
     }
   }
 
@@ -1328,6 +1328,18 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
   );
 }
 
+function PasswordInput({ value, onChange, placeholder }) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="password-input-wrap">
+      <input type={visible ? 'text' : 'password'} value={value} onChange={onChange} placeholder={placeholder} />
+      <button type="button" className="password-toggle" onClick={() => setVisible((v) => !v)} aria-label={visible ? 'Masquer' : 'Afficher'}>
+        {visible ? <EyeOff size={16} /> : <Eye size={16} />}
+      </button>
+    </div>
+  );
+}
+
 function LoginPage({ actions, notify, onLogin, store }) {
   const [mode, setMode] = useState('login');
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
@@ -1416,7 +1428,7 @@ function LoginPage({ actions, notify, onLogin, store }) {
         <form className="stack-form" onSubmit={login}>
           <PanelTitle icon={LockKeyhole} title="Connexion" />
           <Field label="Email" required><input type="email" value={loginForm.email} onChange={(event) => updateForm(setLoginForm, 'email', event.target.value)} /></Field>
-          <Field label="Mot de passe" required><input type="password" value={loginForm.password} onChange={(event) => updateForm(setLoginForm, 'password', event.target.value)} /></Field>
+          <Field label="Mot de passe" required><PasswordInput value={loginForm.password} onChange={(event) => updateForm(setLoginForm, 'password', event.target.value)} /></Field>
           <Button type="submit"><LockKeyhole size={18} /> Se connecter</Button>
         </form>
       ) : (
@@ -1432,7 +1444,7 @@ function LoginPage({ actions, notify, onLogin, store }) {
           <Field label="Téléphone"><input value={registerForm.phone} onChange={(event) => updateForm(setRegisterForm, 'phone', event.target.value)} /></Field>
           <Field label="Organisation"><input value={registerForm.organization} onChange={(event) => updateForm(setRegisterForm, 'organization', event.target.value)} /></Field>
           <Field label="Région"><input value={registerForm.region} onChange={(event) => updateForm(setRegisterForm, 'region', event.target.value)} /></Field>
-          <Field label="Mot de passe" required><input type="password" value={registerForm.password} onChange={(event) => updateForm(setRegisterForm, 'password', event.target.value)} /></Field>
+          <Field label="Mot de passe" required><PasswordInput value={registerForm.password} onChange={(event) => updateForm(setRegisterForm, 'password', event.target.value)} /></Field>
           <Button type="submit"><UserCheck size={18} /> Créer mon espace</Button>
         </form>
       )}
@@ -4171,6 +4183,21 @@ function UsersPage({ actions, currentUser, notify, store }) {
   const [showAddUser, setShowAddUser] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'agriculteur' });
   const [addingUser, setAddingUser] = useState(false);
+  const highlightId = new URLSearchParams(window.location.search).get('highlight') || '';
+
+  useEffect(() => {
+    if (highlightId) {
+      const target = store.users.find((u) => u.id === highlightId);
+      if (target && normalize(target.status) === 'en attente') {
+        setRoleFilter(target.role || 'all');
+      }
+      setTimeout(() => {
+        const el = document.querySelector(`[data-user-id="${highlightId}"]`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+  }, [highlightId]);
+
   if (currentUser.role !== 'admin') return <AccessDenied />;
   const filteredUsers = filterUsersForAdmin(store.users, roleFilter, search);
   const groupedUsers = groupUsersByRole(filteredUsers);
@@ -6197,7 +6224,7 @@ function AgentWorkflowPanel({ onStep, order }) {
 function UserCompactRow({ onStatusChange, onDelete, user, canDelete }) {
   const isPending = user.status === 'En attente';
   return (
-    <article className={`user-row ${isPending ? 'user-row-pending' : ''}`}>
+    <article className={`user-row ${isPending ? 'user-row-pending' : ''}`} data-user-id={user.id}>
       <div className="user-cell-main">
         <Badge>{roleLabel(user.role)}</Badge>
         <strong>{user.name}</strong>
@@ -6590,26 +6617,37 @@ function PendingApprovalPage({ user, logout }) {
 function AppFooter({ currentUser, navigate }) {
   const quickLinks = [
     { label: 'Accueil', path: getRoleHomePath(currentUser.role) },
+    { label: 'Marche', path: '/marche' },
     { label: 'Commandes', path: '/commandes' },
     { label: 'Anti-gaspi', path: '/anti-gaspi' },
-    { label: 'Compte', path: '/compte' },
+    { label: 'Mon compte', path: '/compte' },
   ].filter((item) => canAccessPath(currentUser.role, item.path));
 
   return (
     <footer className="app-footer">
-      <div>
-        <div className="brand"><span>F</span><strong>FresCoop</strong></div>
-        <p>Commerce agricole, suivi des commandes, preuves de paiement et alertes anti-gaspi pour les acteurs de la chaine.</p>
+      <div className="footer-grid">
+        <div className="footer-brand">
+          <div className="brand"><span>F</span><strong>FresCoop</strong></div>
+          <p>Plateforme de commerce agricole integree. Stockage froid, intelligence marche et preuve economique portable pour les producteurs senegalais.</p>
+        </div>
+        <div className="footer-links">
+          <strong>Navigation</strong>
+          <nav aria-label="Liens rapides pied de page">
+            {quickLinks.map((item) => (
+              <button key={item.path} type="button" onClick={() => navigate(item.path)}>{item.label}</button>
+            ))}
+          </nav>
+        </div>
+        <div className="footer-contact">
+          <strong>Contact</strong>
+          <a href="mailto:contact@frescoop.sn">contact@frescoop.sn</a>
+          <span>+221 33 800 00 00</span>
+          <span>Dakar, Senegal</span>
+        </div>
       </div>
-      <nav aria-label="Liens rapides pied de page">
-        {quickLinks.map((item) => (
-          <button key={item.path} type="button" onClick={() => navigate(item.path)}>{item.label}</button>
-        ))}
-      </nav>
-      <div className="app-footer-contact">
-        <span>Support</span>
-        <a href="mailto:contact@frescoop.sn">contact@frescoop.sn</a>
-        <small>POESAM 2026 - Dakar, Senegal</small>
+      <div className="footer-bottom">
+        <small>&copy; 2026 FresCoop — Candidat POESAM. Tous droits reserves.</small>
+        <small>ODD 1 · 5 · 8 · 12</small>
       </div>
     </footer>
   );
@@ -7267,7 +7305,10 @@ function isOperationalNotification(item) {
 
 function getNotificationPath(item, messages = []) {
   if (item.type === 'message') return getMessageNotificationPath(item, messages);
-  if (item.type === 'approval_request') return '/utilisateurs';
+  if (item.type === 'approval_request') {
+    const targetId = item.targetUserId || item.relatedId || '';
+    return targetId ? `/utilisateurs?highlight=${encodeURIComponent(targetId)}` : '/utilisateurs';
+  }
   if (item.path) return item.path;
   if (item.relatedId && (String(item.type || '').startsWith('order') || item.type === 'field-agent' || item.type === 'agent-step')) {
     return `/commandes?tab=tracking&order=${encodeURIComponent(item.relatedId)}`;
@@ -8628,8 +8669,8 @@ function getVisibleOrders(items, user) {
 
 function isClientHomeOrderVisible(order) {
   const status = normalize(order?.status);
-  const payment = normalize(order?.paymentStatus);
-  return status === 'paiement en attente' || payment === 'en attente';
+  if (status === 'annulee' || status === 'livree' || status === 'confirmee') return false;
+  return status === 'paiement en attente' || status === 'en preparation' || status === 'prete' || status === 'en livraison';
 }
 
 function getVisibleMessages(items, user) {
