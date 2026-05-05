@@ -375,6 +375,12 @@ const basePageMeta = {
     title: 'Gerer son profil, ses coordonnees et son activite.',
     body: 'Chaque acteur complete son compte avant de vendre, commander ou soumettre des documents.',
   },
+  '/horeca': {
+    image: publicImages.market,
+    kicker: 'Annuaire HoReCa',
+    title: 'Acheteurs certifiés : hôtels, restaurants, supermarchés et cantines.',
+    body: 'Connectez-vous directement aux acheteurs B2B certifiés FresCoop. Recevez des alertes automatiques dès qu\'un lot correspond à vos besoins.',
+  },
 };
 
 const roleHomeMeta = {
@@ -630,6 +636,7 @@ function App() {
         {accessAllowed && route.pathname === '/secteurs/commerce' && <SectorPage currentUser={currentUser} kind="commerce" navigate={navigate} store={store} />}
         {accessAllowed && route.pathname === '/secteurs/logistique' && <SectorPage currentUser={currentUser} kind="logistique" navigate={navigate} store={store} />}
         {accessAllowed && route.pathname === '/compte' && <AccountPage actions={actions} currentUser={currentUser} notify={notify} store={store} />}
+        {accessAllowed && route.pathname === '/horeca' && <HoRecaDirectoryPage actions={actions} currentUser={currentUser} navigate={navigate} notify={notify} store={store} />}
       </main>
       <AppFooter currentUser={currentUser} navigate={navigate} />
       <LanguageAssistant currentUser={currentUser} store={store} />
@@ -642,17 +649,24 @@ function App() {
 function VerifyReceiptPage({ navigate, route, store }) {
   const params = new URLSearchParams(route.search || '');
   const code = (params.get('code') || '').trim().toUpperCase();
+
   const payment = useMemo(() => {
     if (!code) return null;
     return (store.paymentRecords || []).find((record) => String(record.receiptCode || '').toUpperCase() === code) || null;
   }, [code, store.paymentRecords]);
+
+  const lot = useMemo(() => {
+    if (!code || payment) return null;
+    const data = getFrescoopOperatingData(store);
+    return data.lots.find((l) => String(l.code || '').toUpperCase() === code) || null;
+  }, [code, payment, store]);
 
   const linkedOrder = payment ? (store.orders || []).find((order) => order.id === payment.orderId) : null;
   const product = linkedOrder ? getOrderProduct(linkedOrder, store) : null;
   const payer = payment ? store.users.find((user) => user.id === payment.payerId) : null;
   const seller = payment ? store.users.find((user) => user.id === payment.sellerId) : null;
 
-  const status = !code ? 'missing' : (payment ? 'valid' : 'unknown');
+  const status = !code ? 'missing' : (payment ? 'valid' : lot ? 'lot' : 'unknown');
 
   return (
     <main className="verify-page">
@@ -718,6 +732,38 @@ function VerifyReceiptPage({ navigate, route, store }) {
             </div>
 
             <p className="verify-hint">Ce paiement a bien été exécuté via un partenaire agréé. FresCoop conserve la preuve de coordination.</p>
+          </>
+        )}
+
+        {status === 'lot' && lot && (
+          <>
+            <div className="verify-icon verify-icon-success"><CheckCircle2 size={56} strokeWidth={2.5} /></div>
+            <h1>Lot certifié FresCoop</h1>
+            <p className="verify-subtitle">Ce lot est enregistré et tracé dans le système FresCoop. Son origine, sa qualité et ses données capteurs sont authentifiées.</p>
+            <div className="verify-amount">
+              <em>Produit</em>
+              <strong>{lot.productName}</strong>
+            </div>
+            <div className="verify-details">
+              <div><em>Code lot</em><b>{lot.code}</b></div>
+              <div><em>Producteur</em><b>{lot.producerName}</b></div>
+              <div><em>Coopérative</em><b>{lot.coopérativeName}</b></div>
+              <div><em>Hub de stockage</em><b>{lot.hubName}</b></div>
+              <div><em>Poids net</em><b>{formatNumber(lot.weightKg)} kg ({formatNumber(lot.crateCount)} caisses)</b></div>
+              <div><em>Qualité</em><b>{lot.qualityGrade}</b></div>
+              <div><em>Température</em><b>{lot.temperatureC}°C · Humidité {lot.humidityPercent}%</b></div>
+              <div><em>Vie commerciale</em><b>{lot.shelfLifeDays} jours</b></div>
+              <div><em>Statut</em><b className="status-valid">✓ {lot.status}</b></div>
+              <div><em>Date d'enregistrement</em><b>{formatDate(lot.createdAt)}</b></div>
+            </div>
+            <div className="verify-seal">
+              <ShieldCheck size={20} />
+              <div>
+                <strong>Certificat d'origine FresCoop</strong>
+                <small>Vérifié le {formatDate(new Date().toISOString())} — Données IoT authentifiées</small>
+              </div>
+            </div>
+            <p className="verify-hint">Ce certificat prouve l'origine, la qualité et les conditions de stockage de ce lot agricole. Il peut être présenté à tout acheteur ou partenaire financier.</p>
           </>
         )}
 
@@ -4068,6 +4114,36 @@ function LotIntelligencePage({ actions, currentUser, notify, store }) {
     notify('Réservation B2B créée avec paiement partenaire');
   }
 
+  function alertB2BBuyers(lot) {
+    if (!lot) return;
+    const b2bUsers = store.users.filter((u) => u.role === 'acheteurB2B' && u.status === 'Actif');
+    if (!b2bUsers.length) {
+      const notif = createAppNotification({
+        actor: currentUser,
+        body: `${lot.productName} - ${formatNumber(lot.weightKg)} kg · ${lot.shelfLifeDays} jours restants · ${formatMoney(lot.recommendedPrice)}/kg · Hub: ${lot.hubName}`,
+        path: '/lots',
+        recipientRole: 'acheteurB2B',
+        relatedId: lot.id,
+        title: `Lot urgent disponible : ${lot.productName}`,
+        type: 'anti-waste',
+      });
+      actions.setNotifications((items) => [notif, ...items]);
+    } else {
+      const notifs = b2bUsers.map((buyer) => createAppNotification({
+        actor: currentUser,
+        body: `${lot.productName} - ${formatNumber(lot.weightKg)} kg · ${lot.shelfLifeDays} jours restants · ${formatMoney(lot.recommendedPrice)}/kg · Hub: ${lot.hubName}`,
+        path: '/lots',
+        recipientId: buyer.id,
+        relatedId: lot.id,
+        title: `Lot urgent disponible : ${lot.productName}`,
+        type: 'anti-waste',
+      }));
+      actions.setNotifications((items) => [...notifs, ...items]);
+    }
+    actions.setAuditLogs((items) => [createAuditLog(currentUser, 'b2b_alert_sent', `Acheteurs B2B alertes pour lot ${lot.code}`, lot.id), ...items]);
+    notify('Acheteurs B2B alertés en temps réel');
+  }
+
   function shareConsent(lot) {
     if (!lot) return;
     const existing = (store.consentRecords || []).find((item) => item.lotId === lot.id && item.ownerId === lot.ownerId && item.partnerId === 'partner-baobab');
@@ -4119,6 +4195,7 @@ function LotIntelligencePage({ actions, currentUser, notify, store }) {
           {selectedLot ? (
             <LotDigitalTwinCard
               lot={selectedLot}
+              onAlert={() => alertB2BBuyers(selectedLot)}
               onReserve={() => reserveLot(selectedLot)}
               onShareConsent={() => shareConsent(selectedLot)}
             />
@@ -5418,6 +5495,159 @@ function SectorPage({ currentUser, kind, navigate, store }) {
   );
 }
 
+const HORECA_BUYERS = [
+  { id: 'horeca-001', name: 'King Fahd Palace Hotel', category: 'Hôtel', stars: 5, region: 'Dakar', contact: '+221 33 869 6969', needs: ['Légumes frais', 'Fruits tropicaux', 'Riz local'], minVolumeKg: 200, frequency: 'Hebdomadaire', certified: true, reliabilityScore: 95 },
+  { id: 'horeca-002', name: 'Radisson Blu Dakar', category: 'Hôtel', stars: 5, region: 'Dakar', contact: '+221 33 869 3333', needs: ['Oignons', 'Tomates', 'Mangues', 'Poisson'], minVolumeKg: 300, frequency: 'Bi-hebdomadaire', certified: true, reliabilityScore: 92 },
+  { id: 'horeca-003', name: 'Restaurant La Teranga', category: 'Restaurant', stars: 4, region: 'Dakar', contact: '+221 77 450 1234', needs: ['Légumes locaux', 'Riz', 'Oignons'], minVolumeKg: 50, frequency: 'Hebdomadaire', certified: true, reliabilityScore: 88 },
+  { id: 'horeca-004', name: 'Auchan Sénégal', category: 'Supermarché', stars: null, region: 'Dakar', contact: '+221 33 859 5900', needs: ['Fruits & légumes', 'Riz local', 'Produits transformés'], minVolumeKg: 1000, frequency: 'Quotidienne', certified: true, reliabilityScore: 97 },
+  { id: 'horeca-005', name: 'Casino Supermarché Dakar', category: 'Supermarché', stars: null, region: 'Dakar', contact: '+221 33 822 3222', needs: ['Légumes frais', 'Fruits', 'Céréales'], minVolumeKg: 500, frequency: 'Bi-hebdomadaire', certified: true, reliabilityScore: 91 },
+  { id: 'horeca-006', name: 'Cantine Universitaire UCAD', category: 'Cantine', stars: null, region: 'Dakar', contact: '+221 33 824 6981', needs: ['Riz', 'Oignons', 'Légumes de base'], minVolumeKg: 800, frequency: 'Quotidienne', certified: false, reliabilityScore: 79 },
+  { id: 'horeca-007', name: 'Terrou-Bi Beach Resort', category: 'Hôtel', stars: 4, region: 'Dakar', contact: '+221 33 859 2727', needs: ['Fruits tropicaux', 'Poisson frais', 'Légumes bio'], minVolumeKg: 150, frequency: 'Hebdomadaire', certified: true, reliabilityScore: 89 },
+  { id: 'horeca-008', name: 'Restaurant Niébé & Thiébou', category: 'Restaurant', stars: 3, region: 'Saint-Louis', contact: '+221 77 321 5678', needs: ['Riz local', 'Oignons', 'Tomates'], minVolumeKg: 80, frequency: 'Hebdomadaire', certified: false, reliabilityScore: 74 },
+  { id: 'horeca-009', name: 'Supermarché Exclusive Thiès', category: 'Supermarché', stars: null, region: 'Thiès', contact: '+221 77 456 7890', needs: ['Légumes frais', 'Fruits', 'Oignons'], minVolumeKg: 200, frequency: 'Hebdomadaire', certified: true, reliabilityScore: 84 },
+  { id: 'horeca-010', name: 'Cantine Scolaire Ziguinchor', category: 'Cantine', stars: null, region: 'Ziguinchor', contact: '+221 77 654 3210', needs: ['Riz', 'Légumes', 'Mangues'], minVolumeKg: 300, frequency: 'Quotidienne', certified: false, reliabilityScore: 71 },
+  { id: 'horeca-011', name: 'Hôtel des Almadies', category: 'Hôtel', stars: 4, region: 'Dakar', contact: '+221 33 820 7474', needs: ['Fruits frais', 'Légumes premium', 'Produits bio'], minVolumeKg: 100, frequency: 'Hebdomadaire', certified: true, reliabilityScore: 87 },
+  { id: 'horeca-012', name: 'Transformateur Sunu Jigeen', category: 'Transformateur', stars: null, region: 'Thiès', contact: '+221 77 789 0123', needs: ['Tomates', 'Mangues', 'Oignons (surplus)'], minVolumeKg: 500, frequency: 'Bi-hebdomadaire', certified: true, reliabilityScore: 82 },
+];
+
+const HORECA_CATEGORIES = ['Tous', 'Hôtel', 'Restaurant', 'Supermarché', 'Cantine', 'Transformateur'];
+
+function HoRecaDirectoryPage({ actions, currentUser, navigate, notify, store }) {
+  const [categoryFilter, setCategoryFilter] = useState('Tous');
+  const [regionFilter, setRegionFilter] = useState('Toutes');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [certOnly, setCertOnly] = useState(false);
+
+  const regions = ['Toutes', ...Array.from(new Set(HORECA_BUYERS.map((b) => b.region))).sort()];
+
+  const filtered = HORECA_BUYERS.filter((buyer) => {
+    if (categoryFilter !== 'Tous' && buyer.category !== categoryFilter) return false;
+    if (regionFilter !== 'Toutes' && buyer.region !== regionFilter) return false;
+    if (certOnly && !buyer.certified) return false;
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      return buyer.name.toLowerCase().includes(q) || buyer.needs.some((n) => n.toLowerCase().includes(q));
+    }
+    return true;
+  });
+
+  function sendAlert(buyer) {
+    const b2bUsers = store.users.filter((u) => u.role === 'acheteurB2B' && u.status === 'Actif');
+    const notif = createAppNotification({
+      actor: currentUser,
+      body: `${buyer.name} (${buyer.category}, ${buyer.region}) cherche : ${buyer.needs.join(', ')}. Volume min: ${buyer.minVolumeKg} kg.`,
+      path: '/horeca',
+      recipientRole: 'agriculteur',
+      title: `Acheteur B2B disponible : ${buyer.name}`,
+      type: 'anti-waste',
+    });
+    actions.setNotifications((items) => [notif, ...items]);
+    notify(`Opportunité ${buyer.name} partagée avec les agriculteurs`);
+  }
+
+  const canSendAlert = currentUser?.role === 'admin' || currentUser?.role === 'acheteurB2B';
+  const certifiedCount = HORECA_BUYERS.filter((b) => b.certified).length;
+  const totalVolumeKg = HORECA_BUYERS.reduce((sum, b) => sum + b.minVolumeKg, 0);
+
+  return (
+    <PageFrame>
+      <section className="panel poesam-hero">
+        <div>
+          <span className="poesam-badge">ANNUAIRE B2B</span>
+          <h2>Acheteurs HoReCa certifiés FresCoop</h2>
+          <p>Hôtels, restaurants, supermarchés, cantines et transformateurs prêts à acheter directement aux producteurs. Alertes automatiques dès qu'un lot correspond à leurs besoins.</p>
+        </div>
+      </section>
+
+      <div className="status-grid">
+        <StatCard icon={Building2} label="Acheteurs listés" value={HORECA_BUYERS.length} tone="green" />
+        <StatCard icon={BadgeCheck} label="Certifiés FresCoop" value={certifiedCount} tone="blue" />
+        <StatCard icon={Warehouse} label="Volume min cumulé" value={`${formatCompact(totalVolumeKg)} kg/sem`} tone="gold" />
+        <StatCard icon={CircleDollarSign} label="Valeur potentielle" value={`${formatCompact(totalVolumeKg * 350)} FCFA`} tone="coral" />
+      </div>
+
+      <section className="panel">
+        <PanelTitle icon={Search} title="Filtrer les acheteurs" />
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+          <input
+            className="search-input"
+            placeholder="Rechercher un acheteur ou un produit..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ flex: '1', minWidth: '200px' }}
+          />
+          <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="select-input">
+            {HORECA_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)} className="select-input">
+            {regions.map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '.88rem', cursor: 'pointer' }}>
+            <input type="checkbox" checked={certOnly} onChange={(e) => setCertOnly(e.target.checked)} />
+            Certifiés uniquement
+          </label>
+        </div>
+
+        {filtered.length === 0 ? (
+          <EmptyState icon={Building2} title="Aucun acheteur trouvé" body="Modifiez vos filtres pour élargir la recherche." />
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+            {filtered.map((buyer) => (
+              <article key={buyer.id} style={{ border: '1px solid var(--border)', borderRadius: '12px', padding: '18px', background: '#fff', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <strong style={{ fontSize: '.95rem' }}>{buyer.name}</strong>
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
+                      <Badge>{buyer.category}</Badge>
+                      {buyer.certified && <Badge tone="green"><BadgeCheck size={11} /> Certifié</Badge>}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '.8rem', fontWeight: 700, color: buyer.reliabilityScore >= 90 ? '#1f835d' : buyer.reliabilityScore >= 80 ? '#d99912' : '#6b7280' }}>
+                    Score {buyer.reliabilityScore}/100
+                  </span>
+                </div>
+                <div style={{ fontSize: '.82rem', color: 'var(--muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span><MapPin size={12} style={{ verticalAlign: 'middle' }} /> {buyer.region}</span>
+                  <span>Volume min : <strong>{formatNumber(buyer.minVolumeKg)} kg</strong> · {buyer.frequency}</span>
+                  <span>Besoins : {buyer.needs.join(', ')}</span>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+                  <a href={`tel:${buyer.contact}`} className="btn secondary" style={{ fontSize: '.8rem', padding: '6px 12px' }}>
+                    <PhoneCall size={14} /> {buyer.contact}
+                  </a>
+                  {canSendAlert && (
+                    <Button variant="secondary" onClick={() => sendAlert(buyer)} style={{ fontSize: '.8rem', padding: '6px 12px' }}>
+                      <BellRing size={14} /> Alerter agriculteurs
+                    </Button>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="panel">
+        <PanelTitle icon={BellRing} title="Comment fonctionnent les alertes automatiques ?" />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
+          {[
+            { step: '1', title: 'Lot à risque détecté', body: 'FresCoop détecte qu\'un lot a moins de 3 jours de vie commerciale ou un risque de perte > 25%.' },
+            { step: '2', title: 'Acheteurs B2B notifiés', body: 'Tous les acheteurs HoReCa compatibles reçoivent une notification immédiate avec le prix réduit et le volume disponible.' },
+            { step: '3', title: 'Réservation en 1 clic', body: 'L\'acheteur réserve le lot directement depuis son tableau de bord FresCoop ou via USSD.' },
+            { step: '4', title: 'Paiement partenaire', body: 'Le paiement est orchestré via Orange Money, Wave ou banque partenaire. Le producteur est payé en 24h.' },
+          ].map((item) => (
+            <article key={item.step} style={{ background: '#f9fafb', borderRadius: '10px', padding: '16px' }}>
+              <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#0a4b3e', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '.85rem', marginBottom: '10px' }}>{item.step}</div>
+              <strong style={{ fontSize: '.88rem' }}>{item.title}</strong>
+              <p style={{ fontSize: '.8rem', color: 'var(--muted)', marginTop: '4px' }}>{item.body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+    </PageFrame>
+  );
+}
+
 function AccountPage({ actions, currentUser, notify, store }) {
   const [form, setForm] = useState({
     name: currentUser.name,
@@ -5775,8 +6005,21 @@ function CatalogPager({ onPageChange, page, totalPages }) {
   );
 }
 
-function LotDigitalTwinCard({ lot, onReserve, onShareConsent }) {
+function LotDigitalTwinCard({ lot, onAlert, onReserve, onShareConsent }) {
   const gain = Number(lot.recommendedPrice || 0) - Number(lot.baselinePrice || 0);
+  const verifyUrl = `${window.location.origin}/verifier?code=${encodeURIComponent(lot.code)}`;
+  const isAtRisk = Number(lot.lossRiskPercent || 0) >= 25 || Number(lot.shelfLifeDays || 99) <= 3;
+
+  function downloadCertificate() {
+    const html = renderLotCertificateHtml(lot);
+    downloadHtml(`certificat-lot-${lot.code}.html`, html);
+  }
+
+  function printCertificate() {
+    const html = renderLotCertificateHtml(lot);
+    printHtml(html);
+  }
+
   return (
     <article className="lot-twin-card">
       <div className="lot-twin-head">
@@ -5785,7 +6028,10 @@ function LotDigitalTwinCard({ lot, onReserve, onShareConsent }) {
           <h3>{lot.productName}</h3>
           <p>{lot.producerName} - {lot.coopérativeName}</p>
         </div>
-        <QrMock value={lot.code} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+          <QrMock value={lot.code} />
+          <small style={{ fontSize: '0.65rem', color: 'var(--muted)', textAlign: 'center' }}>{lot.code}</small>
+        </div>
       </div>
       <div className="lot-metrics">
         <article><span>Poids net</span><strong>{formatNumber(lot.weightKg)} kg</strong></article>
@@ -5814,9 +6060,16 @@ function LotDigitalTwinCard({ lot, onReserve, onShareConsent }) {
           <span>Orange Money, Wave, Free Money, carte bancaire. Reçu numérique rattaché au lot.</span>
         </div>
       </div>
-      <div className="button-row">
+      <div className="lot-cert-strip">
+        <FileCheck2 size={15} />
+        <span>Certificat d'origine vérifiable : <code style={{ fontSize: '0.7rem' }}>{verifyUrl.replace(window.location.origin, '')}</code></span>
+      </div>
+      <div className="button-row" style={{ flexWrap: 'wrap' }}>
         <Button onClick={onReserve}><ShoppingCart size={17} /> Reserver B2B</Button>
-        <Button variant="secondary" onClick={onShareConsent}><Landmark size={17} /> Partager avec consentement</Button>
+        {isAtRisk && onAlert && <Button variant="secondary" onClick={onAlert} style={{ borderColor: '#e54d35', color: '#e54d35' }}><BellRing size={17} /> Alerter acheteurs</Button>}
+        <Button variant="secondary" onClick={downloadCertificate}><Download size={17} /> Certificat</Button>
+        <Button variant="secondary" onClick={printCertificate}><Printer size={17} /> Imprimer</Button>
+        <Button variant="secondary" onClick={onShareConsent}><Landmark size={17} /> Consentement</Button>
       </div>
     </article>
   );
@@ -8021,8 +8274,10 @@ function buildFrescoopDemoData(store) {
     { id: 'coop-fouta-riz', name: 'Union rizicole du Fouta', region: 'Saint-Louis', memberCount: 126, womenPercent: 48, youthPercent: 26 },
   ];
   const buyers = [
-    { id: 'buyer-dakar-hotels', name: 'Groupement hotels Dakar', type: 'HoReCa', region: 'Dakar', reliabilityScore: 87 },
-    { id: 'buyer-transform-sn', name: 'Sunu Transformation', type: 'Transformateur', region: 'Thies', reliabilityScore: 78 },
+    { id: 'buyer-dakar-hotels', name: 'Groupement hotels Dakar', type: 'HoReCa', region: 'Dakar', reliabilityScore: 87, minVolumeKg: 300, frequency: 'Hebdomadaire', certified: true },
+    { id: 'buyer-transform-sn', name: 'Sunu Transformation', type: 'Transformateur', region: 'Thies', reliabilityScore: 78, minVolumeKg: 500, frequency: 'Bi-hebdomadaire', certified: true },
+    { id: 'buyer-auchan-sn', name: 'Auchan Sénégal', type: 'Supermarché', region: 'Dakar', reliabilityScore: 97, minVolumeKg: 1000, frequency: 'Quotidienne', certified: true },
+    { id: 'buyer-cantine-ucad', name: 'Cantine UCAD', type: 'Cantine', region: 'Dakar', reliabilityScore: 79, minVolumeKg: 800, frequency: 'Quotidienne', certified: false },
   ];
   const lots = [
     {
@@ -8378,7 +8633,7 @@ function getPrimaryNavLinks(role) {
     agentTerrain: ['/', '/commandes', '/anti-gaspi', '/operations', '/impact'],
     transporteur: ['/', '/lots', '/operations', '/commandes'],
     client: ['/', '/marche', '/anti-gaspi', '/commandes'],
-    acheteurB2B: ['/', '/marche', '/anti-gaspi', '/commandes'],
+    acheteurB2B: ['/', '/marche', '/anti-gaspi', '/commandes', '/horeca'],
     partenaire: ['/', '/bancabilite', '/impact'],
   }[role] || ['/'];
 
@@ -8461,6 +8716,7 @@ function getMenuLinks(role) {
       '/anti-gaspi',
       '/commandes',
       '/paiement',
+      '/horeca',
       '/impact',
       '/compte',
     ],
@@ -8508,6 +8764,7 @@ function getMenuGroups(role, menuLinks) {
     ],
     acheteurB2B: [
       { title: 'Sourcing B2B', paths: ['/', '/marche', '/lots', '/commandes', '/paiement', '/compte'] },
+      { title: 'Réseau acheteurs', paths: ['/horeca'] },
       { title: 'Opportunités & impact', paths: ['/anti-gaspi', '/impact'] },
     ],
     partenaire: [
@@ -8559,6 +8816,7 @@ function navItemByPath(path) {
     '/secteurs/commerce': { path: '/secteurs/commerce', label: 'Commerce', icon: Store, description: 'Page dédiée au secteur commercial' },
     '/secteurs/logistique': { path: '/secteurs/logistique', label: 'Logistique', icon: Truck, description: 'Page dédiée au secteur logistique' },
     '/compte': { path: '/compte', label: 'Compte', icon: UserCheck, description: 'Profil et coordonnees' },
+    '/horeca': { path: '/horeca', label: 'Annuaire HoReCa', icon: Building2, description: 'Hôtels, restaurants, supermarchés certifiés FresCoop' },
   };
   return items[path];
 }
@@ -8812,6 +9070,107 @@ async function fileToAttachment(file) {
     }
   } catch { /* Cloudinary indisponible — fallback base64 */ }
   return { id: uid('file'), name: file.name, type: file.type || 'application/octet-stream', size: file.size, dataUrl, uploadedAt: new Date().toISOString() };
+}
+
+function renderLotCertificateHtml(lot) {
+  const verifyUrl = `${typeof window !== 'undefined' ? window.location.origin : 'https://frescoop.sn'}/verifier?code=${encodeURIComponent(lot.code || '')}`;
+  const qrUrl = getQrImageUrl(verifyUrl, 200);
+  const qrFallback = getQrFallbackDataUrl(lot.code);
+  const isAtRisk = Number(lot.lossRiskPercent || 0) >= 25 || Number(lot.shelfLifeDays || 99) <= 3;
+  const riskColor = isAtRisk ? '#e54d35' : '#1f835d';
+
+  return `<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Certificat d'origine — ${escapeHtml(lot.code)}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f3f4f6; color: #111827; padding: 40px 20px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .cert { width: min(640px, 100%); margin: 0 auto; background: #fff; border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.07); overflow: hidden; }
+  .cert-header { background: linear-gradient(135deg, #0a4b3e, #1f835d); color: #fff; padding: 32px 40px 24px; display: flex; align-items: center; gap: 20px; }
+  .cert-header .logo { width: 48px; height: 48px; border-radius: 10px; background: rgba(255,255,255,.2); display: grid; place-items: center; font-weight: 900; font-size: 1.3rem; flex-shrink: 0; }
+  .cert-header h1 { font-size: 1.25rem; font-weight: 700; }
+  .cert-header p { font-size: .85rem; opacity: .85; margin-top: 2px; }
+  .cert-body { padding: 32px 40px; }
+  .cert-product { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 28px; padding-bottom: 28px; border-bottom: 1px solid #f3f4f6; }
+  .cert-product h2 { font-size: 1.4rem; font-weight: 700; color: #0a4b3e; }
+  .cert-product .grade { display: inline-block; margin-top: 6px; padding: 3px 10px; border-radius: 999px; background: #ecfdf5; color: #065f46; font-size: .78rem; font-weight: 600; }
+  .qr-block { text-align: center; flex-shrink: 0; }
+  .qr-block img { width: 120px; height: 120px; border: 1px solid #e5e7eb; border-radius: 8px; display: block; }
+  .qr-block small { display: block; margin-top: 6px; font-size: .65rem; color: #9ca3af; word-break: break-all; max-width: 120px; }
+  .cert-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 32px; margin-bottom: 28px; }
+  .cert-field em { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; font-style: normal; margin-bottom: 2px; }
+  .cert-field b { font-size: .92rem; color: #111827; }
+  .cert-sensors { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; padding: 16px; background: #f9fafb; border-radius: 10px; }
+  .cert-sensors span { font-size: .82rem; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 6px 12px; }
+  .cert-risk { padding: 14px 18px; border-radius: 10px; border-left: 4px solid ${riskColor}; background: ${isAtRisk ? '#fff5f5' : '#ecfdf5'}; margin-bottom: 28px; font-size: .88rem; }
+  .cert-risk strong { color: ${riskColor}; }
+  .cert-seal { display: flex; align-items: center; gap: 14px; padding: 16px 20px; background: #f0fdf4; border-radius: 10px; margin-bottom: 20px; }
+  .cert-seal svg-icon { width: 36px; height: 36px; background: #dcfce7; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; }
+  .cert-seal strong { font-size: .92rem; color: #065f46; display: block; }
+  .cert-seal small { font-size: .78rem; color: #6b7280; }
+  .cert-footer { text-align: center; padding: 20px 40px 28px; font-size: .78rem; color: #9ca3af; border-top: 1px solid #f3f4f6; }
+  .cert-footer a { color: #1f835d; text-decoration: none; }
+  @media print { body { background: #fff; padding: 0; } .cert { box-shadow: none; border-radius: 0; } }
+</style>
+</head>
+<body>
+<div class="cert">
+  <div class="cert-header">
+    <div class="logo">F</div>
+    <div>
+      <h1>Certificat d'origine FresCoop</h1>
+      <p>Document officiel de traçabilité agricole — Code : ${escapeHtml(lot.code)}</p>
+    </div>
+  </div>
+  <div class="cert-body">
+    <div class="cert-product">
+      <div>
+        <h2>${escapeHtml(lot.productName)}</h2>
+        <span class="grade">${escapeHtml(lot.qualityGrade)}</span>
+      </div>
+      <div class="qr-block">
+        <img src="${qrUrl}" alt="QR code" onerror="this.src='${qrFallback}'" />
+        <small>Scanner pour vérifier</small>
+      </div>
+    </div>
+    <div class="cert-grid">
+      <div class="cert-field"><em>Producteur</em><b>${escapeHtml(lot.producerName)}</b></div>
+      <div class="cert-field"><em>Coopérative</em><b>${escapeHtml(lot.coopérativeName)}</b></div>
+      <div class="cert-field"><em>Hub de stockage</em><b>${escapeHtml(lot.hubName)}</b></div>
+      <div class="cert-field"><em>Chambre</em><b>${escapeHtml(lot.chamber || 'N/A')}</b></div>
+      <div class="cert-field"><em>Poids net</em><b>${escapeHtml(formatNumber(lot.weightKg))} kg</b></div>
+      <div class="cert-field"><em>Nombre de caisses</em><b>${escapeHtml(String(lot.crateCount))}</b></div>
+      <div class="cert-field"><em>Vie commerciale estimée</em><b>${escapeHtml(String(lot.shelfLifeDays))} jours</b></div>
+      <div class="cert-field"><em>Date d'enregistrement</em><b>${escapeHtml(formatDate(lot.createdAt))}</b></div>
+      <div class="cert-field"><em>Prix terrain</em><b>${escapeHtml(formatMoney(lot.baselinePrice))}/kg</b></div>
+      <div class="cert-field"><em>Prix recommandé</em><b>${escapeHtml(formatMoney(lot.recommendedPrice))}/kg</b></div>
+    </div>
+    <div class="cert-sensors">
+      <span>Température : <strong>${escapeHtml(String(lot.temperatureC))}°C</strong></span>
+      <span>Humidité : <strong>${escapeHtml(String(lot.humidityPercent))}%</strong></span>
+      <span>Risque perte : <strong>${escapeHtml(String(lot.lossRiskPercent))}%</strong></span>
+    </div>
+    <div class="cert-risk">
+      <strong>${isAtRisk ? 'Lot à vendre rapidement' : 'Lot en bon état'}</strong>
+      <p style="margin-top:4px">${escapeHtml(lot.routeRecommendation)} — ${escapeHtml(lot.routeReason)}</p>
+    </div>
+    <div class="cert-seal">
+      <div style="width:36px;height:36px;background:#dcfce7;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">✓</div>
+      <div>
+        <strong>Certification FresCoop — Traçabilité IoT authentifiée</strong>
+        <small>Données capteurs, qualité et origine vérifiables sur ${escapeHtml(verifyUrl)}</small>
+      </div>
+    </div>
+  </div>
+  <div class="cert-footer">
+    <p>© FresCoop · Dakar, Sénégal · <a href="mailto:contact@frescoop.sn">contact@frescoop.sn</a></p>
+    <p style="margin-top:4px">Document généré le ${escapeHtml(formatDate(new Date().toISOString()))} · Vérifiable sur FresCoop</p>
+  </div>
+</div>
+</body>
+</html>`;
 }
 
 function renderAttestationHtml(attestation) {

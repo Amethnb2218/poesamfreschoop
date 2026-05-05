@@ -290,6 +290,11 @@ createServer(async (request, response) => {
       return;
     }
 
+    if (request.url?.startsWith('/api/verify/lot')) {
+      await handleVerifyLot(request, response);
+      return;
+    }
+
     if (request.url?.startsWith('/api/store')) {
       await handleStore(request, response);
       return;
@@ -1373,6 +1378,45 @@ function sendJson(response, statusCode, payload) {
     'Cache-Control': 'no-store',
   });
   response.end(JSON.stringify(payload));
+}
+
+// ============================================================================
+// PUBLIC LOT VERIFICATION ENDPOINT
+// ============================================================================
+async function handleVerifyLot(request, response) {
+  const url = new URL(request.url, `http://${request.headers.host}`);
+  const code = (url.searchParams.get('code') || '').trim().toUpperCase();
+  if (!code) {
+    sendJson(response, 400, { error: 'Paramètre code manquant' });
+    return;
+  }
+  const store = await readStore();
+  const lot = (store.lots || []).find((l) => String(l.code || '').toUpperCase() === code);
+  if (!lot) {
+    sendJson(response, 404, { found: false, code });
+    return;
+  }
+  const coop = (store.cooperatives || []).find((c) => c.id === lot.coopérativeId);
+  sendJson(response, 200, {
+    found: true,
+    lot: {
+      code: lot.code,
+      productName: lot.productName,
+      crop: lot.crop,
+      producerName: lot.producerName,
+      coopérativeName: lot.coopérativeName || coop?.name || '',
+      hubName: lot.hubName,
+      weightKg: lot.weightKg,
+      crateCount: lot.crateCount,
+      qualityGrade: lot.qualityGrade,
+      status: lot.status,
+      temperatureC: lot.temperatureC,
+      humidityPercent: lot.humidityPercent,
+      shelfLifeDays: lot.shelfLifeDays,
+      lossRiskPercent: lot.lossRiskPercent,
+      createdAt: lot.createdAt,
+    },
+  });
 }
 
 async function loadEnvFile(filePath) {
