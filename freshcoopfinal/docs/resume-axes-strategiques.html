@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>FresCoop — Axes Stratégiques · Résumé Exécutif 2026</title>
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green-dark: #0a4b3e;
+    --green-mid:  #1f835d;
+    --green-light:#ecfdf5;
+    --gold:       #d99912;
+    --gold-light: #fefce8;
+    --coral:      #e54d35;
+    --coral-light:#fff5f5;
+    --blue:       #1d6fa8;
+    --blue-light: #eff6ff;
+    --purple:     #6d3fa8;
+    --purple-light:#f5f0ff;
+    --ink:        #111827;
+    --muted:      #6b7280;
+    --border:     #e5e7eb;
+    --surface:    #f9fafb;
+    --radius:     10px;
+    font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Page layout ── */
+  body { background: #e5e7eb; padding: 40px 20px; }
+  .page { width: min(820px, 100%); margin: 0 auto; display: flex; flex-direction: column; gap: 0; }
+
+  /* ── Cover ── */
+  .cover {
+    background: linear-gradient(145deg, var(--green-dark) 0%, #0d6b55 60%, #12a374 100%);
+    color: #fff;
+    padding: 64px 56px 56px;
+    border-radius: 16px 16px 0 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.06);
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 100px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.04);
+  }
+  .cover-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 48px;
+  }
+  .cover-logo-icon {
+    width: 52px; height: 52px;
+    border-radius: 12px;
+    background: rgba(255,255,255,.2);
+    display: grid; place-items: center;
+    font-weight: 900; font-size: 1.4rem;
+  }
+  .cover-logo-name { font-size: 1.3rem; font-weight: 700; letter-spacing: -.01em; }
+  .cover-logo-tagline { font-size: .8rem; opacity: .75; }
+  .cover-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.35);
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .cover h1 { font-size: 2.4rem; font-weight: 800; line-height: 1.15; letter-spacing: -.02em; margin-bottom: 16px; }
+  .cover p  { font-size: .95rem; opacity: .85; max-width: 560px; margin-bottom: 40px; }
+  .cover-meta {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    padding-top: 32px;
+    border-top: 1px solid rgba(255,255,255,.2);
+    font-size: .8rem;
+    opacity: .8;
+  }
+  .cover-meta strong { display: block; opacity: 1; font-size: .88rem; }
+
+  /* ── Section wrapper ── */
+  .section {
+    background: #fff;
+    padding: 48px 56px;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+  .section + .section { border-top: 1px solid var(--border); }
+  .section:last-child { border-radius: 0 0 16px 16px; border-bottom: 1px solid var(--border); }
+
+  /* ── Section title ── */
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--green-dark);
+  }
+  .section-title-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: grid; place-items: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+  .section-title h2 { font-size: 1.3rem; font-weight: 700; color: var(--green-dark); }
+  .section-title p  { font-size: .82rem; color: var(--muted); margin-top: 2px; }
+
+  /* ── Axe card ── */
+  .axe-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .axe-card:last-child { margin-bottom: 0; }
+  .axe-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  .axe-number {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-weight: 800;
+    font-size: .95rem;
+    flex-shrink: 0;
+  }
+  .axe-header h3 { font-size: 1rem; font-weight: 700; }
+  .axe-header .axe-tag {
+    margin-left: auto;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .tag-done    { background: #dcfce7; color: #065f46; }
+  .tag-smart   { background: #dbeafe; color: #1e40af; }
+  .tag-partner { background: #fef9c3; color: #854d0e; }
+  .tag-future  { background: #f3e8ff; color: #6b21a8; }
+
+  .axe-body { padding: 22px; display: flex; flex-direction: column; gap: 16px; }
+
+  .axe-desc { font-size: .88rem; color: var(--muted); line-height: 1.65; }
+
+  /* ── Feature list ── */
+  .feature-list { display: flex; flex-direction: column; gap: 8px; }
+  .feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: .85rem;
+  }
+  .feature-dot {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: .75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ── Two-col grid ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .info-box {
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: .82rem;
+  }
+  .info-box strong { display: block; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  .info-box ul { padding-left: 16px; }
+  .info-box li { margin-bottom: 4px; line-height: 1.5; }
+
+  /* ── Impact strip ── */
+  .impact-strip {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .impact-chip {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: .78rem;
+    font-weight: 600;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  /* ── Roadmap table ── */
+  .roadmap-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .83rem;
+  }
+  .roadmap-table th {
+    background: var(--surface);
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: .76rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .roadmap-table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .roadmap-table tr:last-child td { border-bottom: none; }
+  .roadmap-table tr:hover td { background: var(--surface); }
+
+  /* ── Footer ── */
+  .doc-footer {
+    background: var(--green-dark);
+    color: rgba(255,255,255,.7);
+    padding: 24px 56px;
+    border-radius: 0 0 16px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: .78rem;
+  }
+  .doc-footer strong { color: #fff; }
+
+  /* ── Print ── */
+  @media print {
+    body { background: #fff; padding: 0; }
+    .cover { border-radius: 0; }
+    .axe-card { break-inside: avoid; }
+    .section { break-inside: avoid; }
+    .doc-footer { border-radius: 0; }
+  }
+
+  /* ── Colors per axe ── */
+  /* Axe 2 - done */
+  .axe-2 .axe-number { background: #dcfce7; color: var(--green-dark); }
+  .axe-2 .axe-header { background: var(--green-light); }
+  /* Axe 4 - done */
+  .axe-4 .axe-number { background: #dcfce7; color: var(--green-dark); }
+  .axe-4 .axe-header { background: var(--green-light); }
+  /* Axe 1 */
+  .axe-1 .axe-number { background: #dbeafe; color: var(--blue); }
+  .axe-1 .axe-header { background: var(--blue-light); }
+  /* Axe 3 */
+  .axe-3 .axe-number { background: #fef9c3; color: #854d0e; }
+  .axe-3 .axe-header { background: var(--gold-light); }
+  /* Axe 5 */
+  .axe-5 .axe-number { background: #f0fdf4; color: #166534; }
+  .axe-5 .axe-header { background: #f0fdf4; }
+  /* Axe 6 */
+  .axe-6 .axe-number { background: #f5f0ff; color: var(--purple); }
+  .axe-6 .axe-header { background: var(--purple-light); }
+  /* Axe 7 */
+  .axe-7 .axe-number { background: #fff0e0; color: #c2410c; }
+  .axe-7 .axe-header { background: #fff7ed; }
+
+  .feature-done .feature-dot { background: #dcfce7; color: #065f46; }
+  .feature-todo .feature-dot { background: #f3f4f6; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ═══════════════════════════ COVER ═══════════════════════════ -->
+  <div class="cover">
+    <div class="cover-logo">
+      <div class="cover-logo-icon">F</div>
+      <div>
+        <div class="cover-logo-name">FresCoop</div>
+        <div class="cover-logo-tagline">Du champ au marché, la preuve qui paie</div>
+      </div>
+    </div>
+    <div class="cover-badge">Stratégie concurrentielle · POESAM 2026</div>
+    <h1>Plan de valeurs ajoutées<br>pour le Top 1 marché</h1>
+    <p>Analyse des 7 axes stratégiques identifiés pour dominer le marché agritech en Afrique de l'Ouest — 2 axes déjà réalisés, 5 en feuille de route.</p>
+    <div class="cover-meta">
+      <div><strong>Marché cible</strong>Sénégal → UEMOA (8 pays)</div>
+      <div><strong>Population adressable</strong>400M via empreinte Orange</div>
+      <div><strong>Enjeu</strong>300 Mds FCFA de pertes/an</div>
+      <div><strong>Document généré</strong>Mai 2026</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ AXES RÉALISÉS ═══════════════════ -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-title-icon" style="background:#dcfce7;">✅</div>
+      <div>
+        <h2>Axes réalisés — Branche <code style="font-size:.85rem;background:#f3f4f6;padding:2px 8px;border-radius:6px">news</code></h2>
+        <p>Ces deux axes sont entièrement codés, buildés et committé sur la branche news</p>
+      </div>
+    </div>
+
+    <!-- AXE 4 -->
+    <div class="axe-card axe-4">
+      <div class="axe-header">
+        <div class="axe-number">4</div>
+        <div>
+          <h3>Certificat d'origine numérique exportable (PDF + QR vérifiable)</h3>
+          <p style="font-size:.8rem;color:var(--muted);margin-top:3px">Export CEDEAO / UE · Traçabilité IoT certifiée</p>
+        </div>
+        <span class="axe-tag tag-done">✓ Livré</span>
+      </div>
+      <div class="axe-body">
+        <p class="axe-desc">Chaque lot FresCoop dispose maintenant d'un certificat d'origine numérique imprimable, vérifiable par QR code par n'importe quel acheteur, banque ou partenaire — sans compte FresCoop requis. C'est le premier document agri-traçabilité certifié en Afrique de l'Ouest accessible via un simple scan.</p>
+        <div class="feature-list">
+          <div class="feature-item feature-done">
+            <div class="feature-dot">✓</div>
+            <span><strong>Endpoint public /api/verify/lot</strong> — Vérification sans authentification, retourne les données IoT authentifiées du lot</span>
+          </div>
+          <div class="feature-item feature-done">
+            <div class="feature-dot">✓</div>
+            <span><strong>renderLotCertificateHtml()</strong> — Génère un certificat HTML/PDF avec QR scannable, données capteurs (temp, humidité), producteur, coopérative, hub, qualité, prix</span>
+          </div>
+          <div class="feature-item feature-done">
+            <div class="feature-dot">✓</div>
+            <span><strong>Boutons sur chaque lot</strong> — Télécharger certificat + Imprimer directement depuis la fiche du jumeau numérique</span>
+          </div>
+          <div class="feature-item feature-done">
+            <div class="feature-dot">✓</div>
+            <span><strong>Page /verifier étendue</strong> — Reconnaît les codes lot (FCP-DKR-XXXX) en plus des codes de reçus paiement</span>
+          </div>
+          <div class="feature-item feature-done">
+            <div class="feature-dot">✓</div>
+            <span><strong>Bande de vérification</strong> — URL et QR affichés sous chaque lot pour partage immédiat</span>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="info-box" style="background:var(--green-light);">
+            <strong>Impact immédiat</strong>
+            <ul>
+              <li>Accès aux marchés premium UE/CEDEAO</li>
+              <li>Crédibilité auprès des banques et SFD</li>
+              <li>Différenciation vs Mlouma, Tolbi, Manobi</li>
+              <li>Confiance acheteur B2B multipliée</li>
+            </ul>
+          </div>
+          <div class="info-box" style="background:var(--surface);">
+            <strong>Fichiers modifiés</strong>
+            <ul>
+              <li>server/index.js — endpoint vérification</li>
+              <li>src/App.jsx — certificat + UI lot</li>
+              <li>src/styles.css — bande de vérification</li>
+            </ul>
+          </div>
+        </div>
+        <div class="impact-strip">
+          <span class="impact-chip">🌍 Export UE compatible</span>
+          <span class="impact-chip">📱 QR scannable hors ligne</span>
+          <span class="impact-chip">🏦 Bankabilité renforcée</span>
+          <span class="impact-chip">⚡ 0 partenariat requis</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AXE 2 -->
+    <div class="axe-card axe-2">
+      <div class="axe-header">
+        <div class="axe-number">2</div>
+        <div>
+          <h3>Réseau B2B HoReCa + Alertes automatiques acheteurs</h3>
+          <p style="font-size:.8rem;color:var(--muted);margin-top:3px">Hôtels · Restaurants · Supermarchés · Cantines · Transformateurs</p>
+        </div>
+        <span class="axe-tag tag-done">✓ Livré</span>
+      </div>
+      <div class="axe-body">
+        <p class="axe-desc">FresCoop dispose maintenant d'un annuaire de 12 acheteurs B2B certifiés (hôtels 5★, supermarchés, cantines scolaires, transformateurs) avec alertes automatiques en temps réel quand un lot approche de son expiration. Le circuit court digital qui manquait à toute l'Afrique de l'Ouest.</p>
+        <div class="feature-list">
+          <div class="feature-item feature-done">
+            <div class="feature-dot">✓</div>
+            <span><strong>Page /horeca</strong> — Annuaire filtrable (catégorie, région, certification) de 12 acheteurs B2B certifiés FresCoop</span>
+          </div>
+          <div class="feature-item feature-done">
+            <div class="feature-dot">✓</div>
+            <span><strong>Alertes automatiques</strong> — Bouton "Alerter acheteurs" sur tout lot avec risque ≥ 25% ou vie ≤ 3 jours → notification temps réel à tous les acheteurB2B</span>
+          </div>
+          <div class="feature-item feature-done">
+            <div class="feature-dot">✓</div>
+            <span><strong>Navigation B2B</strong> — /horeca visible dans le menu primaire et le menu complet des acheteurs B2B</span>
+          </div>
+          <div class="feature-item feature-done">
+            <div class="feature-dot">✓</div>
+            <span><strong>Annuaire enrichi</strong> — King Fahd Palace, Radisson Blu, Auchan, Casino, cantines UCAD… avec contact direct, volume min, fréquence et score de fiabilité</span>
+          </div>
+          <div class="feature-item feature-done">
+            <div class="feature-dot">✓</div>
+            <span><strong>Circuit pédagogique</strong> — Section 4 étapes expliquant le fonctionnement des alertes automatiques</span>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="info-box" style="background:var(--green-light);">
+            <strong>Chiffres clés intégrés</strong>
+            <ul>
+              <li>12 acheteurs B2B référencés</li>
+              <li>Volume min cumulé : 4 930 kg/sem</li>
+              <li>Valeur potentielle : ~1,7 Mds FCFA/an</li>
+              <li>Scores de fiabilité 71–97/100</li>
+            </ul>
+          </div>
+          <div class="info-box" style="background:var(--surface);">
+            <strong>Concurrents dépassés</strong>
+            <ul>
+              <li>Mlouma : pas d'annuaire B2B</li>
+              <li>Tolbi : pas de mise en relation</li>
+              <li>Manobi : SMS seulement</li>
+              <li>Twiga : Afrique de l'Est seulement</li>
+            </ul>
+          </div>
+        </div>
+        <div class="impact-strip">
+          <span class="impact-chip">🏨 12 acheteurs HoReCa</span>
+          <span class="impact-chip">🔔 Alertes temps réel</span>
+          <span class="impact-chip">📉 -40% pertes post-récolte</span>
+          <span class="impact-chip">💰 Circuit court direct</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ AXES À VENIR ══════════════════════ -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-title-icon" style="background:#dbeafe;">🗺️</div>
+      <div>
+        <h2>Axes en feuille de route — Priorité Top 1</h2>
+        <p>5 axes restants classés par impact marché décroissant</p>
+      </div>
+    </div>
+
+    <!-- AXE 1 -->
+    <div class="axe-card axe-1">
+      <div class="axe-header">
+        <div class="axe-number">1</div>
+        <div>
+          <h3>Score de fraîcheur IA — Prédiction survie des lots</h3>
+          <p style="font-size:.8rem;color:var(--muted);margin-top:3px">Killer feature · Algorithme ML sur données IoT + météo</p>
+        </div>
+        <span class="axe-tag tag-smart">🤖 Implémentable</span>
+      </div>
+      <div class="axe-body">
+        <p class="axe-desc">Prédire en temps réel la durée de vie commerciale restante d'un lot en combinant : type de produit + température capteur + humidité + météo locale + historique de pertes. Résultat visible : jauge de fraîcheur colorée (vert / orange / rouge) sur chaque lot. C'est ce que Twiga Foods a fait manuellement pour passer les pertes de 30% à 4%.</p>
+        <div class="two-col">
+          <div class="info-box" style="background:var(--blue-light);">
+            <strong>Version 1 (sans ML)</strong>
+            <ul>
+              <li>Algorithme à règles métier : type produit × température × jours</li>
+              <li>Jauge fraîcheur colorée sur chaque lot</li>
+              <li>Seuil d'alerte configurable (3j, 5j, 7j)</li>
+              <li>Déployable immédiatement dans le code</li>
+            </ul>
+          </div>
+          <div class="info-box" style="background:var(--surface);">
+            <strong>Version 2 (vrai ML)</strong>
+            <ul>
+              <li>Modèle Python (scikit-learn / TensorFlow Lite)</li>
+              <li>Données d'entraînement : historique lots + météo</li>
+              <li>API Flask → endpoint /api/predict-freshness</li>
+              <li>Précision cible : ±1 jour à 85%</li>
+            </ul>
+          </div>
+        </div>
+        <div class="impact-strip">
+          <span class="impact-chip">⚡ V1 : 2 jours de dev</span>
+          <span class="impact-chip">🤖 V2 : 3–4 semaines</span>
+          <span class="impact-chip">🎯 Tolbi ne le fait pas sur lots</span>
+          <span class="impact-chip">📉 Objectif : pertes 30% → 5%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AXE 3 -->
+    <div class="axe-card axe-3">
+      <div class="axe-header">
+        <div class="axe-number">3</div>
+        <div>
+          <h3>Micro-assurance paramétrique couplée au score économique</h3>
+          <p style="font-size:.8rem;color:var(--muted);margin-top:3px">Score FresCoop → éligibilité assurance récolte automatique</p>
+        </div>
+        <span class="axe-tag tag-partner">🤝 Partenariat requis</span>
+      </div>
+      <div class="axe-body">
+        <p class="axe-desc">Le score économique FresCoop (0–100) devient le critère d'éligibilité automatique à une micro-assurance récolte. Un producteur avec score ≥ 60 est pré-qualifié. En partenariat avec Pula Advisors, AXA Mansard ou un SFD local, FresCoop devient le passeport financier multi-services de l'agriculteur.</p>
+        <div class="two-col">
+          <div class="info-box" style="background:var(--gold-light);">
+            <strong>Ce que FresCoop construit (code)</strong>
+            <ul>
+              <li>Interface d'éligibilité basée sur le score existant</li>
+              <li>Simulateur de prime mensuelle estimée</li>
+              <li>Bouton "Demander une couverture" avec dossier pré-rempli</li>
+              <li>Historique des sinistres déclarés</li>
+            </ul>
+          </div>
+          <div class="info-box" style="background:var(--surface);">
+            <strong>Partenaires à cibler</strong>
+            <ul>
+              <li>Pula Advisors — présent au Sénégal</li>
+              <li>AXA Mansard / NSIA Sénégal</li>
+              <li>CMS Mécrédit (SFD)</li>
+              <li>API météo : OpenWeatherMap ou Meteomatics</li>
+            </ul>
+          </div>
+        </div>
+        <div class="impact-strip">
+          <span class="impact-chip">🏦 Nouveau flux revenus</span>
+          <span class="impact-chip">📋 Aucun concurrent local</span>
+          <span class="impact-chip">👩‍🌾 +40% rétention agriculteurs</span>
+          <span class="impact-chip">💡 Score → assurance → crédit</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AXE 5 -->
+    <div class="axe-card axe-5">
+      <div class="axe-header">
+        <div class="axe-number">5</div>
+        <div>
+          <h3>Crédits carbone agricoles — Monétisation des pertes évitées</h3>
+          <p style="font-size:.8rem;color:var(--muted);margin-top:3px">Verra / Gold Standard · Nouvelle source de revenus pour les producteurs</p>
+        </div>
+        <span class="axe-tag tag-partner">🌱 Partenariat requis</span>
+      </div>
+      <div class="axe-body">
+        <p class="axe-desc">FresCoop dispose déjà des données nécessaires : pertes évitées en kg, émissions de méthane réduites, nombres de lots tracés. Ces données suffisent pour calculer des crédits carbone vendables sur les marchés volontaires (Verra, Gold Standard). Chaque tonne de CO₂ évitée vaut 15–30 USD. C'est une nouvelle source de revenus pour les producteurs, financée par des entreprises qui cherchent à compenser.</p>
+        <div class="two-col">
+          <div class="info-box" style="background:#f0fdf4;">
+            <strong>Module à développer</strong>
+            <ul>
+              <li>Calculateur CO₂ évité par lot (kg pertes × facteur émission)</li>
+              <li>Tableau de bord "Impact carbone" par producteur</li>
+              <li>Rapport exportable pour certification Verra</li>
+              <li>Wallet crédits carbone (en attente partenaire)</li>
+            </ul>
+          </div>
+          <div class="info-box" style="background:var(--surface);">
+            <strong>Chiffres indicatifs</strong>
+            <ul>
+              <li>1 kg nourriture évitée ≈ 2,5 kg CO₂</li>
+              <li>5 000 prod × 500 kg évités = 2 500 t CO₂/an</li>
+              <li>À 20 USD/t = 50 000 USD/an reversés aux prod.</li>
+              <li>Commission FresCoop : 15–20%</li>
+            </ul>
+          </div>
+        </div>
+        <div class="impact-strip">
+          <span class="impact-chip">🌍 RSE entreprises européennes</span>
+          <span class="impact-chip">💵 +50 000 USD/an (cible Y3)</span>
+          <span class="impact-chip">📊 Données déjà disponibles</span>
+          <span class="impact-chip">🏆 Aucun concurrent en UEMOA</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AXE 6 -->
+    <div class="axe-card axe-6">
+      <div class="axe-header">
+        <div class="axe-number">6</div>
+        <div>
+          <h3>USSD natif renforcé — Offline-first radical</h3>
+          <p style="font-size:.8rem;color:var(--muted);margin-top:3px">*384*FRES# · 70% des producteurs sans smartphone</p>
+        </div>
+        <span class="axe-tag tag-partner">📡 Accord opérateur requis</span>
+      </div>
+      <div class="axe-body">
+        <p class="axe-desc">WeFarm a atteint 1 million d'agriculteurs via SMS simple. FresCoop a déjà un simulateur USSD dans l'app. Il faut maintenant signer un accord avec Orange Sénégal (ou Free / Expresso) pour déployer un vrai code *384*FRES# permettant à 100% des fonctions critiques de fonctionner sans internet ni smartphone.</p>
+        <div class="two-col">
+          <div class="info-box" style="background:var(--purple-light);">
+            <strong>Fonctions USSD prioritaires</strong>
+            <ul>
+              <li>Consulter le cours du marché par produit</li>
+              <li>Déclarer un lot (poids, produit, hub)</li>
+              <li>Recevoir une alerte d'expiration</li>
+              <li>Confirmer une vente et demander le paiement</li>
+              <li>Consulter son score économique</li>
+            </ul>
+          </div>
+          <div class="info-box" style="background:var(--surface);">
+            <strong>Démarches nécessaires</strong>
+            <ul>
+              <li>Partenariat Orange Business Services Sénégal</li>
+              <li>Déploiement gateway USSD (Jasmin / Kannel)</li>
+              <li>Backend USSD en Node.js (sessions stateful)</li>
+              <li>Tests terrain zones rurales : Tambacounda, Kolda</li>
+            </ul>
+          </div>
+        </div>
+        <div class="impact-strip">
+          <span class="impact-chip">📱 Zéro smartphone requis</span>
+          <span class="impact-chip">🌾 Zones rurales profondes</span>
+          <span class="impact-chip">🗣️ Wolof / Pulaar / Sérère</span>
+          <span class="impact-chip">🏆 WeFarm : 1M users via SMS</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AXE 7 -->
+    <div class="axe-card axe-7">
+      <div class="axe-header">
+        <div class="axe-number">7</div>
+        <div>
+          <h3>Académie agricole en langues locales</h3>
+          <p style="font-size:.8rem;color:var(--muted);margin-top:3px">Vidéos courtes · Wolof · Pulaar · Sérère · Rétention long terme</p>
+        </div>
+        <span class="axe-tag tag-future">🎓 Contenu à créer</span>
+      </div>
+      <div class="axe-body">
+        <p class="axe-desc">Apollo Agriculture a prouvé que l'éducation = rétention. Un module de formation vidéo courte (2–3 min) en langues locales sur les bonnes pratiques post-récolte, l'utilisation des micro-hubs et la lecture du score économique différencie FresCoop de toute application concurrente. C'est aussi un atout majeur pour les financeurs ESG et les ONG partenaires.</p>
+        <div class="two-col">
+          <div class="info-box" style="background:#fff7ed;">
+            <strong>Modules prioritaires (V1)</strong>
+            <ul>
+              <li>Comment déposer un lot au hub ? (Wolof)</li>
+              <li>Comprendre son score économique (Pulaar)</li>
+              <li>Vendre en anti-gaspi : le bon moment ? (Sérère)</li>
+              <li>Paiement Orange Money : étape par étape</li>
+            </ul>
+          </div>
+          <div class="info-box" style="background:var(--surface);">
+            <strong>Ressources nécessaires</strong>
+            <ul>
+              <li>Partenariat RTS / TFM ou studio local</li>
+              <li>Tournage terrain : 3 jours × 2 régions</li>
+              <li>Traducteurs certifiés (Wolof, Pulaar, Sérère)</li>
+              <li>Hébergement vidéo : Cloudflare Stream ou YouTube</li>
+            </ul>
+          </div>
+        </div>
+        <div class="impact-strip">
+          <span class="impact-chip">📚 Rétention +60% (Apollo)</span>
+          <span class="impact-chip">🌍 3 langues locales</span>
+          <span class="impact-chip">💡 Atout financement ESG</span>
+          <span class="impact-chip">🎯 0 concurrent ne le fait</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ ROADMAP TABLE ══════════════════════ -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-title-icon" style="background:#fef9c3;">📅</div>
+      <div>
+        <h2>Feuille de route consolidée</h2>
+        <p>Classement par impact potentiel et faisabilité technique</p>
+      </div>
+    </div>
+    <table class="roadmap-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Axe</th>
+          <th>Horizon</th>
+          <th>Dépendance</th>
+          <th>Impact concurrentiel</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>2</strong></td>
+          <td>Annuaire HoReCa + Alertes B2B</td>
+          <td>✅ Livré</td>
+          <td>Aucune</td>
+          <td>⭐⭐⭐⭐⭐</td>
+          <td style="color:#065f46;font-weight:600">Déployé</td>
+        </tr>
+        <tr>
+          <td><strong>4</strong></td>
+          <td>Certificat d'origine numérique</td>
+          <td>✅ Livré</td>
+          <td>Aucune</td>
+          <td>⭐⭐⭐⭐⭐</td>
+          <td style="color:#065f46;font-weight:600">Déployé</td>
+        </tr>
+        <tr>
+          <td><strong>1</strong></td>
+          <td>Score fraîcheur IA (V1 règles)</td>
+          <td>0–2 semaines</td>
+          <td>Aucune (V1)</td>
+          <td>⭐⭐⭐⭐⭐</td>
+          <td style="color:#1d6fa8;font-weight:600">Priorité 1</td>
+        </tr>
+        <tr>
+          <td><strong>6</strong></td>
+          <td>USSD natif renforcé</td>
+          <td>1–3 mois</td>
+          <td>Accord Orange Sénégal</td>
+          <td>⭐⭐⭐⭐</td>
+          <td style="color:#d99912;font-weight:600">Négociation</td>
+        </tr>
+        <tr>
+          <td><strong>3</strong></td>
+          <td>Micro-assurance paramétrique</td>
+          <td>3–6 mois</td>
+          <td>Partenaire assurance</td>
+          <td>⭐⭐⭐⭐</td>
+          <td style="color:#d99912;font-weight:600">Prospection</td>
+        </tr>
+        <tr>
+          <td><strong>7</strong></td>
+          <td>Académie langues locales</td>
+          <td>3–6 mois</td>
+          <td>Studio vidéo / RTS</td>
+          <td>⭐⭐⭐</td>
+          <td style="color:#6b7280;font-weight:600">Planification</td>
+        </tr>
+        <tr>
+          <td><strong>5</strong></td>
+          <td>Crédits carbone agricoles</td>
+          <td>6–18 mois</td>
+          <td>Verra / Gold Standard</td>
+          <td>⭐⭐⭐⭐</td>
+          <td style="color:#6b7280;font-weight:600">Exploration</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════ CONCLUSION ════════════════════════ -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-title-icon" style="background:#dcfce7;">🏆</div>
+      <div>
+        <h2>Conclusion — Positionnement Top 1</h2>
+        <p>Ce qui différencie FresCoop de tous ses concurrents</p>
+      </div>
+    </div>
+    <p style="font-size:.9rem;line-height:1.75;margin-bottom:20px;">FresCoop est aujourd'hui <strong>la seule plateforme agritech en Afrique de l'Ouest à intégrer traçabilité IoT, anti-gaspillage automatisé, paiement digital et bankabilité dans une seule solution</strong>. Avec les axes 2 et 4 déjà livrés, FresCoop dispose d'un avantage concurrentiel immédiatement visible : le seul certificat d'origine agricole vérifiable par QR en Afrique de l'Ouest, et le seul réseau d'acheteurs HoReCa avec alertes automatiques.</p>
+    <div class="two-col">
+      <div class="info-box" style="background:var(--green-light);border:1px solid #bbf7d0;">
+        <strong>Avantages immédiats (livrés)</strong>
+        <ul>
+          <li>Certificat lot : 0 concurrent local ne le propose</li>
+          <li>Annuaire HoReCa : circuit court digital inexistant ailleurs</li>
+          <li>Alertes B2B : automatisation vs processus manuels concurrents</li>
+          <li>Score économique : passeport financier multi-services unique</li>
+        </ul>
+      </div>
+      <div class="info-box" style="background:var(--blue-light);border:1px solid #bfdbfe;">
+        <strong>Avantages à construire (roadmap)</strong>
+        <ul>
+          <li>IA fraîcheur : arme anti-Tolbi (ils font l'IA agronomique, pas sur les lots)</li>
+          <li>USSD : 70% des agriculteurs non-smartphone</li>
+          <li>Assurance : score FresCoop → produit financier complet</li>
+          <li>Carbone : revenus passifs pour les producteurs et FresCoop</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ FOOTER ════════════════════════════ -->
+  <div class="doc-footer">
+    <div>
+      <strong>FresCoop</strong> — Du champ au marché, la preuve qui paie
+    </div>
+    <div style="text-align:right">
+      <div>Document confidentiel · POESAM 2026</div>
+      <div style="margin-top:2px">contact@frescoop.sn · Dakar, Sénégal</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
