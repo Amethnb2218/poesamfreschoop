@@ -1247,14 +1247,11 @@ async function handleStore(request, response) {
         currentStoreForMerge = current;
         const checks = [
           { key: 'users', min: 3 },
-          { key: 'products', min: 5 },
-          { key: 'orders', min: 2 },
-          { key: 'lots', min: 2 },
         ];
         for (const { key, min } of checks) {
           const cur = (current[key] || []).length;
           const next = (incoming[key] || []).length;
-          if (cur > min && next < cur * 0.7) {
+          if (cur > min && next < cur * 0.5) {
             console.warn(`[Store] PUT rejected: ${key} would drop from ${cur} to ${next} (-${Math.round((1 - next / cur) * 100)}%). Possible stale client.`);
             sendJson(response, 409, {
               ok: false,
