@@ -9,11 +9,35 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <title>FresCoop — Du champ au marché, la preuve qui paie</title>
+    <script>
+      // Nettoyage des produits démo fantômes dans le localStorage
+      try {
+        const k = 'frescoop.production.roles.v2';
+        const raw = localStorage.getItem(k);
+        if (raw) {
+          const store = JSON.parse(raw);
+          if (store && store.products) {
+            const demoIds = ['demo-antigaspi-', 'demo-', 'prd-demo'];
+            const before = store.products.length;
+            store.products = store.products.filter(p => {
+              const id = String(p.id || '');
+              const name = String(p.name || '').toLowerCase();
+              const isDemoAntiGaspi = demoIds.some(d => id.includes(d)) ||
+                (name.includes('ecouler') || name.includes('fin de date') || name.includes('test anti-g'));
+              return !isDemoAntiGaspi;
+            });
+            if (store.products.length !== before) {
+              localStorage.setItem(k, JSON.stringify(store));
+            }
+          }
+        }
+      } catch(e) {}
+    </script>
     <script type="module" crossorigin src="/assets/index-GaRyhMHk.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-A7PYfJc4.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"></div>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
