@@ -1,0 +1,22 @@
+{
+  "name": "FresCoop",
+  "short_name": "FresCoop",
+  "description": "Plateforme agritech Sénégal — traçabilité, anti-gaspi, paiement sécurisé et bancabilité pour producteurs.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7fbf8",
+  "theme_color": "#0a4b3e",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "finance", "food", "productivity"]
+}
