@@ -12575,7 +12575,7 @@ function renderBusinessReportHtml(store) {
       </div>
       <div class="poesam-badge-doc">
         <strong>POESAM 2026</strong>
-        <span>Hackathon Filieres Agricoles 2026</span>
+        <span>POESAM 2026 — Prix Orange Entrepreneur Social</span>
         <span class="badge-tag">Finaliste</span>
       </div>
     </header>
