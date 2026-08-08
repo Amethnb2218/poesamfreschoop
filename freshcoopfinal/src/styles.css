@@ -10677,3 +10677,104 @@ label, .field-label {
 }
 .public-contact-team h3 { margin: 0 0 0.5rem; color: #0a4b3e; }
 .public-contact-team p { margin: 0.25rem 0; color: #4b5563; }
+
+/* ==========================================================================
+   Impact Genre Section
+   ========================================================================== */
+
+.public-genre-section {
+  background: linear-gradient(180deg, #fdf2f8 0%, #ffffff 100%);
+  padding-top: 64px;
+  padding-bottom: 64px;
+}
+
+.genre-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.genre-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 16px;
+  border-radius: 16px;
+  text-align: center;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.genre-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+.genre-stat-card strong {
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  line-height: 1;
+  font-weight: 950;
+}
+
+.genre-stat-card span {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.genre-stat-card--rose strong { color: #e11d48; }
+.genre-stat-card--red strong { color: #dc2626; }
+.genre-stat-card--amber strong { color: #d97706; }
+.genre-stat-card--purple strong { color: #7c3aed; }
+
+.genre-response {
+  margin-top: 32px;
+  padding: 24px 32px;
+  border-radius: 16px;
+  background: rgba(225, 29, 72, 0.04);
+  border: 1px solid rgba(225, 29, 72, 0.12);
+}
+
+.genre-response h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+
+.genre-response p {
+  font-size: 0.95rem;
+  color: var(--muted);
+  line-height: 1.7;
+  margin: 0;
+}
+
+.genre-sources {
+  margin-top: 24px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  opacity: 0.7;
+  line-height: 1.5;
+  text-align: center;
+}
+
+@media (max-width: 1024px) {
+  .genre-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .genre-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .genre-response {
+    padding: 20px;
+  }
+}
