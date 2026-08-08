@@ -1277,17 +1277,14 @@ function PublicPageImpact({ navigate }) {
 
       <section className="public-band public-poesam-section reveal">
         <div className="public-poesam-copy">
-          <img src="/orange-poesam-logo.svg" alt="POESAM Orange" className="poesam-logo" />
-          <span className="eyebrow">Scalabilité Afrique</span>
-          <h2>Un scoring conçu pour 17 pays. Un déploiement progressif.</h2>
-          <p className="public-subtitle">FresCoop démarre au Sénégal avec un pilote de 500 agriculteurs, puis s'étend à toute l'Afrique et le Moyen-Orient grâce à une infrastructure 100% cloud et des partenariats Orange Digital Center.</p>
+          <span className="eyebrow">Scalabilité — 17 pays Orange</span>
+          <h2>Un scoring conçu pour l'Afrique. Un déploiement progressif.</h2>
+          <p className="public-subtitle">FresCoop démarre au Sénégal avec un pilote de 500 agriculteurs et 10 coopératives, puis s'étend progressivement à toute l'Afrique grâce à une infrastructure 100% cloud et les Orange Digital Centers.</p>
           <div className="public-poesam-countries">
-            {['Sénégal', 'Côte d\'Ivoire', 'Mali', 'Burkina Faso', 'Bénin', 'Niger', 'Togo', 'Guinée-Bissau'].map((country) => <span key={country}>{country}</span>)}
+            {['Sénégal', 'Côte d'Ivoire', 'Mali', 'Burkina Faso', 'Cameroun', 'Niger', 'Guinée', 'Madagascar', 'Maroc', 'Tunisie', 'Égypte', 'RDC', 'Jordanie', 'Togo', 'Bénin', 'Sierra Leone', 'Botswana'].map((country) => <span key={country}>{country}</span>)}
           </div>
+          <p style={{ marginTop: "1.5rem", fontSize: "0.85rem", opacity: 0.7 }}>POESAM 2026 — Prix Orange de l'Entrepreneur Social en Afrique et au Moyen-Orient · 16e édition</p>
         </div>
-        <figure className="public-poesam-map">
-          <img src={publicImages.africaMap} alt="Carte Afrique" />
-        </figure>
       </section>
 
       <section className="public-demo-banner reveal">
@@ -9673,7 +9670,7 @@ function PitchPage({ navigate, store }) {
   return (
     <PageFrame>
       <section className="pitch-hero">
-        <img src="/orange-poesam-logo.svg" alt="POESAM Orange" className="poesam-logo-pitch" />
+        
         <span className="poesam-badge">POESAM 2026 — ORANGE</span>
         <h1>FresCoop — Pitch Deck</h1>
         <p>Digitalisation de la chaîne de valeur agricole africaine</p>
@@ -9753,7 +9750,7 @@ function AppFooter({ currentUser, navigate }) {
         </div>
       </div>
       <div className="footer-bottom">
-        <div className="footer-poesam"><img src="/orange-poesam-logo.svg" alt="POESAM Orange" className="poesam-logo-footer" /><small>&copy; 2026 FresCoop — Finaliste POESAM 2026, Dakar 18-21 mai 2026.</small></div>
+        <div className="footer-poesam"><small>&copy; 2026 FresCoop — Finaliste POESAM 2026, Dakar 18-21 mai 2026.</small></div>
         <small>ODD 1 · 2 · 5 · 8 · 12 · 13</small>
       </div>
     </footer>
