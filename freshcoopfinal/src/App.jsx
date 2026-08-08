@@ -89,7 +89,7 @@ const ORDER_PAGE_SIZE_OPTIONS = [5, 10, 20];
 const SEEDED_ADMIN_EMAIL = 'amethsl2218@gmail.com';
 const SEEDED_ADMIN_PASSWORD_HASH = '62a1a5600217bfc84fa5ac26faf898b366581f3b1512624444654b795b108a92';
 const SEEDED_ADMIN_USER = {
-  id: 'usr-admin-uemoa',
+  id: 'usr-admin-poesam',
   createdAt: '2026-04-28T00:00:00.000Z',
   name: 'Admin FresCoop',
   email: SEEDED_ADMIN_EMAIL,
@@ -235,7 +235,7 @@ const publicImages = {
   commerce: '/sector-images/sector-commerce.jpg',
   logistics: '/sector-images/sector-logistics.jpg',
   account: '/sector-images/account-profile.jpg',
-  uemoaMap: '/uemoa-map.svg',
+  africaMap: '/africa-map.svg',
   identity: '/frescoop-identity.svg',
   fallbackProduct: '/sector-images/fallback-product.jpg',
   fallbackHub: '/sector-images/fallback-hub.jpg',
@@ -317,7 +317,7 @@ const basePageMeta = {
   '/impact': {
     image: publicImages.impact,
     kicker: 'Impact',
-    title: 'Indicateurs mesurables UEMOA.',
+    title: 'Indicateurs mesurables impact social.',
     body: 'Pertes évitées, revenu, genre et CO2.',
   },
   '/bancabilite': {
@@ -351,7 +351,7 @@ const roleHomeMeta = {
     image: publicImages.impact,
     kicker: 'Admin',
     title: 'Pilotez la plateforme FresCoop.',
-    body: 'Revenus, agriculteurs, financement et rapport UEMOA.',
+    body: 'Revenus, agriculteurs, financement et rapport impact.',
   },
   agriculteur: {
     image: publicImages.agriculture,
@@ -745,12 +745,12 @@ function VerifyReceiptPage({ navigate, route, store }) {
               <div><em>Code de reçu</em><b>{payment.receiptCode}</b></div>
               <div><em>Date du paiement</em><b>{formatDate(payment.createdAt)}</b></div>
               <div><em>Statut</em><b className="status-valid">✓ {payment.status || 'Payé'}</b></div>
-              <div><em>Mode de paiement</em><b>{payment.partner || 'GIM-Pay'}</b></div>
+              <div><em>Mode de paiement</em><b>{payment.partner || 'PayDunya'}</b></div>
               {product && <div><em>Produit</em><b>{product.name}</b></div>}
               {linkedOrder && <div><em>Quantité</em><b>{formatNumber(linkedOrder.quantity)} {linkedOrder.unit || product?.unit || 'kg'}</b></div>}
               {payer && <div><em>Client</em><b>{payer.name}</b></div>}
               {seller && <div><em>Vendeur</em><b>{seller.name}</b></div>}
-              {payment.gimpayToken && <div><em>Référence GIM-Pay</em><b className="ref-token">{payment.gimpayToken}</b></div>}
+              {payment.paydunyaToken && <div><em>Référence PayDunya</em><b className="ref-token">{payment.paydunyaToken}</b></div>}
             </div>
 
             <div className="verify-seal">
@@ -930,7 +930,7 @@ function PublicSiteFooter({ navigate }) {
         <div className="brand big"><span>F</span><strong>FresCoop</strong></div>
         <p>FresCoop rend chaque agriculteur visible, vérifiable et finançable grâce à la preuve économique portable.</p>
         <p>Contact : <strong>contact@frescoop.sn</strong></p>
-        <p style={{ fontSize: '0.78rem', opacity: 0.7 }}>Hackathon Filières Agricoles GIM-UEMOA 2026 — Point 4 : Accès au financement agricole</p>
+        <p style={{ fontSize: '0.78rem', opacity: 0.7 }}>POESAM 2026 — Prix Orange de l'Entrepreneur Social — Impact Social — IA & Agriculture</p>
       </div>
     </footer>
   );
@@ -943,12 +943,12 @@ function PublicPageHero({ navigate }) {
       <PublicSiteNav navigate={navigate} path="/" />
       <section className="public-hero" style={{ backgroundImage: `linear-gradient(90deg, rgba(5,23,18,0.92), rgba(5,23,18,0.28)), url("${publicImages.hero}")` }}>
         <div>
-          <span className="eyebrow">Hackathon Filières Agricoles GIM-UEMOA 2026 — Point 4 : Accès au financement</span>
+          <span className="eyebrow">POESAM 2026 — Prix Orange de l'Entrepreneur Social — Impact Social — IA & Agriculture</span>
           <h1>De l'invisible au finançable.<br /><em>En 90 jours.</em></h1>
-          <p>FresCoop transforme chaque vente, chaque livraison, chaque paiement d'un agriculteur en preuve bancaire vérifiable — construisant automatiquement un score de crédit exploitable par toute institution financière de la zone UEMOA.</p>
+          <p>FresCoop transforme chaque vente, chaque livraison, chaque paiement d'un agriculteur en preuve bancaire vérifiable — construisant automatiquement un score de crédit exploitable par toute institution financière en Afrique subsaharienne.</p>
           <div className="hero-kpis">
             <div className="hero-kpi"><AnimatedCounter end={80} suffix="%" /><span>des agriculteurs exclus du crédit</span></div>
-            <div className="hero-kpi"><AnimatedCounter end={60} suffix="M" /><span>d'agriculteurs dans l'UEMOA</span></div>
+            <div className="hero-kpi"><AnimatedCounter end={60} suffix="M" /><span>d'agriculteurs en Afrique subsaharienne</span></div>
             <div className="hero-kpi"><AnimatedCounter end={3} suffix="%" /><span>du crédit va à l'agriculture</span></div>
           </div>
           <div className="button-row">
@@ -988,7 +988,7 @@ function PublicPageProbleme({ navigate }) {
             </div>
             <div className="probleme-card__stat"><AnimatedCounter end={3} suffix="%" /></div>
             <h3 className="probleme-card__title">Du crédit vers l'agriculture</h3>
-            <p className="probleme-card__desc">Alors que l'agriculture représente <strong>35% du PIB</strong> de la zone UEMOA. Un paradoxe inacceptable.</p>
+            <p className="probleme-card__desc">Alors que l'agriculture représente <strong>35% du PIB</strong> en Afrique subsaharienne. Un paradoxe inacceptable.</p>
           </article>
           <article className="reveal probleme-card probleme-card--dark">
             <div className="probleme-card__icon">
@@ -1053,7 +1053,7 @@ function PublicPageComment({ navigate }) {
     "Inscription et vérification d'identité (CNI)",
     'Publication de vos produits sur le marché',
     "Réception de commandes d'acheteurs",
-    'Paiement confirmé via GIM-Pay',
+    'Paiement confirmé via PayDunya',
     'Score de bancabilité qui monte',
     'Dossier de crédit exportable',
     'Présentation à une banque ou SFD',
@@ -1201,7 +1201,7 @@ function PublicPageModele({ navigate }) {
             <div className="modele-viability-item">
               <strong>Marché total (TAM)</strong>
               <span>60M agriculteurs × 8 pays</span>
-              <em>Zone UEMOA entière</em>
+              <em>Afrique subsaharienne</em>
             </div>
             <div className="modele-viability-item">
               <strong>Projection an 1</strong>
@@ -1260,7 +1260,7 @@ function PublicPageImpact({ navigate }) {
           <article className="reveal impact-social-card">
             <div className="impact-social-icon"><ShieldCheck size={22} /></div>
             <strong>Souveraineté des données</strong>
-            <p>L'agriculteur décide qui voit son dossier. Portabilité totale. Conforme aux principes UEMOA de protection des données.</p>
+            <p>L'agriculteur décide qui voit son dossier. Portabilité totale. Conforme aux principes de protection des données.</p>
           </article>
           <article className="reveal impact-social-card">
             <div className="impact-social-icon"><PhoneCall size={22} /></div>
@@ -1275,18 +1275,18 @@ function PublicPageImpact({ navigate }) {
         </div>
       </section>
 
-      <section className="public-band public-uemoa-section reveal">
-        <div className="public-uemoa-copy">
-          <img src="/gim-uemoa-logo.png" alt="GIM-UEMOA" className="gim-uemoa-logo" />
-          <span className="eyebrow">Scalabilité UEMOA</span>
+      <section className="public-band public-poesam-section reveal">
+        <div className="public-poesam-copy">
+          <img src="/orange-poesam-logo.png" alt="POESAM Orange" className="poesam-logo" />
+          <span className="eyebrow">Scalabilité Afrique</span>
           <h2>Un scoring conçu pour les 8 pays. Un déploiement progressif.</h2>
-          <p className="public-subtitle">FresCoop démarre au Sénégal avec un pilote de 100 agriculteurs, puis s'étend à toute la zone UEMOA grâce à une infrastructure 100% cloud et des partenariats GIM-UEMOA.</p>
-          <div className="public-uemoa-countries">
+          <p className="public-subtitle">FresCoop démarre au Sénégal avec un pilote de 100 agriculteurs, puis s'étend à toute l'Afrique et le Moyen-Orient grâce à une infrastructure 100% cloud et des partenariats Orange Digital Center.</p>
+          <div className="public-poesam-countries">
             {['Sénégal', 'Côte d\'Ivoire', 'Mali', 'Burkina Faso', 'Bénin', 'Niger', 'Togo', 'Guinée-Bissau'].map((country) => <span key={country}>{country}</span>)}
           </div>
         </div>
-        <figure className="public-uemoa-map">
-          <img src={publicImages.uemoaMap} alt="Carte UEMOA" />
+        <figure className="public-poesam-map">
+          <img src={publicImages.africaMap} alt="Carte Afrique" />
         </figure>
       </section>
 
@@ -1323,7 +1323,7 @@ function PublicPageContact({ navigate }) {
         </div>
         <div className="public-contact-info reveal">
           <p><strong>Email :</strong> contact@frescoop.sn</p>
-          <p><strong>Projet :</strong> Hackathon Filières Agricoles GIM-UEMOA 2026</p>
+          <p><strong>Projet :</strong> POESAM 2026 — Prix Orange de l'Entrepreneur Social</p>
           <p><strong>Point :</strong> Accès au financement agricole (Point 4)</p>
         </div>
       </section>
@@ -1529,7 +1529,7 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
 
       <section className="survey-hero">
         <div>
-          <span className="eyebrow">Hackathon Filières Agricoles UEMOA 2026 — questionnaire pilote</span>
+          <span className="eyebrow">POESAM 2026 — Prix Orange de l'Entrepreneur Social — questionnaire pilote</span>
           <h1>Rejoindre le pilote FresCoop</h1>
           <p>Identifiez-vous pour que l'équipe FresCoop vous intègre au programme pilote. Producteurs, acheteurs et partenaires finance sont les bienvenus.</p>
         </div>
@@ -2291,7 +2291,7 @@ function FrescoopRoleHomePage({ currentUser, navigate, store }) {
                   <span>{index + 1}</span>
                   <div>
                     <strong>{item.farmer.name}</strong>
-                    <small>{item.farmer.region || 'UEMOA'} - Score {item.score}/100</small>
+                    <small>{item.farmer.region || 'Sénégal'} - Score {item.score}/100</small>
                   </div>
                   <b>{item.score}/100</b>
                 </article>
@@ -2371,7 +2371,7 @@ function AdminHomePage({ navigate, stats, store }) {
           <div className="button-row">
             <Button onClick={() => navigate('/bancabilite')}><Landmark size={18} /> Vue bancabilité</Button>
             <Button variant="secondary" onClick={() => navigate('/impact')}><BarChart3 size={18} /> Impact</Button>
-            <Button variant="secondary" onClick={() => downloadHtml('rapport-uemoa-frescoop.html', renderBusinessReportHtml(store))}><Download size={18} /> Rapport UEMOA</Button>
+            <Button variant="secondary" onClick={() => downloadHtml('rapport-impact-frescoop.html', renderBusinessReportHtml(store))}><Download size={18} /> Rapport Impact</Button>
             <Button variant="secondary" onClick={() => navigate('/donnees')}><Database size={18} /> Export</Button>
           </div>
         </div>
@@ -2440,7 +2440,7 @@ function AdminHomePage({ navigate, stats, store }) {
             <article><strong>{pipeline.pending}</strong><span>A traiter</span></article>
             <article><strong>{store.proofs.length}</strong><span>Preuves économiques</span></article>
           </div>
-          <NoticeCard icon={Landmark} title="Point 4 GIM-UEMOA" body="Plateforme de scoring basee sur les données de production reelles pour susciter la confiance des institutions financieres." />
+          <NoticeCard icon={Landmark} title="Impact Social — IA & Agriculture" body="Plateforme de scoring basee sur les données de production reelles pour susciter la confiance des institutions financieres." />
         </section>
 
         <section className="panel">
@@ -3805,7 +3805,7 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
         paymentStatus: 'En attente',
         assignedAgentId: assignedAgent?.id || '',
         agentWorkflow: {},
-        message: 'Commande FresCoop en attente de paiement. Règlement sécurisé via GIM-Pay requis avant préparation.',
+        message: 'Commande FresCoop en attente de paiement. Règlement sécurisé via PayDunya requis avant préparation.',
         productSnapshot: snapshotCartProduct(item.product),
       };
     });
@@ -4391,7 +4391,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
   const [receipt, setReceipt] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [pendingToken, setPendingToken] = useState(() => {
-    try { return sessionStorage.getItem('frescoop.gimpay.token') || ''; } catch { return ''; }
+    try { return sessionStorage.getItem('frescoop.paydunya.token') || ''; } catch { return ''; }
   });
   const orderIds = useMemo(() => new URLSearchParams(route.search || '').get('orders')?.split(',').filter(Boolean) || [], [route.search]);
   const queryStatus = useMemo(() => new URLSearchParams(route.search || '').get('status') || '', [route.search]);
@@ -4403,16 +4403,16 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
   ));
   const total = payableOrders.reduce((sum, order) => sum + getOrderTotal(order, store), 0);
 
-  function finalizePayment(token, gimpayData) {
+  function finalizePayment(token, paydunyaData) {
     // Garde anti-rejouage: si un paymentRecord existe déjà avec ce token, on ne refait rien
-    const alreadyProcessed = (store.paymentRecords || []).some((record) => record.gimpayToken === token);
+    const alreadyProcessed = (store.paymentRecords || []).some((record) => record.paydunyaToken === token);
     if (alreadyProcessed) {
-      const existing = (store.paymentRecords || []).find((record) => record.gimpayToken === token);
+      const existing = (store.paymentRecords || []).find((record) => record.paydunyaToken === token);
       if (existing) {
-        const paidOrders = (store.orders || []).filter((order) => order.gimpayToken === token);
-        setReceipt({ code: existing.receiptCode, orders: paidOrders, total: existing.amount, paidAt: existing.createdAt, token, gimpayReceiptUrl: existing.gimpayReceiptUrl || '' });
+        const paidOrders = (store.orders || []).filter((order) => order.paydunyaToken === token);
+        setReceipt({ code: existing.receiptCode, orders: paidOrders, total: existing.amount, paidAt: existing.createdAt, token, paydunyaReceiptUrl: existing.paydunyaReceiptUrl || '' });
       }
-      try { sessionStorage.removeItem('frescoop.gimpay.token'); } catch {}
+      try { sessionStorage.removeItem('frescoop.paydunya.token'); } catch {}
       setPendingToken('');
       return;
     }
@@ -4425,7 +4425,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
     ));
     if (!eligibleOrders.length) {
       notify('Aucune commande éligible au paiement.', 'info');
-      try { sessionStorage.removeItem('frescoop.gimpay.token'); } catch {}
+      try { sessionStorage.removeItem('frescoop.paydunya.token'); } catch {}
       setPendingToken('');
       return;
     }
@@ -4522,14 +4522,14 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
         agentId: order.assignedAgentId || agent?.id || '',
         amount: getOrderTotal(order, store),
         status: 'Paye',
-        partner: `GIM-Pay (${gimpayData?.mode || 'test'})`,
+        partner: `PayDunya (${paydunyaData?.mode || 'test'})`,
         receiptCode,
-        gimpayToken: token,
-        gimpayReceiptUrl: gimpayData?.receiptUrl || '',
+        paydunyaToken: token,
+        paydunyaReceiptUrl: paydunyaData?.receiptUrl || '',
         loanDeductionAmount: loanDeduction?.amount || 0,
         loanDeductionPct: loanDeduction?.repaymentPct || 0,
         sellerNetAmount: getOrderTotal(order, store) - (loanDeduction?.amount || 0),
-        regulatoryNote: 'Paiement execute via GIM-Pay. FresCoop conserve la preuve de coordination.',
+        regulatoryNote: 'Paiement execute via PayDunya. FresCoop conserve la preuve de coordination.',
       };
     });
 
@@ -4539,7 +4539,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
       paymentStatus: 'Paye',
       paidAt: now,
       receiptCode,
-      gimpayToken: token,
+      paydunyaToken: token,
       assignedAgentId: order.assignedAgentId || getAvailableFieldAgent(store)?.id || '',
       updatedAt: now,
     } : order));
@@ -4578,12 +4578,12 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
         ownerId: order.sellerId,
         label: `Vente ${product?.name || 'produit'} (${formatNumber(order.quantity)} ${order.unit || product?.unit || 'kg'})`,
         amount: getOrderTotal(order, store),
-        paymentMethod: `GIM-Pay`,
+        paymentMethod: `PayDunya`,
         status: 'Paye',
         buyer: currentUser.name || 'Client',
         orderId: order.id,
         receiptCode,
-        gimpayToken: token,
+        paydunyaToken: token,
         loanDeductionAmount: repayment?.amount || 0,
         netAmount: getOrderTotal(order, store) - (repayment?.amount || 0),
       };
@@ -4593,10 +4593,10 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
     }
 
     actions.setNotifications((items) => [...notifications, ...items]);
-    actions.setAuditLogs((items) => [createAuditLog(currentUser, 'payment_gimpay_confirmed', `Paiement GIM-Pay confirmé: ${receiptCode} (token ${token})`, receiptCode), ...items]);
-    setReceipt({ code: receiptCode, orders: eligibleOrders, total: totalAmount, paidAt: now, token, gimpayReceiptUrl: gimpayData?.receiptUrl || '' });
+    actions.setAuditLogs((items) => [createAuditLog(currentUser, 'payment_paydunya_confirmed', `Paiement PayDunya confirmé: ${receiptCode} (token ${token})`, receiptCode), ...items]);
+    setReceipt({ code: receiptCode, orders: eligibleOrders, total: totalAmount, paidAt: now, token, paydunyaReceiptUrl: paydunyaData?.receiptUrl || '' });
     notify('Paiement confirmé. Reçu généré.', 'success');
-    try { sessionStorage.removeItem('frescoop.gimpay.token'); } catch {}
+    try { sessionStorage.removeItem('frescoop.paydunya.token'); } catch {}
     setPendingToken('');
   }
 
@@ -4604,17 +4604,17 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
     if (!token) return;
     setProcessing(true);
     try {
-      const res = await fetch(`${API_BASE}/api/gimpay/confirm/${encodeURIComponent(token)}`);
+      const res = await fetch(`${API_BASE}/api/paydunya/confirm/${encodeURIComponent(token)}`);
       const data = await res.json();
       if (data?.confirmed) {
         finalizePayment(token, data);
       } else {
         notify(`Paiement non confirmé (statut: ${data?.status || 'inconnu'}). Aucun reçu généré.`);
-        try { sessionStorage.removeItem('frescoop.gimpay.token'); } catch {}
+        try { sessionStorage.removeItem('frescoop.paydunya.token'); } catch {}
         setPendingToken('');
       }
     } catch (error) {
-      notify(`Erreur verification GIM-Pay: ${error.message}`);
+      notify(`Erreur verification PayDunya: ${error.message}`);
     } finally {
       setProcessing(false);
     }
@@ -4623,7 +4623,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
   useEffect(() => {
     if (queryStatus === 'cancel') {
       notify('Paiement annulé. Aucun reçu généré.');
-      try { sessionStorage.removeItem('frescoop.gimpay.token'); } catch {}
+      try { sessionStorage.removeItem('frescoop.paydunya.token'); } catch {}
       setPendingToken('');
       navigate(route.pathname);
       return;
@@ -4651,7 +4651,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
     setProcessing(true);
     try {
       const description = `Commande FresCoop - ${payableOrders.length} article(s)`;
-      const res = await fetch(API_BASE + '/api/gimpay/create-invoice', {
+      const res = await fetch(API_BASE + '/api/paydunya/create-invoice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -4665,16 +4665,16 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
       });
       const data = await res.json();
       if (!data?.ok || !data?.url) {
-        notify(data?.error || 'Echec initialisation GIM-Pay');
+        notify(data?.error || 'Echec initialisation PayDunya');
         setProcessing(false);
         return;
       }
-      try { sessionStorage.setItem('frescoop.gimpay.token', data.token); } catch {}
+      try { sessionStorage.setItem('frescoop.paydunya.token', data.token); } catch {}
       setPendingToken(data.token);
-      notify('Redirection vers GIM-Pay...');
+      notify('Redirection vers PayDunya...');
       window.location.href = data.url;
     } catch (error) {
-      notify(`Erreur GIM-Pay: ${error.message}`);
+      notify(`Erreur PayDunya: ${error.message}`);
       setProcessing(false);
     }
   }
@@ -4709,7 +4709,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
             <div><em>Code de reçu</em><b>{receipt.code}</b></div>
             <div><em>Date & heure</em><b>{formatDate(receipt.paidAt)}</b></div>
             <div><em>Articles</em><b>{receipt.orders.length} produit{receipt.orders.length > 1 ? 's' : ''}</b></div>
-            <div><em>Mode</em><b>{receipt.token?.startsWith('DEMO') ? 'Simulation démo' : 'GIM-Pay'}</b></div>
+            <div><em>Mode</em><b>{receipt.token?.startsWith('DEMO') ? 'Simulation démo' : 'PayDunya'}</b></div>
           </div>
           <div className="payment-success-qr">
             <img
@@ -4739,7 +4739,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
       ) : (
         <section className="panel payment-panel partner-powered">
           <PanelToolbar icon={ReceiptText} title="Paiement sécurisé" action={<Button variant="secondary" onClick={() => navigate('/commandes?tab=cart')}><ShoppingCart size={16} /> Retour commandes</Button>} />
-          <NoticeCard icon={ShieldCheck} title="Paiement via GIM-Pay" body="Orange Money, Wave, Free Money, carte bancaire. Aucun reçu n'est émis tant que le paiement n'est pas confirmé." />
+          <NoticeCard icon={ShieldCheck} title="Paiement via PayDunya" body="Orange Money, Wave, Free Money, carte bancaire. Aucun reçu n'est émis tant que le paiement n'est pas confirmé." />
           {pendingToken && (
             <NoticeCard icon={CircleAlert} title="Paiement en cours de vérification" body={`Référence: ${pendingToken}. Cliquez ci-dessous pour vérifier le statut.`} />
           )}
@@ -4765,7 +4765,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
               <div className="summary-total"><span>Total à payer</span><strong>{formatMoney(total)}</strong></div>
               <div className="button-row">
                 <Button onClick={payNow} disabled={processing}>
-                  <CheckCircle2 size={18} /> {processing ? 'Redirection...' : 'Payer via GIM-Pay'}
+                  <CheckCircle2 size={18} /> {processing ? 'Redirection...' : 'Payer via PayDunya'}
                 </Button>
                 <Button variant="secondary" onClick={simulateAcceptedPayment} disabled={processing}>
                   <CheckCircle2 size={18} /> {processing ? '...' : 'Simuler paiement (démo)'}
@@ -6169,14 +6169,14 @@ function ImpactPage({ stats, store }) {
 
   return (
     <PageFrame>
-      <section className="panel uemoa-hero">
+      <section className="panel poesam-hero">
         <div>
-          <span className="uemoa-badge">IMPACT FILIERES UEMOA</span>
+          <span className="poesam-badge">IMPACT FILIÈRES AGRICOLES</span>
           <h2>FresCoop en chiffres: indicateurs mesurables</h2>
-          <p>Chaque lot trace, chaque paiement partenaire, chaque capteur froid convertit des pertes en revenu pour les acteurs agricoles UEMOA. Aucun chiffre fictif: ces KPI sont calcules en temps reel sur l activité du compte.</p>
-          <div className="gimpay-counter" style={{ marginTop: '1rem', padding: '0.75rem 1.25rem', background: 'var(--surface)', borderRadius: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+          <p>Chaque lot trace, chaque paiement partenaire, chaque capteur froid convertit des pertes en revenu pour les acteurs agricoles en Afrique. Aucun chiffre fictif: ces KPI sont calcules en temps reel sur l activité du compte.</p>
+          <div className="paydunya-counter" style={{ marginTop: '1rem', padding: '0.75rem 1.25rem', background: 'var(--surface)', borderRadius: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
             <ReceiptText size={18} />
-            <span><strong>{impact.gimpayTxCount}</strong> paiements GIM-Pay (Wave, OM, Free Money)</span>
+            <span><strong>{impact.paydunyaTxCount}</strong> paiements PayDunya (Wave, OM, Free Money)</span>
           </div>
         </div>
       </section>
@@ -6188,7 +6188,7 @@ function ImpactPage({ stats, store }) {
         <StatCard icon={Sprout} label="CO2 évité (kg eq.)" value={formatCompact(impact.co2SavedKg)} tone="blue" />
         <StatCard icon={Tractor} label="Coopératives connectées" value={impact.coopérativeCount} tone="green" />
         <StatCard icon={Truck} label="Kg tracés jusqu'au marché" value={formatCompact(impact.tracedKg)} tone="blue" />
-        <StatCard icon={ReceiptText} label="Transactions partenaires" value={impact.gimpayTxCount} tone="gold" />
+        <StatCard icon={ReceiptText} label="Transactions partenaires" value={impact.paydunyaTxCount} tone="gold" />
         <StatCard icon={ShieldCheck} label="Preuves économiques émises" value={stats.proofs} tone="coral" />
       </div>
 
@@ -6235,11 +6235,11 @@ function ImpactPage({ stats, store }) {
       </div>
 
       <section className="panel">
-        <PanelTitle icon={ShieldCheck} title="Pitch GIM-UEMOA — du lot agricole au paiement vérifiable" />
-        <div className="uemoa-pitch-grid">
+        <PanelTitle icon={ShieldCheck} title="Pitch POESAM — du lot agricole au paiement vérifiable" />
+        <div className="poesam-pitch-grid">
           <article><strong>Impact mesurable</strong><p>Chaque KPI ci-dessus est calculé sur les transactions et lots réels, pas sur une projection théorique.</p></article>
           <article><strong>Innovation utile</strong><p>IoT froid + QR traçabilité + IA durée de vie + paiement partenaire: une stack pragmatique, pas gadget.</p></article>
-          <article><strong>Scalabilité</strong><p>Modèle reproductible dans les 8 pays UEMOA. API, données et parcours sont déjà découplés pour un déploiement régional.</p></article>
+          <article><strong>Scalabilité</strong><p>Modèle reproductible dans 17 pays d'Afrique et Moyen-Orient. API, données et parcours sont déjà découplés pour un déploiement régional.</p></article>
           <article><strong>Inclusion financière</strong><p>Historique de ventes exportable pour banques, SFD et partenaires, avec paiement mobile sans wallet propriétaire.</p></article>
           <article><strong>Genre</strong><p>Indicateur femmes productrices visible, utile pour inclusion, subventions et programmes d'appui régionaux.</p></article>
           <article><strong>Anti-gaspillage</strong><p>Alertes durée courte + prix dégressifs pour sauver des lots avant perte et orienter la demande régionale.</p></article>
@@ -6267,7 +6267,7 @@ function computeUemoaImpact(store) {
   const producers = users.filter((user) => user.role === 'agriculteur');
   const womenProducers = producers.filter((user) => user.gender === 'Femme' || user.gender === 'F' || /(^|\s)(fatou|aissatou|aïssatou|aminata|awa|khady|marieme|mariéme|mariame|mame|ndeye|fama|ndèye|fatoumata|diarra|binta|astou|bintou|soda|coumba|rokhaya|rokhia|aida|aïda|yacine|khadija|khadidja|penda|dior|oumy|mareme|marème)/i.test(String(user.name || ''))).length;
   const coopérativeCount = (store.coopératives || []).length;
-  const gimpayTxCount = paymentRecords.filter((record) => record.gimpayToken || /gimpay/i.test(record.partner || '')).length;
+  const paydunyaTxCount = paymentRecords.filter((record) => record.paydunyaToken || /paydunya/i.test(record.partner || '')).length;
 
   return {
     lossesAvertedPercent,
@@ -6277,7 +6277,7 @@ function computeUemoaImpact(store) {
     totalProducers: producers.length,
     womenProducers,
     coopérativeCount,
-    gimpayTxCount,
+    paydunyaTxCount,
     transactionsCount: transactions.length,
     revenue: totalRevenue,
   };
@@ -6373,9 +6373,9 @@ function AntiWastePage({ actions, currentUser, navigate, notify, store }) {
 
   return (
     <PageFrame>
-      <section className="panel uemoa-hero">
+      <section className="panel poesam-hero">
         <div>
-          <span className="uemoa-badge">ANTI-GASPI</span>
+          <span className="poesam-badge">ANTI-GASPI</span>
           <h2>{copy.title}</h2>
           <p>{copy.body}</p>
         </div>
@@ -6726,7 +6726,7 @@ function RepayLoanBlock({ loan, actions, currentUser, store, notify }) {
     };
     const notif = loan.partnerId ? createAppNotification({
         actor: currentUser,
-        body: `${currentUser.name} a remboursé ${formatMoney(amount)}${isFullyRepaid ? ' (solde complet)' : ''} sur le prêt ${loan.contractCode || ''}. Mode: ${method === 'gimpay' ? 'GIM-Pay' : 'Simulation'}.`,
+        body: `${currentUser.name} a remboursé ${formatMoney(amount)}${isFullyRepaid ? ' (solde complet)' : ''} sur le prêt ${loan.contractCode || ''}. Mode: ${method === 'paydunya' ? 'PayDunya' : 'Simulation'}.`,
         path: '/bancabilite',
         recipientId: loan.partnerId,
         relatedId: loan.id,
@@ -6751,7 +6751,7 @@ function RepayLoanBlock({ loan, actions, currentUser, store, notify }) {
     if (amount > remaining) { notify(`Le montant dépasse le solde restant (${formatMoney(remaining)}).`, 'error'); return; }
     setProcessing(true);
     try {
-      const res = await fetch(API_BASE + '/api/gimpay/create-invoice', {
+      const res = await fetch(API_BASE + '/api/paydunya/create-invoice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -6765,15 +6765,15 @@ function RepayLoanBlock({ loan, actions, currentUser, store, notify }) {
       });
       const data = await res.json();
       if (!data?.ok || !data?.url) {
-        notify(data?.error || 'Echec initialisation GIM-Pay', 'error');
+        notify(data?.error || 'Echec initialisation PayDunya', 'error');
         setProcessing(false);
         return;
       }
-      executeRepayment(amount, 'gimpay');
-      notify('Redirection vers GIM-Pay...');
+      executeRepayment(amount, 'paydunya');
+      notify('Redirection vers PayDunya...');
       window.location.href = data.url;
     } catch (error) {
-      notify(`Erreur GIM-Pay: ${error.message}`, 'error');
+      notify(`Erreur PayDunya: ${error.message}`, 'error');
       setProcessing(false);
     }
   }
@@ -6812,7 +6812,7 @@ function RepayLoanBlock({ loan, actions, currentUser, store, notify }) {
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             <button type="button" className="btn btn-primary" onClick={handleGimPay} disabled={processing} style={{ fontSize: '0.82rem', padding: '0.45rem 0.8rem' }}>
-              {processing ? '...' : '💳 Payer via GIM-Pay'}
+              {processing ? '...' : '💳 Payer via PayDunya'}
             </button>
             <button type="button" className="btn btn-secondary" onClick={handleSimulation} disabled={processing} style={{ fontSize: '0.82rem', padding: '0.45rem 0.8rem' }}>
               {processing ? '...' : '⚡ Simulation paiement'}
@@ -7161,13 +7161,13 @@ function BancabilitePage({ actions, currentUser, notify, store }) {
 
   return (
     <PageFrame>
-      <section className="panel uemoa-hero">
+      <section className="panel poesam-hero">
         <div>
-          <span className="uemoa-badge">INCLUSION FINANCIERE</span>
+          <span className="poesam-badge">INCLUSION FINANCIERE</span>
           <h2>{isFinancePartner ? 'Portefeuille agriculteurs - éligibilité crédit' : 'Score de bancabilité & dossier financement'}</h2>
           <p>{isFinancePartner
             ? 'Consultez les profils d\'agriculteurs FresCoop, leur score de bancabilité en temps réel, et instruisez les demandes de prêt directement depuis cette page.'
-            : 'Transformez votre activité réelle (transactions GIM-Pay, lots tracés, attestations) en dossier exploitable par banques, SFD et microfinance. Demande de prêt en un clic.'}
+            : 'Transformez votre activité réelle (transactions PayDunya, lots tracés, attestations) en dossier exploitable par banques, SFD et microfinance. Demande de prêt en un clic.'}
           </p>
         </div>
       </section>
@@ -7177,8 +7177,8 @@ function BancabilitePage({ actions, currentUser, notify, store }) {
         const scoreFactor = myDossier.score >= 80 ? 0.7 : myDossier.score >= 60 ? 0.5 : myDossier.score >= 40 ? 0.3 : 0;
         const monthsFactor = Number(loanForm.months) / 6;
         const regularityBonus = myDossier.transactionsCount >= 10 ? 1.2 : myDossier.transactionsCount >= 5 ? 1.1 : 1.0;
-        const gimpayBonus = myDossier.gimpayCount >= 3 ? 1.15 : 1.0;
-        const maxEligible = Math.round(myDossier.monthlyAverage * 6 * scoreFactor * regularityBonus * gimpayBonus);
+        const paydunyaBonus = myDossier.paydunyaCount >= 3 ? 1.15 : 1.0;
+        const maxEligible = Math.round(myDossier.monthlyAverage * 6 * scoreFactor * regularityBonus * paydunyaBonus);
         const suggestedForDuration = Math.round(maxEligible * monthsFactor);
         const blockingLoan = findBlockingLoanForFarmer(currentUser.id, store);
         return (
@@ -7196,12 +7196,12 @@ function BancabilitePage({ actions, currentUser, notify, store }) {
             <div className="bancabilite-kpi">
               <div><em>Revenu mensuel moyen</em><b>{formatMoney(myDossier.monthlyAverage)}</b></div>
               <div><em>Transactions vérifiées</em><b>{myDossier.transactionsCount}</b></div>
-              <div><em>Paiements GIM-Pay</em><b>{myDossier.gimpayCount}</b></div>
+              <div><em>Paiements PayDunya</em><b>{myDossier.paydunyaCount}</b></div>
               {(() => { const rats = (store.ratings || []).filter((rt) => rt.sellerId === currentUser.id); if (!rats.length) return null; const avg = (rats.reduce((s, rt) => s + rt.rating, 0) / rats.length).toFixed(1); return <div><em>Note clients</em><b style={{ color: '#d97706' }}>{'★'.repeat(Math.round(Number(avg)))} {avg}/5 <small>({rats.length} avis)</small></b></div>; })()}
               <div><em>Montant max éligible (IA)</em><b>{maxEligible > 0 ? formatMoney(maxEligible) : 'Score insuffisant'}</b></div>
             </div>
             {maxEligible > 0 && (
-              <NoticeCard icon={Activity} title="Calcul IA du montant éligible" body={`Basé sur : revenu moyen (${formatMoney(myDossier.monthlyAverage)}/mois) × facteur score (${(scoreFactor * 100).toFixed(0)}%) × régularité (×${regularityBonus.toFixed(2)}) × bonus GIM-Pay (×${gimpayBonus.toFixed(2)}). Montant max : ${formatMoney(maxEligible)} sur 6 mois.`} />
+              <NoticeCard icon={Activity} title="Calcul IA du montant éligible" body={`Basé sur : revenu moyen (${formatMoney(myDossier.monthlyAverage)}/mois) × facteur score (${(scoreFactor * 100).toFixed(0)}%) × régularité (×${regularityBonus.toFixed(2)}) × bonus PayDunya (×${paydunyaBonus.toFixed(2)}). Montant max : ${formatMoney(maxEligible)} sur 6 mois.`} />
             )}
             <div className="button-row">
               <Button variant="secondary" onClick={() => exportDossier(currentUser)}><Download size={16} /> Exporter mon dossier (PDF)</Button>
@@ -7227,7 +7227,7 @@ function BancabilitePage({ actions, currentUser, notify, store }) {
         }
         const sFactor = dossier.score >= 80 ? 0.7 : dossier.score >= 60 ? 0.5 : 0;
         const regBonus = dossier.transactionsCount >= 10 ? 1.2 : dossier.transactionsCount >= 5 ? 1.1 : 1.0;
-        const pdBonus = dossier.gimpayCount >= 3 ? 1.15 : 1.0;
+        const pdBonus = dossier.paydunyaCount >= 3 ? 1.15 : 1.0;
         const maxEligible6m = Math.round(dossier.monthlyAverage * 6 * sFactor * regBonus * pdBonus);
         const mFactor = Number(loanForm.months) / 6;
         const maxForDuration = Math.round(maxEligible6m * mFactor);
@@ -7271,7 +7271,7 @@ function BancabilitePage({ actions, currentUser, notify, store }) {
                     <div className="loan-ia-details">
                       <small>Revenu moyen : {formatMoney(dossier.monthlyAverage)}/mois</small>
                       <small>Score : {dossier.score}/100 (facteur {(sFactor * 100).toFixed(0)}%)</small>
-                      <small>Régularité : ×{regBonus.toFixed(2)} · GIM-Pay : ×{pdBonus.toFixed(2)}</small>
+                      <small>Régularité : ×{regBonus.toFixed(2)} · PayDunya : ×{pdBonus.toFixed(2)}</small>
                     </div>
                   </div>
                 ) : (
@@ -7499,7 +7499,7 @@ function BancabilitePage({ actions, currentUser, notify, store }) {
               <div><em>Revenu vérifié</em><b>{formatMoney(dossier.totalRevenue)}</b></div>
               <div><em>Moyenne / mois</em><b>{formatMoney(dossier.monthlyAverage)}</b></div>
               <div><em>Transactions</em><b>{dossier.transactionsCount}</b></div>
-              <div><em>GIM-Pay</em><b>{dossier.gimpayCount}</b></div>
+              <div><em>PayDunya</em><b>{dossier.paydunyaCount}</b></div>
               {(() => { const rats = (store.ratings || []).filter((rt) => rt.sellerId === user.id); if (!rats.length) return null; const avg = (rats.reduce((s, rt) => s + rt.rating, 0) / rats.length).toFixed(1); return <div><em>Note clients</em><b style={{ color: '#d97706' }}>{'★'.repeat(Math.round(Number(avg)))} {avg}/5 <small>({rats.length})</small></b></div>; })()}
             </div>
             <div className="button-row">
@@ -7665,9 +7665,9 @@ function AgriScoreCollectePage({ actions, currentUser, notify, store }) {
 
   return (
     <PageFrame>
-      <section className="panel uemoa-hero">
+      <section className="panel poesam-hero">
         <div>
-          <span className="uemoa-badge">AGRISCORE</span>
+          <span className="poesam-badge">AGRISCORE</span>
           <h2>Collecte terrain assistée — Scoring agricole</h2>
           <p>Collectez les données de l'agriculteur en langue locale, avec consentement oral et témoin. Ces données alimentent directement le score AgriScore pour le dossier bancaire.</p>
         </div>
@@ -7828,7 +7828,7 @@ function buildBancabiliteDossier(user, store) {
   const orders = (store.orders || []).filter((item) => item.sellerId === user.id);
   const paidOrders = orders.filter((order) => order.paymentStatus === 'Paye' || order.status === 'Confirmee' || order.status === 'Livree');
   const paymentRecords = (store.paymentRecords || []).filter((record) => record.sellerId === user.id);
-  const gimpayTx = paymentRecords.filter((r) => r.gimpayToken || /gimpay/i.test(r.partner || ''));
+  const paydunyaTx = paymentRecords.filter((r) => r.paydunyaToken || /paydunya/i.test(r.partner || ''));
   const proofs = (store.proofs || []).filter((item) => item.ownerId === user.id);
   const activityProofs = (store.activityProofs || []).filter((item) => item.userId === user.id && (item.status === 'valide' || item.status === 'auto_valide'));
   const totalRevenue = paidOrders.reduce((sum, order) => sum + getOrderTotal(order, store), 0)
@@ -7854,14 +7854,14 @@ function buildBancabiliteDossier(user, store) {
   const criteria = [
     { label: 'Anciennete compte', value: `${monthsActive} mois`, points: Math.min(15, monthsActive * 2) },
     { label: 'Transactions vérifiées', value: transactions.length + paidOrders.length, points: Math.min(15, (transactions.length + paidOrders.length) * 2) },
-    { label: 'Paiements GIM-Pay', value: gimpayTx.length, points: Math.min(10, gimpayTx.length * 3) },
+    { label: 'Paiements PayDunya', value: paydunyaTx.length, points: Math.min(10, paydunyaTx.length * 3) },
     { label: 'Vérifications terrain par agent', value: activityProofs.length, points: Math.min(15, activityProofs.length * 4) },
     { label: 'Justificatifs de revenus vérifiés', value: proofs.length + paidOrders.length, points: Math.min(10, (proofs.length + paidOrders.length) * 2) },
     { label: 'Revenu mensuel moyen', value: `${formatCompact(monthlyAverage)} FCFA`, points: Math.min(10, Math.floor(monthlyAverage / 50000) * 2) },
     { label: 'Groupement / GIE / Coop', value: hasGroupement ? groupementValue : 'Non renseigné', points: hasGroupement ? 5 : 0 },
     { label: 'Foncier (formel ou coutumier)', value: hasFoncier ? foncierValue : 'Non renseigné', points: hasFoncier ? 5 : 0 },
     { label: 'Expérience agricole', value: experienceYears > 0 ? `${experienceYears} ans` : '⚠ Non renseigné (0 an)', points: Math.min(5, Math.floor(experienceYears / 2)) },
-    { label: 'Mobile Money actif', value: (hasMobileMoney || gimpayTx.length > 0) ? 'Oui' : 'Non', points: (hasMobileMoney || gimpayTx.length > 0) ? 4 : 0 },
+    { label: 'Mobile Money actif', value: (hasMobileMoney || paydunyaTx.length > 0) ? 'Oui' : 'Non', points: (hasMobileMoney || paydunyaTx.length > 0) ? 4 : 0 },
     { label: 'Tontine / épargne informelle', value: hasTontine ? 'Oui' : 'Non', points: hasTontine ? 4 : 0 },
     { label: 'Historique remboursement', value: repaid > 0 ? `${repaid} remboursé(s)${defaults > 0 ? `, ${defaults} défaut(s)` : ''}` : '—', points: Math.max(0, repaymentBonus) },
     { label: 'Avis clients (étoiles)', value: (() => { const r = (store.ratings || []).filter((rt) => rt.sellerId === user.id); if (r.length === 0) return '—'; const avg = r.reduce((s, rt) => s + rt.rating, 0) / r.length; return `${avg.toFixed(1)}/5 (${r.length} avis)`; })(), points: (() => { const r = (store.ratings || []).filter((rt) => rt.sellerId === user.id); if (r.length === 0) return 0; const avg = r.reduce((s, rt) => s + rt.rating, 0) / r.length; if (avg >= 4.5) return 8; if (avg >= 4) return 6; if (avg >= 3) return 3; return -2; })() },
@@ -7881,7 +7881,7 @@ function buildBancabiliteDossier(user, store) {
     totalRevenue,
     monthlyAverage,
     transactionsCount: transactions.length + paidOrders.length,
-    gimpayCount: gimpayTx.length,
+    paydunyaCount: paydunyaTx.length,
     activityProofsCount: activityProofs.length,
     agriCollectionCount: agriCollections.length,
     repaymentHistory: { repaid, defaults },
@@ -7909,7 +7909,7 @@ function renderBancabiliteHtml(dossier) {
       <h2>Indicateurs cles</h2>
       <p>Revenu total vérifié: <strong>${escapeHtml(formatMoney(dossier.totalRevenue))}</strong></p>
       <p>Revenu mensuel moyen: <strong>${escapeHtml(formatMoney(dossier.monthlyAverage))}</strong></p>
-      <p>Transactions vérifiées: ${dossier.transactionsCount} | Paiements GIM-Pay: ${dossier.gimpayCount}</p>
+      <p>Transactions vérifiées: ${dossier.transactionsCount} | Paiements PayDunya: ${dossier.paydunyaCount}</p>
       <p>Vérifications terrain par agent: ${dossier.activityProofsCount}</p>
     </section>
     <section>
@@ -8041,11 +8041,11 @@ function UssdSimulatorPage({ currentUser, store }) {
 
   return (
     <PageFrame>
-      <section className="panel uemoa-hero">
+      <section className="panel poesam-hero">
         <div>
-          <span className="uemoa-badge">INCLUSION DIGITALE · USSD</span>
+          <span className="poesam-badge">INCLUSION DIGITALE · USSD</span>
           <h2>Parcours USSD *384*FRES# pour agriculteurs sans smartphone</h2>
-          <p>Une grande partie des petits producteurs UEMOA n'a pas d'Internet fiable. FresCoop étend ses services via USSD + SMS: consulter les cours du jour, déclarer son stock, enregistrer une vente — depuis un simple téléphone à touches.</p>
+          <p>Une grande partie des petits producteurs africains n'a pas d'Internet fiable. FresCoop étend ses services via USSD + SMS: consulter les cours du jour, déclarer son stock, enregistrer une vente — depuis un simple téléphone à touches.</p>
         </div>
       </section>
 
@@ -8074,7 +8074,7 @@ function UssdSimulatorPage({ currentUser, store }) {
         </section>
         <section className="panel">
           <PanelTitle icon={PhoneCall} title="Pourquoi ça change tout" />
-          <ul className="uemoa-bullets">
+          <ul className="poesam-bullets">
             <li><strong>Inclusion réelle</strong>: fonctionne sur Nokia 105 à 8000 FCFA, pas besoin de 4G.</li>
             <li><strong>Couverture totale</strong>: le USSD passe même en zones rurales avec 2G.</li>
             <li><strong>Langues locales</strong>: menu disponible en wolof, pular, serere (SMS).</li>
@@ -8631,7 +8631,7 @@ function LotDigitalTwinCard({ lot, canReserve, canConsent, onReserve, onShareCon
       <div className="payment-proof-card">
         <ShieldCheck size={18} />
         <div>
-          <strong>Paiement sécurisé via GIM-Pay</strong>
+          <strong>Paiement sécurisé via PayDunya</strong>
           <span>Orange Money, Wave, Free Money, carte bancaire. Reçu numérique rattaché au lot.</span>
         </div>
       </div>
@@ -9196,31 +9196,31 @@ function LanguageAssistant({ currentUser, store }) {
 
   const quickPrompts = {
     fr: [
-      { q: 'Comment vendre mes produits ?', a: 'Trois étapes: 1) Publiez votre produit dans "Produits" avec photo et prix, 2) Les acheteurs vous commandent depuis le Marché, 3) Vous recevez le paiement GIM-Pay directement sur votre compte (Orange Money, Wave, banque).' },
+      { q: 'Comment vendre mes produits ?', a: 'Trois étapes: 1) Publiez votre produit dans "Produits" avec photo et prix, 2) Les acheteurs vous commandent depuis le Marché, 3) Vous recevez le paiement PayDunya directement sur votre compte (Orange Money, Wave, banque).' },
       { q: 'Quel est le prix du jour ?', a: `Consultez la page "Marché" pour voir tous les produits disponibles et leurs prix en temps réel. Actuellement ${store.products.length} produits sont listés sur la plateforme.` },
-      { q: 'Comment obtenir un crédit bancaire ?', a: 'Allez dans "Bancabilité": FresCoop calcule votre score (0-100) à partir de vos ventes et paiements GIM-Pay. Exportez le dossier PDF et présentez-le à une banque ou SFD partenaire. Plus vous vendez via FresCoop, meilleur est votre score.' },
+      { q: 'Comment obtenir un crédit bancaire ?', a: 'Allez dans "Bancabilité": FresCoop calcule votre score (0-100) à partir de vos ventes et paiements PayDunya. Exportez le dossier PDF et présentez-le à une banque ou SFD partenaire. Plus vous vendez via FresCoop, meilleur est votre score.' },
       { q: 'Comment éviter de perdre ma récolte ?', a: 'Inscrivez vos produits dès la récolte. La page "Anti-gaspi" détecte les lots à DLC courte et propose une réduction automatique (-15% à -40%) pour vendre vite aux acheteurs B2B avant perte. Utilisez aussi les hubs froid pour prolonger la durée de vie.' },
       { q: 'Comment suivre un lot ?', a: 'Chaque lot reçoit un QR code. Dans "Lots froids", scannez le QR pour voir: température en temps réel, photos qualité, durée de vie restante, acheteur recommandé et preuve de paiement.' },
       { q: 'Je n ai pas de smartphone', a: 'Pas de problème! Appelez *384*FRES# depuis un téléphone à touches (même 2G). Menu en wolof/pular: cours du jour, déclaration de stock, vente, consultation paiement. Testez le simulateur dans "USSD".' },
     ],
     wo: [
-      { q: 'Naka laa man jaay sama njaay ?', a: '1) Bind sa njaay ci "Produits" ak nataal ak njëg, 2) Jaaykatyi dinañu la jënd ci Marché, 3) Dinga jot sa pay ci GIM-Pay (Orange Money, Wave, banq).' },
+      { q: 'Naka laa man jaay sama njaay ?', a: '1) Bind sa njaay ci "Produits" ak nataal ak njëg, 2) Jaaykatyi dinañu la jënd ci Marché, 3) Dinga jot sa pay ci PayDunya (Orange Money, Wave, banq).' },
       { q: 'Lan mooy njëg bis bi ?', a: `Demal ci "Marché" ngir gis njëg yépp ci waxtu wi. Tey am na ${store.products.length} njaay ci plateforme bi.` },
-      { q: 'Naka laa man jot crédit ?', a: 'Demal ci "Bancabilité": FresCoop dina wax sa score (0-100) ci sa njaay ak pay GIM-Pay. Yeggali dossier PDF, yobbu ko banq walla SFD. Bu nga jaay lu bari ci FresCoop, sa score mooy baax.' },
+      { q: 'Naka laa man jot crédit ?', a: 'Demal ci "Bancabilité": FresCoop dina wax sa score (0-100) ci sa njaay ak pay PayDunya. Yeggali dossier PDF, yobbu ko banq walla SFD. Bu nga jaay lu bari ci FresCoop, sa score mooy baax.' },
       { q: 'Naka laa fi man moytu yàq sama ngëneel ?', a: 'Bindal sa ngëneel jekk. "Anti-gaspi" dina gis yi doon yàq, jaay leen ak -15% ba -40% ci jaaykat B2B yi. Jëfandikoo hub yu sedd ngir sedd sa ngëneel.' },
       { q: 'Naka laa man topp sama lot ?', a: 'Lot bu ci nekk am na QR code. Ci "Lots froids", scaan QR bi: température, nataal, bërëb-bi mu des, jaaykat wi reccommende, pay yi.' },
       { q: 'Amuma téléphone bu baax', a: 'Dara du jaxasu! Woo *384*FRES# ci téléphone bi am touche (2G doy na). Menu ci wolof: njëg bis bi, bind stock, jaay, saytu pay.' },
     ],
     pul: [
-      { q: 'No mbaawnoo njeeygol am ?', a: '1) Winndu njeeygol ma e "Produits" e nataal e coggu, 2) Yiɗɓe soodugol ina sooda e Marché, 3) A heɓa njoɓdi ma e GIM-Pay.' },
+      { q: 'No mbaawnoo njeeygol am ?', a: '1) Winndu njeeygol ma e "Produits" e nataal e coggu, 2) Yiɗɓe soodugol ina sooda e Marché, 3) A heɓa njoɓdi ma e PayDunya.' },
       { q: 'No foti coggu hannde ?', a: `Yahu e "Marché" ngam yi\'ugol kala njeeygol e coggu maggi. Hannde ${store.products.length} njeeygol woni e plateforme.` },
-      { q: 'No mbaawnoo heɓugol tokkoral ?', a: 'Yahu e "Bancabilité": FresCoop hiitoo score maa (0-100) e njeeygol e njoɓdi GIM-Pay. Yaltin dossier PDF, addan banka walla SFD.' },
+      { q: 'No mbaawnoo heɓugol tokkoral ?', a: 'Yahu e "Bancabilité": FresCoop hiitoo score maa (0-100) e njeeygol e njoɓdi PayDunya. Yaltin dossier PDF, addan banka walla SFD.' },
       { q: 'No reenoo bonnde ndema am ?', a: '"Anti-gaspi" ko hollitta ko boni: jeey ɗum -15% haa -40% e soodooɓe B2B ado ɗum bonnugol.' },
       { q: 'No ndaroo-mi lot ?', a: 'Lot kala ina jogii QR code. E "Lots froids", scaan QR ndi: wulaango, nataa, ñalɗi keddiiɗi, soodoowo, njoɓdi.' },
       { q: 'Mi alaa simartifol', a: 'Noddu *384*FRES# e njokkondiral foti touches. Menu e pulaar: coggu hannde, winndugol stock, njeeygol.' },
     ],
     sr: [
-      { q: 'Le mbaane mbelax lomi tedd ?', a: '1) Bisim kirim ma ole "Produits", 2) Nga nu jim moox le "Marché", 3) Mi fa pay ole GIM-Pay.' },
+      { q: 'Le mbaane mbelax lomi tedd ?', a: '1) Bisim kirim ma ole "Produits", 2) Nga nu jim moox le "Marché", 3) Mi fa pay ole PayDunya.' },
       { q: 'Le ma ŋ kirim penaar ?', a: `Da "Marché" ole ya kirim ma tedd. Penaar ${store.products.length} kirim ne.` },
       { q: 'Le mbaane haat ana ?', a: 'Da "Bancabilité": score ma (0-100). Yol ma e yo le bank ole SFD.' },
       { q: 'Le mbaane rot ale ñoox ?', a: '"Anti-gaspi" yol ŋ ŋoox le -15% haa -40%.' },
@@ -9546,7 +9546,7 @@ function PitchPage({ navigate, store }) {
   const slides = [
     {
       title: 'Le problème',
-      body: 'Dans les filières agricoles UEMOA, 30 a 40% des récoltes perissables sont perdues faute de froid, de traçabilité et de preuve économique. Les producteurs restent invisibles pour les banques.',
+      body: 'Dans les filières agricoles africaines, 30 a 40% des récoltes perissables sont perdues faute de froid, de traçabilité et de preuve économique. Les producteurs restent invisibles pour les banques.',
       metrics: [
         { label: 'Pertes post-recolte', value: '30-40%' },
         { label: 'Productrices sans compte bancaire', value: '78%' },
@@ -9555,11 +9555,11 @@ function PitchPage({ navigate, store }) {
     },
     {
       title: 'La solution FresCoop',
-      body: 'Une plateforme intégrée qui connecte lot froid, paiement partenaire (GIM-Pay) et preuve économique portable. Pas de wallet: le paiement reste chez Wave, OM, Free Money. FresCoop fabrique la preuve.',
+      body: 'Une plateforme intégrée qui connecte lot froid, paiement partenaire (PayDunya) et preuve économique portable. Pas de wallet: le paiement reste chez Wave, OM, Free Money. FresCoop fabrique la preuve.',
       metrics: [
         { label: 'Lots traces', value: String(store.lots?.length || 0) },
         { label: 'Hubs solaires', value: String(store.hubs?.length || 0) },
-        { label: 'Paiements partenaires', value: String(impact.gimpayTxCount) },
+        { label: 'Paiements partenaires', value: String(impact.paydunyaTxCount) },
       ],
     },
     {
@@ -9599,10 +9599,10 @@ function PitchPage({ navigate, store }) {
   return (
     <PageFrame>
       <section className="pitch-hero">
-        <img src="/gim-uemoa-logo.png" alt="GIM-UEMOA" className="gim-uemoa-logo-pitch" />
-        <span className="uemoa-badge">HACKATHON GIM-UEMOA 2026</span>
+        <img src="/orange-poesam-logo.png" alt="POESAM Orange" className="poesam-logo-pitch" />
+        <span className="poesam-badge">POESAM 2026 — ORANGE</span>
         <h1>FresCoop — Pitch Deck</h1>
-        <p>Digitalisation de la chaine de valeur agricole UEMOA</p>
+        <p>Digitalisation de la chaîne de valeur agricole africaine</p>
       </section>
 
       <nav className="pitch-nav">
@@ -9661,7 +9661,7 @@ function AppFooter({ currentUser, navigate }) {
       <div className="footer-grid">
         <div className="footer-brand">
           <div className="brand"><span>F</span><strong>FresCoop</strong></div>
-          <p>Plateforme de commerce agricole intégrée. Stockage froid, intelligence marché et preuve économique portable pour les producteurs UEMOA.</p>
+          <p>Plateforme de commerce agricole intégrée. Stockage froid, intelligence marché et preuve économique portable pour les producteurs africains.</p>
         </div>
         <div className="footer-links">
           <strong>Navigation</strong>
@@ -9679,7 +9679,7 @@ function AppFooter({ currentUser, navigate }) {
         </div>
       </div>
       <div className="footer-bottom">
-        <div className="footer-gim"><img src="/gim-uemoa-logo.png" alt="GIM-UEMOA" className="gim-uemoa-logo-footer" /><small>&copy; 2026 FresCoop — Finaliste Hackathon GIM-UEMOA, Dakar 18-21 mai 2026.</small></div>
+        <div className="footer-poesam"><img src="/orange-poesam-logo.png" alt="POESAM Orange" className="poesam-logo-footer" /><small>&copy; 2026 FresCoop — Finaliste POESAM 2026, Dakar 18-21 mai 2026.</small></div>
         <small>ODD 1 · 2 · 5 · 8 · 12 · 13</small>
       </div>
     </footer>
@@ -10966,7 +10966,7 @@ function getFrescoopOperatingData(store) {
 }
 
 function createFrescoopDemoStore(store) {
-  // Mélange l'ancien seed léger (buildFrescoopDemoData) + le seed UEMOA riche.
+  // Mélange l'ancien seed léger (buildFrescoopDemoData) + le seed complet.
   // Mot de passe de tous les comptes démo : "demo1234".
   const demo = buildFrescoopDemoData(store);
   const next = { ...store };
@@ -11743,7 +11743,7 @@ function navItemByPath(path) {
     '/paiement': { path: '/paiement', label: 'Paiement', icon: ReceiptText, description: 'Paiement partenaire et reçus' },
     '/operations': { path: '/operations', label: 'Opérations', icon: Warehouse, description: 'Hubs, stockage et logistique' },
     '/utilisateurs': { path: '/utilisateurs', label: 'Utilisateurs', icon: Users, description: 'Comptes, rôles et statuts' },
-    '/impact': { path: '/impact', label: 'Impact', icon: BarChart3, description: 'KPI filières UEMOA: pertes évitées, revenu +, genre, CO2' },
+    '/impact': { path: '/impact', label: 'Impact', icon: BarChart3, description: 'KPI filières agricoles: pertes évitées, revenu, genre, CO2' },
     '/collecte-agriscore': { path: '/collecte-agriscore', label: 'Collecte AgriScore', icon: ClipboardCheck, description: 'Collecte terrain assistée pour scoring agricole' },
     '/bancabilite': { path: '/bancabilite', label: 'Bancabilité', icon: Landmark, description: 'Score crédit et dossier finance exportable' },
     '/ussd': { path: '/ussd', label: 'USSD', icon: PhoneCall, description: 'Accès *384*FRES# pour téléphones sans Internet' },
@@ -12124,7 +12124,7 @@ function renderPaymentReceiptHtml(receipt, store, user) {
   const dateStr = paidDate.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
   const timeStr = paidDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   const invoiceNum = `FC-${paidDate.getFullYear()}-${receipt.code.slice(-8)}`;
-  const method = receipt.token?.startsWith('DEMO') ? 'Simulation démo' : 'GIM-Pay';
+  const method = receipt.token?.startsWith('DEMO') ? 'Simulation démo' : 'PayDunya';
 
   const verifyUrl = getReceiptVerifyUrl(receipt.code);
   const qrUrl = getQrImageUrl(verifyUrl, 220);
@@ -12451,17 +12451,17 @@ function renderBusinessReportHtml(store) {
   `).join('');
   const opportunityRows = opportunities.map((item) => `<li><strong>${escapeHtml(item.title)}</strong>: ${escapeHtml(item.body)} (${escapeHtml(item.value)})</li>`).join('');
 
-  return renderDocumentShell('Rapport Filieres Agricoles UEMOA FresCoop', `
+  return renderDocumentShell('Rapport Impact FresCoop POESAM 2026', `
     <header class="report-header">
       <div class="header-brand">
         <div class="logo-badge"><span>F</span></div>
         <div>
           <h1>FresCoop</h1>
-          <p class="subtitle">Rapport Filieres Agricoles UEMOA</p>
+          <p class="subtitle">Rapport Impact POESAM 2026</p>
         </div>
       </div>
-      <div class="gim-badge">
-        <strong>GIM-UEMOA</strong>
+      <div class="poesam-badge-doc">
+        <strong>POESAM 2026</strong>
         <span>Hackathon Filieres Agricoles 2026</span>
         <span class="badge-tag">Finaliste</span>
       </div>
@@ -12469,7 +12469,7 @@ function renderBusinessReportHtml(store) {
     <p class="code">Genere le ${escapeHtml(formatDate(new Date().toISOString()))}</p>
 
     <section class="impact-grid">
-      <h2>Impact UEMOA - Indicateurs temps reel</h2>
+      <h2>Impact Social - Indicateurs temps réel</h2>
       <div class="kpi-row">
         <div class="kpi-card green"><span class="kpi-value">${impact.lossesAvertedPercent}%</span><span class="kpi-label">Pertes evitees</span></div>
         <div class="kpi-card gold"><span class="kpi-value">${escapeHtml(formatMoney(impact.additionalFarmerRevenue))}</span><span class="kpi-label">Revenu additionnel</span></div>
@@ -12478,7 +12478,7 @@ function renderBusinessReportHtml(store) {
       </div>
       <div class="kpi-row">
         <div class="kpi-card green"><span class="kpi-value">${formatCompact(impact.tracedKg)}</span><span class="kpi-label">Kg traces</span></div>
-        <div class="kpi-card gold"><span class="kpi-value">${impact.gimpayTxCount}</span><span class="kpi-label">Paiements GIM-Pay</span></div>
+        <div class="kpi-card gold"><span class="kpi-value">${impact.paydunyaTxCount}</span><span class="kpi-label">Paiements PayDunya</span></div>
         <div class="kpi-card blue"><span class="kpi-value">${(store.lots || []).length}</span><span class="kpi-label">Lots actifs</span></div>
         <div class="kpi-card coral"><span class="kpi-value">${store.proofs.length}</span><span class="kpi-label">Preuves économiques</span></div>
       </div>
@@ -12486,7 +12486,7 @@ function renderBusinessReportHtml(store) {
 
     <section>
       <h2>Proposition de valeur</h2>
-      <p>FresCoop digitalise la chaîne de valeur agricole UEMOA : marketplace multicanale, stockage froid solaire, paiement via rails GIM-UEMOA et preuve économique portable pour l'accès au crédit formel.</p>
+      <p>FresCoop digitalise la chaîne de valeur agricole africaine : marketplace multicanale, stockage froid solaire, paiement mobile (PayDunya, Wave, Orange Money) et preuve économique portable pour l'accès au crédit formel.</p>
     </section>
 
     <section>
@@ -12529,7 +12529,7 @@ function renderBusinessReportHtml(store) {
     </section>
 
     <div class="report-footer">
-      <p>FresCoop | Hackathon Filieres Agricoles UEMOA 2026 | GIM-UEMOA / ABX Accelerator</p>
+      <p>FresCoop | POESAM 2026 | Orange Digital Center Sénégal</p>
       <p>Demo : https://poesamfreschoop-three.vercel.app | contact@frescoop.sn | Dakar, Senegal</p>
     </div>
   `);
@@ -12554,9 +12554,9 @@ th{background:#0d3320;color:#fff;font-weight:600}
 .header-brand{display:flex;align-items:center;gap:14px}
 .logo-badge{width:48px;height:48px;background:#17a34a;border-radius:10px;display:flex;align-items:center;justify-content:center}
 .logo-badge span{color:#fff;font-size:26px;font-weight:bold}
-.gim-badge{text-align:right;padding:10px 16px;border:2px solid #f59e0b;border-radius:8px;background:#fffbeb}
-.gim-badge strong{display:block;color:#b45309;font-size:16px}
-.gim-badge span{display:block;font-size:11px;color:#92400e}
+.poesam-badge-doc{text-align:right;padding:10px 16px;border:2px solid #f59e0b;border-radius:8px;background:#fffbeb}
+.poesam-badge-doc strong{display:block;color:#b45309;font-size:16px}
+.poesam-badge-doc span{display:block;font-size:11px;color:#92400e}
 .badge-tag{display:inline-block;margin-top:4px;padding:2px 10px;background:#f59e0b;color:#fff;border-radius:3px;font-size:11px;font-weight:bold;text-transform:uppercase}
 .kpi-row{display:flex;gap:12px;margin:10px 0}
 .kpi-card{flex:1;padding:14px;border-radius:8px;text-align:center}
