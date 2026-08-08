@@ -1275,6 +1275,37 @@ function PublicPageImpact({ navigate }) {
         </div>
       </section>
 
+      <section className="public-band public-genre-section reveal">
+        <div className="reveal">
+          <span className="eyebrow">INCLUSION FÉMININE</span>
+          <h2>70% du travail agricole. 2% du crédit. FresCoop change ça.</h2>
+          <p className="public-subtitle">Les femmes nourrissent le Sénégal mais restent exclues du système financier. FresCoop corrige cette injustice structurelle avec une approche pensée pour elles.</p>
+        </div>
+        <div className="genre-stats-grid reveal">
+          <div className="genre-stat-card genre-stat-card--rose">
+            <strong>70%</strong>
+            <span>de la main-d'œuvre agricole au Sénégal = des femmes</span>
+          </div>
+          <div className="genre-stat-card genre-stat-card--red">
+            <strong>2%</strong>
+            <span>des femmes ont un document foncier</span>
+          </div>
+          <div className="genre-stat-card genre-stat-card--amber">
+            <strong>57.7%</strong>
+            <span>d'analphabétisme chez les femmes rurales</span>
+          </div>
+          <div className="genre-stat-card genre-stat-card--purple">
+            <strong>50%</strong>
+            <span>du pilote FresCoop (250 places) réservées aux productrices</span>
+          </div>
+        </div>
+        <div className="genre-response reveal">
+          <h3>Comment FresCoop répond</h3>
+          <p>Notre interface vocale en wolof et en français permet aux femmes analphabètes d'utiliser la plateforme sans intermédiaire. Le Passeport Économique remplace l'exigence de titre foncier — la preuve d'activité suffit. Et notre ciblage prioritaire des GIE féminins garantit que 50% des 250 places du pilote sont réservées aux productrices.</p>
+        </div>
+        <p className="genre-sources reveal">Sources : Alliance Bioversity-CIAT &amp; AVSF (main-d'œuvre agricole) · PROCASEF (accès foncier femmes) · ANSD/UNESCO (alphabétisation) · FresCoop pilote 2026 (quota productrices)</p>
+      </section>
+
       <section className="public-band public-poesam-section reveal">
         <div className="public-poesam-copy">
           <span className="eyebrow">Scalabilité — 17 pays Orange</span>
