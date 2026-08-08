@@ -1585,7 +1585,7 @@ async function handleActivityProofs(request, response) {
       attachment: data.attachment || null,
       sponsorIds: Array.isArray(data.sponsorIds) ? data.sponsorIds : [],
       agentId: data.agentId || null,
-      status: 'soumis',
+      status: data.agentId ? 'en_attente_agent' : 'soumis',
       createdAt: now,
     };
 
