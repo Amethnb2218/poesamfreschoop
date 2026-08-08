@@ -10,5 +10,14 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 900,
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          charts: ['recharts'],
+        },
+      },
+    },
   },
 });
