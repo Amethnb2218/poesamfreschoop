@@ -1575,7 +1575,7 @@ async function handleActivityProofs(request, response) {
     const data = JSON.parse(body || '{}');
     const store = await readStore();
     const now = new Date().toISOString();
-    const proofId = ;
+    const proofId = `proof-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
     const proof = {
       id: proofId,
