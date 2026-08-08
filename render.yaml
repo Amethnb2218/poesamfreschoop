@@ -16,7 +16,7 @@ services:
         value: "10000"
       - key: FRESCOOP_HOST
         value: "0.0.0.0"
-    disk:
-      name: frescoop-data
-      mountPath: /opt/render/project/src/server/data
-      sizeGB: 1
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false
