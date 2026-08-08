@@ -1281,7 +1281,7 @@ function PublicPageImpact({ navigate }) {
           <h2>Un scoring conçu pour l'Afrique. Un déploiement progressif.</h2>
           <p className="public-subtitle">FresCoop démarre au Sénégal avec un pilote de 500 agriculteurs et 10 coopératives, puis s'étend progressivement à toute l'Afrique grâce à une infrastructure 100% cloud et les Orange Digital Centers.</p>
           <div className="public-poesam-countries">
-            {['Sénégal', 'Côte d'Ivoire', 'Mali', 'Burkina Faso', 'Cameroun', 'Niger', 'Guinée', 'Madagascar', 'Maroc', 'Tunisie', 'Égypte', 'RDC', 'Jordanie', 'Togo', 'Bénin', 'Sierra Leone', 'Botswana'].map((country) => <span key={country}>{country}</span>)}
+            {["Sénégal", "Côte d'Ivoire", "Mali", "Burkina Faso", "Cameroun", "Niger", "Guinée", "Madagascar", "Maroc", "Tunisie", "Égypte", "RDC", "Jordanie", "Togo", "Bénin", "Sierra Leone", "Botswana"].map((country) => <span key={country}>{country}</span>)}
           </div>
           <p style={{ marginTop: "1.5rem", fontSize: "0.85rem", opacity: 0.7 }}>POESAM 2026 — Prix Orange de l'Entrepreneur Social en Afrique et au Moyen-Orient · 16e édition</p>
         </div>
