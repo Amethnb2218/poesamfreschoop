@@ -1277,7 +1277,7 @@ function PublicPageImpact({ navigate }) {
 
       <section className="public-band public-poesam-section reveal">
         <div className="public-poesam-copy">
-          <img src="/orange-poesam-logo.png" alt="POESAM Orange" className="poesam-logo" />
+          <img src="/orange-poesam-logo.svg" alt="POESAM Orange" className="poesam-logo" />
           <span className="eyebrow">Scalabilité Afrique</span>
           <h2>Un scoring conçu pour les 8 pays. Un déploiement progressif.</h2>
           <p className="public-subtitle">FresCoop démarre au Sénégal avec un pilote de 100 agriculteurs, puis s'étend à toute l'Afrique et le Moyen-Orient grâce à une infrastructure 100% cloud et des partenariats Orange Digital Center.</p>
@@ -9599,7 +9599,7 @@ function PitchPage({ navigate, store }) {
   return (
     <PageFrame>
       <section className="pitch-hero">
-        <img src="/orange-poesam-logo.png" alt="POESAM Orange" className="poesam-logo-pitch" />
+        <img src="/orange-poesam-logo.svg" alt="POESAM Orange" className="poesam-logo-pitch" />
         <span className="poesam-badge">POESAM 2026 — ORANGE</span>
         <h1>FresCoop — Pitch Deck</h1>
         <p>Digitalisation de la chaîne de valeur agricole africaine</p>
@@ -9679,7 +9679,7 @@ function AppFooter({ currentUser, navigate }) {
         </div>
       </div>
       <div className="footer-bottom">
-        <div className="footer-poesam"><img src="/orange-poesam-logo.png" alt="POESAM Orange" className="poesam-logo-footer" /><small>&copy; 2026 FresCoop — Finaliste POESAM 2026, Dakar 18-21 mai 2026.</small></div>
+        <div className="footer-poesam"><img src="/orange-poesam-logo.svg" alt="POESAM Orange" className="poesam-logo-footer" /><small>&copy; 2026 FresCoop — Finaliste POESAM 2026, Dakar 18-21 mai 2026.</small></div>
         <small>ODD 1 · 2 · 5 · 8 · 12 · 13</small>
       </div>
     </footer>
