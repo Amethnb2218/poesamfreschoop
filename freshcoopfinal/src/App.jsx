@@ -7993,6 +7993,7 @@ function renderBancabiliteHtml(dossier) {
     </section>
   `);
 }
+function renderLoanContractHtml(loan, store) {
   const contract = getLoanContract(loan, store);
   const stats = getLoanRepaymentStats(loan, store);
   const trancheRows = (contract.tranches || []).map((tranche) => `
