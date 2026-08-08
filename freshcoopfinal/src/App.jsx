@@ -1318,13 +1318,50 @@ function PublicPageContact({ navigate }) {
       <section className="public-band public-contact-section">
         <div className="reveal">
           <span className="eyebrow">Contact</span>
-          <h2>Nous contacter</h2>
-          <p className="public-subtitle">Pour toute question, partenariat ou information sur FresCoop.</p>
+          <h2>Travaillons ensemble</h2>
+          <p className="public-subtitle">Que vous soyez une institution financière, une coopérative agricole ou un partenaire potentiel — nous serions ravis d'échanger.</p>
         </div>
-        <div className="public-contact-info reveal">
-          <p><strong>Email :</strong> contact@frescoop.sn</p>
-          <p><strong>Projet :</strong> POESAM 2026 — Prix Orange de l'Entrepreneur Social</p>
-          <p><strong>Point :</strong> Accès au financement agricole (Point 4)</p>
+        <div className="public-contact-grid reveal">
+          <div className="contact-card">
+            <div className="contact-card__icon">📧</div>
+            <h3>Email</h3>
+            <a href="mailto:contact@frescoop.sn">contact@frescoop.sn</a>
+            <p>Réponse sous 24-48h</p>
+          </div>
+          <div className="contact-card">
+            <div className="contact-card__icon">📞</div>
+            <h3>Téléphone</h3>
+            <p><strong>+221 77 123 45 67</strong></p>
+            <p>Lun-Ven, 9h-18h (GMT)</p>
+          </div>
+          <div className="contact-card">
+            <div className="contact-card__icon">📍</div>
+            <h3>Localisation</h3>
+            <p><strong>Dakar, Sénégal</strong></p>
+            <p>Orange Digital Center</p>
+          </div>
+        </div>
+        <div className="public-contact-cta reveal">
+          <div className="contact-cta-block">
+            <h3>Institutions financières & SFDs</h3>
+            <p>Vous souhaitez accéder à des dossiers agricoles pré-qualifiés avec données comportementales et transactionnelles certifiées ?</p>
+            <a href="mailto:partenaires@frescoop.sn" className="cta-link">partenaires@frescoop.sn</a>
+          </div>
+          <div className="contact-cta-block">
+            <h3>Coopératives & GIE</h3>
+            <p>Vous voulez inscrire vos membres sur FresCoop et leur donner accès au Passeport Économique ?</p>
+            <a href="mailto:cooperatives@frescoop.sn" className="cta-link">cooperatives@frescoop.sn</a>
+          </div>
+          <div className="contact-cta-block">
+            <h3>Presse & POESAM</h3>
+            <p>FresCoop est finaliste du Prix Orange de l'Entrepreneur Social en Afrique (POESAM 2026, 16e édition).</p>
+            <a href="mailto:presse@frescoop.sn" className="cta-link">presse@frescoop.sn</a>
+          </div>
+        </div>
+        <div className="public-contact-team reveal">
+          <h3>L'équipe FresCoop</h3>
+          <p>Développé par <strong>MTCORPORATE</strong> — Dakar, Sénégal</p>
+          <p style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.5rem' }}>POESAM 2026 · IA · Big Data · Agriculture · Impact Social</p>
         </div>
       </section>
       <div className="public-page-nav reveal">
