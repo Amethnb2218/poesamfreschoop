@@ -1,15 +1,13 @@
 import { createServer } from 'node:http';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
-import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { MongoClient } from 'mongodb';
+import { initDatabase, readStore as tursoReadStore, writeStore as tursoWriteStore, createBackup, listBackups, restoreBackup } from './db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
-const dataDir = path.join(__dirname, 'data');
-const dbPath = path.join(dataDir, 'store.json');
 const distDir = path.join(rootDir, 'dist');
 const envPath = path.join(rootDir, '.env');
 
@@ -108,21 +106,7 @@ setInterval(() => {
   }
 }, 300_000);
 
-// ============================================================================
-// MONGODB
-// ============================================================================
-const mongoUri = process.env.MONGODB_URI || '';
-let mongoDb = null;
-if (mongoUri) {
-  try {
-    const client = new MongoClient(mongoUri);
-    await client.connect();
-    mongoDb = client.db(process.env.MONGODB_DB || 'frescoop');
-    console.log('[MongoDB] Connecté à Atlas');
-  } catch (err) {
-    console.error('[MongoDB] Connexion échouée, fallback sur store.json:', err.message);
-  }
-}
+
 
 // ============================================================================
 // CLOUDINARY
@@ -244,7 +228,6 @@ const mimeTypes = {
   '.ico': 'image/x-icon',
 };
 
-await mkdir(dataDir, { recursive: true });
 await ensureDatabase();
 
 createServer(async (request, response) => {
@@ -273,7 +256,7 @@ createServer(async (request, response) => {
 
   try {
     if (request.url?.startsWith('/api/health')) {
-      sendJson(response, 200, { ok: true, mode: apiOnly ? 'api-only' : 'static', db: mongoDb ? 'mongodb' : 'json' });
+      sendJson(response, 200, { ok: true, mode: apiOnly ? 'api-only' : 'static', db: 'turso' });
       return;
     }
 
@@ -1200,8 +1183,6 @@ function callOpenRouter(apiKey, model, messages, options = {}) {
   });
 }
 
-const backupsDir = path.join(dataDir, 'backups');
-await mkdir(backupsDir, { recursive: true });
 
 async function handleStore(request, response) {
   if (request.method === 'GET') {
@@ -1273,21 +1254,14 @@ async function handleStore(request, response) {
     }
     incoming = preservePrivateUserFields(incoming, currentStoreForMerge);
 
-    // === BACKUP ROTATIF ===
-    // On garde les 10 dernières versions pour pouvoir restaurer en cas d'incident.
+    // === BACKUP ROTATIF (Turso) ===
     try {
-      const prev = await readFile(dbPath, 'utf8');
-      if (prev && prev.length > 100) {
-        const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-        await writeFile(path.join(backupsDir, `store-${stamp}.json`), prev, 'utf8');
-        // Garder seulement les 10 plus récents
-        const fsMod = await import('node:fs/promises');
-        const files = (await fsMod.readdir(backupsDir))
-          .filter((f) => f.startsWith('store-') && f.endsWith('.json'))
-          .sort()
-          .reverse();
-        for (const old of files.slice(10)) {
-          try { await fsMod.unlink(path.join(backupsDir, old)); } catch {}
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const prev = await readStore();
+      if (prev && (prev.users?.length || prev.products?.length)) {
+        await createBackup(`store-${stamp}`, prev);
+      }
+    } catch {}
         }
       }
     } catch {}
@@ -1303,66 +1277,38 @@ async function handleStore(request, response) {
 // Endpoint de restauration : GET /api/store/backups liste les backups
 // POST /api/store/restore?name=xxx restaure une version précédente
 async function handleStoreBackups(request, response) {
-  const fsMod = await import('node:fs/promises');
   const url = new URL(request.url || '/', `http://${request.headers.host}`);
 
   if (request.method === 'GET' && url.pathname.endsWith('/backups')) {
-    const files = (await fsMod.readdir(backupsDir).catch(() => []))
-      .filter((f) => f.startsWith('store-') && f.endsWith('.json'))
-      .sort()
-      .reverse();
-    const list = await Promise.all(
-      files.map(async (name) => {
-        const full = path.join(backupsDir, name);
-        const info = await stat(full);
-        const content = JSON.parse(await readFile(full, 'utf8'));
-        return {
-          name,
-          size: info.size,
-          mtime: info.mtime,
-          counts: {
-            users: (content.users || []).length,
-            products: (content.products || []).length,
-            orders: (content.orders || []).length,
-            lots: (content.lots || []).length,
-          },
-        };
-      }),
-    );
-    sendJson(response, 200, { ok: true, backups: list });
+    const backups = await listBackups();
+    sendJson(response, 200, { ok: true, backups });
     return;
   }
 
   if (request.method === 'POST' && url.pathname.endsWith('/restore')) {
     const name = url.searchParams.get('name');
-    if (!name || !/^store-[\w\-T:.]+\.json$/.test(name)) {
+    if (!name) {
       sendJson(response, 400, { error: 'Nom de backup invalide' });
       return;
     }
-    const src = path.join(backupsDir, name);
-    try {
-      const content = await readFile(src, 'utf8');
-      // On sauvegarde d'abord la version actuelle
-      const current = await readFile(dbPath, 'utf8').catch(() => '');
-      if (current) {
-        const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-        await writeFile(path.join(backupsDir, `store-pre-restore-${stamp}.json`), current, 'utf8');
-      }
-      // Puis on restaure
-      await writeFile(dbPath, content, 'utf8');
-      const restored = JSON.parse(content);
-      sendJson(response, 200, {
-        ok: true,
-        restored: name,
-        counts: {
-          users: (restored.users || []).length,
-          products: (restored.products || []).length,
-          orders: (restored.orders || []).length,
-        },
-      });
-    } catch (err) {
-      sendJson(response, 500, { error: err.message || 'Erreur restauration' });
+    const current = await readStore();
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    await createBackup(`pre-restore-${stamp}`, current);
+    const restored = await restoreBackup(name);
+    if (!restored) {
+      sendJson(response, 404, { error: 'Backup introuvable' });
+      return;
     }
+    await writeStore(restored);
+    sendJson(response, 200, {
+      ok: true,
+      restored: name,
+      counts: {
+        users: (restored.users || []).length,
+        products: (restored.products || []).length,
+        orders: (restored.orders || []).length,
+      },
+    });
     return;
   }
 
@@ -1401,39 +1347,21 @@ async function serveStatic(request, response) {
 }
 
 async function ensureDatabase() {
-  if (mongoDb) {
-    const col = mongoDb.collection('store');
-    const doc = await col.findOne({ _id: 'main' });
-    if (!doc) {
-      await col.insertOne({ _id: 'main', ...emptyStore });
-      console.log('[MongoDB] Store initial créé');
-    }
-    return;
-  }
-  try {
-    await readFile(dbPath, 'utf8');
-  } catch {
-    await writeFile(dbPath, JSON.stringify(emptyStore, null, 2), 'utf8');
+  await initDatabase();
+  const store = await readStore();
+  if (!store.users || store.users.length === 0) {
+    await writeStore(emptyStore);
+    console.log('[Turso] Store initial créé');
   }
 }
 
 async function readStore() {
-  if (mongoDb) {
-    const doc = await mongoDb.collection('store').findOne({ _id: 'main' });
-    if (!doc) return normalizeStore({});
-    const { _id, ...data } = doc;
-    return normalizeStore(data);
-  }
-  const raw = await readFile(dbPath, 'utf8');
-  return normalizeStore(JSON.parse(raw || '{}'));
+  const data = await tursoReadStore();
+  return normalizeStore(data);
 }
 
 async function writeStore(data) {
-  if (mongoDb) {
-    await mongoDb.collection('store').replaceOne({ _id: 'main' }, { _id: 'main', ...data }, { upsert: true });
-    return;
-  }
-  await writeFile(dbPath, JSON.stringify(data, null, 2), 'utf8');
+  await tursoWriteStore(data);
 }
 
 function normalizeStore(value) {
