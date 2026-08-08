@@ -1262,10 +1262,6 @@ async function handleStore(request, response) {
         await createBackup(`store-${stamp}`, prev);
       }
     } catch {}
-        }
-      }
-    } catch {}
-
     await writeStore(incoming);
     sendJson(response, 200, { ok: true });
     return;
