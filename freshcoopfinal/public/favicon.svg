@@ -1,19 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
-  <title id="title">ECONO-ID Africa</title>
-  <desc>Logo minimal en forme de badge avec les lettres EI</desc>
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#dff4ed"/>
-      <stop offset="100%" stop-color="#b8d8cf"/>
-    </linearGradient>
-    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0d4d43"/>
-      <stop offset="100%" stop-color="#08755f"/>
-    </linearGradient>
-  </defs>
-  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#bg)"/>
-  <rect x="8" y="8" width="48" height="48" rx="12" fill="#ffffff" opacity="0.72"/>
-  <path d="M20 16h24a8 8 0 0 1 8 8v16a8 8 0 0 1-8 8H20a8 8 0 0 1-8-8V24a8 8 0 0 1 8-8z" fill="url(#accent)"/>
-  <path d="M23 24h18v4H27v6h12v4H27v6h14v4H23z" fill="#ffffff"/>
-  <circle cx="46" cy="18" r="4" fill="#f5c242"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#0a4b3e"/>
+  <path d="M20 16h24v6H27v8h14v6H27v14h-7V16z" fill="#ffffff"/>
+  <path d="M44 12c2.5-3.5 6-4.5 9-3 3 1.5 4 5 2.5 8-1.5 2.5-4 4.5-7 5.5" stroke="#4ade80" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <circle cx="48" cy="10" r="2.5" fill="#4ade80"/>
 </svg>
