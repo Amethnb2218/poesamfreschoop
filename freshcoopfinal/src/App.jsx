@@ -7851,26 +7851,51 @@ function buildBancabiliteDossier(user, store) {
   const defaults = repayments.filter((r) => r.status === 'Défaut').length;
   const repaymentBonus = Math.min(10, repaid * 5) - (defaults * 8);
 
-  const criteria = [
-    { label: 'Anciennete compte', value: `${monthsActive} mois`, points: Math.min(15, monthsActive * 2) },
-    { label: 'Transactions vérifiées', value: transactions.length + paidOrders.length, points: Math.min(15, (transactions.length + paidOrders.length) * 2) },
-    { label: 'Paiements PayDunya', value: paydunyaTx.length, points: Math.min(10, paydunyaTx.length * 3) },
-    { label: 'Vérifications terrain par agent', value: activityProofs.length, points: Math.min(15, activityProofs.length * 4) },
-    { label: 'Justificatifs de revenus vérifiés', value: proofs.length + paidOrders.length, points: Math.min(10, (proofs.length + paidOrders.length) * 2) },
-    { label: 'Revenu mensuel moyen', value: `${formatCompact(monthlyAverage)} FCFA`, points: Math.min(10, Math.floor(monthlyAverage / 50000) * 2) },
-    { label: 'Groupement / GIE / Coop', value: hasGroupement ? groupementValue : 'Non renseigné', points: hasGroupement ? 5 : 0 },
-    { label: 'Foncier (formel ou coutumier)', value: hasFoncier ? foncierValue : 'Non renseigné', points: hasFoncier ? 5 : 0 },
-    { label: 'Expérience agricole', value: experienceYears > 0 ? `${experienceYears} ans` : '⚠ Non renseigné (0 an)', points: Math.min(5, Math.floor(experienceYears / 2)) },
-    { label: 'Mobile Money actif', value: (hasMobileMoney || paydunyaTx.length > 0) ? 'Oui' : 'Non', points: (hasMobileMoney || paydunyaTx.length > 0) ? 4 : 0 },
-    { label: 'Tontine / épargne informelle', value: hasTontine ? 'Oui' : 'Non', points: hasTontine ? 4 : 0 },
-    { label: 'Historique remboursement', value: repaid > 0 ? `${repaid} remboursé(s)${defaults > 0 ? `, ${defaults} défaut(s)` : ''}` : '—', points: Math.max(0, repaymentBonus) },
-    { label: 'Avis clients (étoiles)', value: (() => { const r = (store.ratings || []).filter((rt) => rt.sellerId === user.id); if (r.length === 0) return '—'; const avg = r.reduce((s, rt) => s + rt.rating, 0) / r.length; return `${avg.toFixed(1)}/5 (${r.length} avis)`; })(), points: (() => { const r = (store.ratings || []).filter((rt) => rt.sellerId === user.id); if (r.length === 0) return 0; const avg = r.reduce((s, rt) => s + rt.rating, 0) / r.length; if (avg >= 4.5) return 8; if (avg >= 4) return 6; if (avg >= 3) return 3; return -2; })() },
+  const ratings = (store.ratings || []).filter((rt) => rt.sellerId === user.id);
+  const avgRating = ratings.length > 0 ? ratings.reduce((s, rt) => s + rt.rating, 0) / ratings.length : 0;
+  const ratingPoints = ratings.length === 0 ? 0 : avgRating >= 4.5 ? 8 : avgRating >= 4 ? 6 : avgRating >= 3 ? 3 : -2;
+
+  // ══════════════════════════════════════════════════════════════════
+  // AXE 1 — FIABILITÉ (50 pts max)
+  // "Est-ce que cette personne est réelle, active et engagée ?"
+  // ══════════════════════════════════════════════════════════════════
+  const fiabiliteCriteria = [
+    { label: 'KYC validé par agent terrain', value: activityProofs.length > 0 ? `${activityProofs.length} vérification(s)` : 'Non vérifié', points: Math.min(12, activityProofs.length * 4) },
+    { label: 'Ancienneté et régularité', value: `${monthsActive} mois actif`, points: Math.min(10, monthsActive * 2) },
+    { label: 'Historique de remboursement', value: repaid > 0 ? `${repaid} remboursé(s)${defaults > 0 ? `, ${defaults} défaut(s)` : ''}` : 'Aucun prêt', points: Math.max(0, repaymentBonus) },
+    { label: 'Réputation (avis clients)', value: ratings.length > 0 ? `${avgRating.toFixed(1)}/5 (${ratings.length} avis)` : 'Aucun avis', points: ratingPoints },
+    { label: 'Appartenance GIE / Coopérative', value: hasGroupement ? groupementValue : 'Individuel', points: hasGroupement ? 5 : 0 },
+    { label: 'Engagement continu (transactions)', value: `${transactions.length + paidOrders.length} opérations`, points: Math.min(10, (transactions.length + paidOrders.length) * 2) },
   ];
-  const score = Math.min(100, criteria.reduce((sum, c) => sum + c.points, 0));
+  const fiabiliteScore = Math.min(50, fiabiliteCriteria.reduce((sum, c) => sum + c.points, 0));
+
+  // ══════════════════════════════════════════════════════════════════
+  // AXE 2 — IDENTITÉ ÉCONOMIQUE (50 pts max)
+  // "Son profil est-il lisible et exploitable par une institution ?"
+  // ══════════════════════════════════════════════════════════════════
+  const identiteCriteria = [
+    { label: 'Revenu mensuel vérifié', value: `${formatCompact(monthlyAverage)} FCFA/mois`, points: Math.min(12, Math.floor(monthlyAverage / 40000) * 2) },
+    { label: 'Paiements traçables (PayDunya/OM)', value: `${paydunyaTx.length} paiement(s)`, points: Math.min(10, paydunyaTx.length * 3) },
+    { label: 'Justificatifs économiques', value: `${proofs.length + paidOrders.length} pièce(s)`, points: Math.min(8, (proofs.length + paidOrders.length) * 2) },
+    { label: 'Expérience agricole déclarée', value: experienceYears > 0 ? `${experienceYears} ans` : 'Non renseigné', points: Math.min(5, Math.floor(experienceYears / 2)) },
+    { label: 'Foncier (formel ou coutumier)', value: hasFoncier ? foncierValue : 'Non renseigné', points: hasFoncier ? 5 : 0 },
+    { label: 'Mobile Money actif', value: (hasMobileMoney || paydunyaTx.length > 0) ? 'Oui' : 'Non', points: (hasMobileMoney || paydunyaTx.length > 0) ? 4 : 0 },
+    { label: 'Épargne informelle (tontine)', value: hasTontine ? 'Oui' : 'Non', points: hasTontine ? 4 : 0 },
+  ];
+  const identiteScore = Math.min(50, identiteCriteria.reduce((sum, c) => sum + c.points, 0));
+
+  // ══════════════════════════════════════════════════════════════════
+  // SCORE GLOBAL & PASSEPORT ÉCONOMIQUE
+  // ══════════════════════════════════════════════════════════════════
+  const criteria = [...fiabiliteCriteria, ...identiteCriteria];
+  const score = Math.min(100, fiabiliteScore + identiteScore);
   const grade = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
-  const verdict = grade === 'A' ? 'Dossier solide, eligible credit bancaire' :
-                  grade === 'B' ? 'Bonne assise, eligible SFD / microfinance' :
-                  grade === 'C' ? 'Profil a consolider, eligible pret garanti' : 'Historique insuffisant, accompagnement recommande';
+  const verdict = grade === 'A' ? 'Passeport économique complet — éligible crédit bancaire' :
+                  grade === 'B' ? 'Profil vérifié — éligible SFD / microfinance' :
+                  grade === 'C' ? 'Profil en construction — éligible prêt garanti' : 'Identité économique insuffisante — accompagnement recommandé';
+
+  const fiabiliteGrade = fiabiliteScore >= 40 ? 'Fiable' : fiabiliteScore >= 25 ? 'En consolidation' : 'À vérifier';
+  const identiteGrade = identiteScore >= 40 ? 'Complète' : identiteScore >= 25 ? 'Partielle' : 'Insuffisante';
 
   return {
     user,
@@ -7878,6 +7903,10 @@ function buildBancabiliteDossier(user, store) {
     grade,
     verdict,
     criteria,
+    fiabiliteScore,
+    fiabiliteGrade,
+    identiteScore,
+    identiteGrade,
     totalRevenue,
     monthlyAverage,
     transactionsCount: transactions.length + paidOrders.length,
@@ -7885,41 +7914,48 @@ function buildBancabiliteDossier(user, store) {
     activityProofsCount: activityProofs.length,
     agriCollectionCount: agriCollections.length,
     repaymentHistory: { repaid, defaults },
-    verificationCode: `BANC-${user.id.slice(-6).toUpperCase()}-${grade}${score}`,
+    verificationCode: `PASS-${user.id.slice(-6).toUpperCase()}-${grade}${score}`,
   };
 }
 
 function renderBancabiliteHtml(dossier) {
   const rows = dossier.criteria.map((crit) => `<tr><td>${escapeHtml(crit.label)}</td><td>${escapeHtml(String(crit.value))}</td><td>${crit.points} pts</td></tr>`).join('');
-  return renderDocumentShell(`Dossier bancabilité ${dossier.user.name}`, `
-    <h1>Dossier de bancabilité FresCoop</h1>
-    <p class="code">Code verification: ${escapeHtml(dossier.verificationCode)}</p>
+  return renderDocumentShell(`Passeport Économique ${dossier.user.name}`, `
+    <h1>Passeport Économique FresCoop</h1>
+    <p class="code">Code vérification: ${escapeHtml(dossier.verificationCode)}</p>
     <section>
       <h2>Bénéficiaire</h2>
       <p><strong>${escapeHtml(dossier.user.name)}</strong> - ${escapeHtml(dossier.user.email)}</p>
-      <p>Role: ${escapeHtml(dossier.user.role)} - Organisation: ${escapeHtml(dossier.user.organization || '—')} - Region: ${escapeHtml(dossier.user.region || '—')}</p>
+      <p>Rôle: ${escapeHtml(dossier.user.role)} | Organisation: ${escapeHtml(dossier.user.organization || '—')} | Région: ${escapeHtml(dossier.user.region || '—')}</p>
     </section>
     <section>
-      <h2>Score de bancabilité</h2>
-      <p>Score global: <strong>${dossier.score}/100 (Grade ${escapeHtml(dossier.grade)})</strong></p>
-      <p>${escapeHtml(dossier.verdict)}</p>
-      <table><thead><tr><th>Critère</th><th>Valeur</th><th>Points</th></tr></thead><tbody>${rows}</tbody></table>
+      <h2>Score Global: ${dossier.score}/100 (Grade ${dossier.grade})</h2>
+      <p><strong>${escapeHtml(dossier.verdict)}</strong></p>
     </section>
     <section>
-      <h2>Indicateurs cles</h2>
+      <h2>Axe 1 — Fiabilité: ${dossier.fiabiliteScore}/50 (${dossier.fiabiliteGrade})</h2>
+      <p><em>Est-ce que cette personne est réelle, active et engagée ?</em></p>
+      <table><thead><tr><th>Critère</th><th>Valeur</th><th>Points</th></tr></thead><tbody>${rows.slice(0, 6)}</tbody></table>
+    </section>
+    <section>
+      <h2>Axe 2 — Identité Économique: ${dossier.identiteScore}/50 (${dossier.identiteGrade})</h2>
+      <p><em>Son profil est-il lisible et exploitable par une institution financière ?</em></p>
+      <table><thead><tr><th>Critère</th><th>Valeur</th><th>Points</th></tr></thead><tbody>${rows.slice(6)}</tbody></table>
+    </section>
+    <section>
+      <h2>Indicateurs clés</h2>
       <p>Revenu total vérifié: <strong>${escapeHtml(formatMoney(dossier.totalRevenue))}</strong></p>
       <p>Revenu mensuel moyen: <strong>${escapeHtml(formatMoney(dossier.monthlyAverage))}</strong></p>
-      <p>Transactions vérifiées: ${dossier.transactionsCount} | Paiements PayDunya: ${dossier.paydunyaCount}</p>
-      <p>Vérifications terrain par agent: ${dossier.activityProofsCount}</p>
+      <p>Transactions vérifiées: ${dossier.transactionsCount} | Paiements traçables: ${dossier.paydunyaCount}</p>
+      <p>Vérifications terrain: ${dossier.activityProofsCount}</p>
     </section>
     <section>
-      <h2>Note aux partenaires finance</h2>
-      <p>Ce dossier a été généré automatiquement par FresCoop à partir de données transactionnelles et logistiques vérifiées. Le code de vérification ci-dessus permet d'authentifier les informations auprès de la plateforme.</p>
+      <h2>Note aux partenaires financiers</h2>
+      <p>Ce Passeport Économique est généré automatiquement par FresCoop à partir de données transactionnelles, comportementales et agronomiques vérifiées. Il ne constitue pas un scoring de crédit — il fournit aux institutions financières les données certifiées nécessaires à leur propre évaluation.</p>
+      <p>Code de vérification authentifiable sur la plateforme FresCoop.</p>
     </section>
   `);
 }
-
-function renderLoanContractHtml(loan, store) {
   const contract = getLoanContract(loan, store);
   const stats = getLoanRepaymentStats(loan, store);
   const trancheRows = (contract.tranches || []).map((tranche) => `
