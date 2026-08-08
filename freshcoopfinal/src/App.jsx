@@ -1190,7 +1190,7 @@ function PublicPageModele({ navigate }) {
           <div className="modele-viability-grid">
             <div className="modele-viability-item">
               <strong>Point mort</strong>
-              <span>100 agriculteurs + 3 SFD</span>
+              <span>500 agriculteurs + 10 coopératives</span>
               <em>Atteignable en 6 mois</em>
             </div>
             <div className="modele-viability-item">
@@ -1200,7 +1200,7 @@ function PublicPageModele({ navigate }) {
             </div>
             <div className="modele-viability-item">
               <strong>Marché total (TAM)</strong>
-              <span>60M agriculteurs × 8 pays</span>
+              <span>60M agriculteurs × 17 pays</span>
               <em>Afrique subsaharienne</em>
             </div>
             <div className="modele-viability-item">
@@ -1279,8 +1279,8 @@ function PublicPageImpact({ navigate }) {
         <div className="public-poesam-copy">
           <img src="/orange-poesam-logo.svg" alt="POESAM Orange" className="poesam-logo" />
           <span className="eyebrow">Scalabilité Afrique</span>
-          <h2>Un scoring conçu pour les 8 pays. Un déploiement progressif.</h2>
-          <p className="public-subtitle">FresCoop démarre au Sénégal avec un pilote de 100 agriculteurs, puis s'étend à toute l'Afrique et le Moyen-Orient grâce à une infrastructure 100% cloud et des partenariats Orange Digital Center.</p>
+          <h2>Un scoring conçu pour 17 pays. Un déploiement progressif.</h2>
+          <p className="public-subtitle">FresCoop démarre au Sénégal avec un pilote de 500 agriculteurs, puis s'étend à toute l'Afrique et le Moyen-Orient grâce à une infrastructure 100% cloud et des partenariats Orange Digital Center.</p>
           <div className="public-poesam-countries">
             {['Sénégal', 'Côte d\'Ivoire', 'Mali', 'Burkina Faso', 'Bénin', 'Niger', 'Togo', 'Guinée-Bissau'].map((country) => <span key={country}>{country}</span>)}
           </div>
