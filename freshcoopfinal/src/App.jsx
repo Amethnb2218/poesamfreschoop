@@ -26,18 +26,22 @@ import {
   ImagePlus,
   Landmark,
   Leaf,
+  Loader2,
   LineChart as LineChartIcon,
   LockKeyhole,
   LogOut,
   MapPin,
   Menu,
   MessageSquare,
+  Mic,
+  MicOff,
   PackageCheck,
   PhoneCall,
   Plus,
   Printer,
   ReceiptText,
   RefreshCcw,
+  RotateCcw,
   Save,
   Search,
   Send,
@@ -48,6 +52,7 @@ import {
   Store,
   Tractor,
   Trash2,
+  TrendingUp,
   Truck,
   Upload,
   UserCheck,
@@ -55,6 +60,7 @@ import {
   Users,
   Warehouse,
   X,
+  Star,
 } from 'lucide-react';
 import {
   Area,
@@ -82,21 +88,8 @@ const PRODUCT_PAGE_SIZE_OPTIONS = [6, 9, 12];
 const ORDER_PAGE_SIZE_OPTIONS = [5, 10, 20];
 const SEEDED_ADMIN_EMAIL = 'amethsl2218@gmail.com';
 const SEEDED_ADMIN_PASSWORD_HASH = '62a1a5600217bfc84fa5ac26faf898b366581f3b1512624444654b795b108a92';
-const DEMO_USER = {
-  id: 'usr-demo',
-  createdAt: '2026-05-02T00:00:00.000Z',
-  name: 'Visiteur Demo',
-  email: 'demovisiteur@gmail.com',
-  phone: '',
-  role: 'agriculteur',
-  status: 'Actif',
-  organization: 'FresCoop Demo',
-  region: 'Dakar',
-  bio: 'Compte de démonstration pour découvrir FresCoop.',
-  passwordHash: 'd3ad9315b7be5dd53b31a273b3b3aba5defe700808305aa16a3062b76658a791',
-};
 const SEEDED_ADMIN_USER = {
-  id: 'usr-admin-poesam',
+  id: 'usr-admin-uemoa',
   createdAt: '2026-04-28T00:00:00.000Z',
   name: 'Admin FresCoop',
   email: SEEDED_ADMIN_EMAIL,
@@ -110,7 +103,6 @@ const SEEDED_ADMIN_USER = {
 };
 const SEEDED_ADMIN_USERS = [
   SEEDED_ADMIN_USER,
-  DEMO_USER,
   {
     id: 'usr-admin-richef360',
     createdAt: '2026-04-29T00:00:00.000Z',
@@ -221,7 +213,6 @@ const roles = [
   { id: 'admin', label: 'Admin', locked: true },
   { id: 'agriculteur', label: 'Agriculteur' },
   { id: 'agentTerrain', label: 'Agent Terrain' },
-  { id: 'transporteur', label: 'Transporteur' },
   { id: 'client', label: 'Client' },
   { id: 'acheteurB2B', label: 'Acheteur B2B' },
   { id: 'partenaire', label: 'Partenaire finance' },
@@ -229,7 +220,7 @@ const roles = [
 
 const publicImages = {
   hero: '/sector-images/platform-home.jpg',
-  auth: '/sector-images/auth-coopérative.jpg',
+  auth: '/sector-images/auth-cooperative.jpg',
   market: '/sector-images/market-produce.jpg',
   products: '/sector-images/seller-products.jpg',
   dossiers: '/sector-images/documents-dossier.jpg',
@@ -244,6 +235,8 @@ const publicImages = {
   commerce: '/sector-images/sector-commerce.jpg',
   logistics: '/sector-images/sector-logistics.jpg',
   account: '/sector-images/account-profile.jpg',
+  uemoaMap: '/uemoa-map.svg',
+  identity: '/frescoop-identity.svg',
   fallbackProduct: '/sector-images/fallback-product.jpg',
   fallbackHub: '/sector-images/fallback-hub.jpg',
 };
@@ -251,174 +244,144 @@ const publicImages = {
 const basePageMeta = {
   '/': {
     image: publicImages.hero,
-    kicker: 'Plateforme production',
-    title: 'FresCoop connecte vendeurs, clients, preuves et operations avec des donnees saisies.',
-    body: 'Login, rôles, comptes, produits, commandes, dossiers, attestations et preuves économiques sont séparés par espace.',
+    kicker: 'Plateforme',
+    title: 'FresCoop — vendre, prouver, financer.',
+    body: 'Connectez vendeurs et acheteurs avec des preuves vérifiables.',
   },
   '/login': {
     image: publicImages.auth,
-    kicker: 'Accès sécurisé',
-    title: 'Connectez-vous à votre espace FresCoop.',
-    body: 'Admin, agriculteur, acheteur B2B, transporteur et client ont chacun des pages et actions distinctes.',
+    kicker: 'Connexion',
+    title: 'Accédez à votre espace.',
+    body: 'Chaque rôle a son espace dédié.',
   },
   '/marche': {
     image: publicImages.market,
-    kicker: 'Espace client',
-    title: 'Commander les articles disponibles et contacter les vendeurs.',
-    body: 'Les clients voient seulement le marche, leurs commandes, leurs messages et leur compte.',
+    kicker: 'Marché',
+    title: 'Trouvez et commandez des produits frais.',
+    body: 'Produits locaux disponibles près de chez vous.',
   },
   '/produits': {
     image: publicImages.products,
-    kicker: 'Produits vendeurs',
-    title: 'Agriculteurs et commercants publient leurs produits reels.',
-    body: 'Chaque article appartient a un compte vendeur et peut etre commande ou contacte par un client.',
+    kicker: 'Produits',
+    title: 'Gérez vos produits en vente.',
+    body: 'Publiez, modifiez et suivez vos articles.',
   },
   '/dossiers': {
     image: publicImages.dossiers,
-    kicker: 'Dossiers et preuves',
-    title: 'Soumettre les dossiers des personnes concernees avec pieces justificatives.',
-    body: 'Les attestations sont possibles si le dossier contient assez de preuves ou apres validation admin.',
+    kicker: 'Dossiers',
+    title: 'Soumettez vos pièces justificatives.',
+    body: 'Construisez votre dossier pour les attestations.',
   },
   '/attestations': {
     image: publicImages.attestations,
-    kicker: 'Attestations serieuses',
-    title: 'Generer des attestations avec code, score de preuve et dossier source.',
-    body: 'Un utilisateur sans ancienne attestation peut obtenir un certificat si ses preuves sont suffisantes.',
+    kicker: 'Attestations',
+    title: 'Certificats vérifiables par QR code.',
+    body: 'Générés à partir de vos preuves validées.',
   },
   '/preuves': {
     image: publicImages.proofs,
-    kicker: 'Preuve économique',
-    title: 'Transformer les ventes et paiements reels en preuve économique portable.',
-    body: 'Les preuves se basent sur transactions, paiements, acheteurs et justificatifs rattaches au compte.',
+    kicker: 'Preuves',
+    title: 'Vos ventes deviennent des preuves.',
+    body: 'Preuve économique portable pour le crédit.',
   },
   '/commandes': {
     image: publicImages.orders,
     kicker: 'Commandes',
-    title: 'Suivre commandes, contacts et reponses vendeurs.',
-    body: 'Clients, acheteurs et agriculteurs voient uniquement les commandes qui les concernent.',
+    title: 'Suivez vos commandes en cours.',
+    body: 'Statut, paiement et échanges vendeur.',
   },
   '/paiement': {
     image: publicImages.proofs,
-    kicker: 'Paiement partenaire',
-    title: 'Payer la commande via partenaire agree et obtenir un recu transparent.',
-    body: 'FresCoop ne detient pas de wallet. Le paiement est orchestre par Orange Money, banque, SFD ou fintech agreee.',
+    kicker: 'Paiement',
+    title: 'Payez via mobile money ou partenaire.',
+    body: 'Wave, Orange Money ou Free Money.',
   },
   '/operations': {
     image: publicImages.operations,
-    kicker: 'Operations terrain',
-    title: 'Administrer hubs, logistique, capacite et froid.',
-    body: 'Admin et transporteurs suivent les sites operationnels avec stock, temperature et responsable.',
+    kicker: 'Opérations',
+    title: 'Hubs, stockage et logistique.',
+    body: 'Gérez les sites, le stock et la chaîne du froid.',
   },
   '/lots': {
     image: publicImages.operations,
-    kicker: 'Lots froids intelligents',
-    title: 'Suivre le jumeau numerique du lot, du depot au paiement partenaire.',
-    body: 'QR, pesee, photos qualite, capteurs, duree de vie commerciale, debouche recommande et preuve économique explicable.',
+    kicker: 'Lots',
+    title: 'Traçabilité des lots agricoles.',
+    body: 'QR code, pesée, température et durée de vie.',
   },
   '/utilisateurs': {
     image: publicImages.admin,
-    kicker: 'Administration',
-    title: 'Gerer les comptes, roles et statuts des utilisateurs.',
-    body: 'L admin conserve une vue complete sur les acteurs, dossiers et preuves.',
+    kicker: 'Utilisateurs',
+    title: 'Gérez les comptes et les rôles.',
+    body: 'Vue complète des acteurs de la plateforme.',
   },
   '/impact': {
     image: publicImages.impact,
-    kicker: 'Impact POESAM',
-    title: 'Pertes evitees, revenu +, genre, CO2 — chiffres mesurables.',
-    body: 'Les KPI POESAM sont calcules a partir des produits, transactions, commandes, dossiers et capteurs saisis.',
-  },
-  '/anti-gaspi': {
-    image: publicImages.agriculture,
-    kicker: 'Anti-gaspillage',
-    title: 'Detecter les lots a DLC courte et convertir en vente eclair.',
-    body: '30 a 40% des recoltes sont perdues au Senegal. FresCoop alerte producteurs et acheteurs B2B avant qu il ne soit trop tard.',
+    kicker: 'Impact',
+    title: 'Indicateurs mesurables UEMOA.',
+    body: 'Pertes évitées, revenu, genre et CO2.',
   },
   '/bancabilite': {
     image: publicImages.impact,
-    kicker: 'Inclusion financiere',
-    title: 'Score de credit et dossier bancaire exportable.',
-    body: 'Transformer l activite reelle en dossier verifiable pour banques, SFD et microfinance — sans wallet proprietaire.',
+    kicker: 'Bancabilité',
+    title: 'Score de crédit et dossier exportable.',
+    body: 'Activité réelle transformée en dossier bancaire.',
   },
   '/ussd': {
     image: publicImages.operations,
-    kicker: 'USSD · inclusion digitale',
-    title: 'Acceder a FresCoop depuis un simple telephone a touches.',
-    body: '*384*FRES# pour les 70% de producteurs sans smartphone. Cours du jour, stock, ventes et paiements en wolof/pular.',
+    kicker: 'USSD',
+    title: 'FresCoop sur téléphone à touches.',
+    body: '*384*FRES# — accès sans smartphone.',
   },
   '/donnees': {
     image: publicImages.data,
-    kicker: 'Base applicative',
-    title: 'Exporter, importer et synchroniser les donnees de production.',
-    body: 'Les donnees sont centralisables via API locale et exportables pour migration base de donnees.',
-  },
-  '/secteurs/agriculture': {
-    image: publicImages.agriculture,
-    kicker: 'Secteur agriculture',
-    title: 'Une page dediee aux producteurs et coopératives agricoles.',
-    body: 'Produits, recoltes, pieces terrain, preuves et attestations agricoles sont organises ensemble.',
-  },
-  '/secteurs/commerce': {
-    image: publicImages.commerce,
-    kicker: 'Secteur commerce',
-    title: 'Une page dediee aux commercants, boutiques et acheteurs B2B.',
-    body: 'Catalogue, ventes, paiements et preuves commerciales restent separes du parcours agricole.',
-  },
-  '/secteurs/logistique': {
-    image: publicImages.logistics,
-    kicker: 'Secteur logistique',
-    title: 'Une page dediee aux transporteurs, hubs et operations terrain.',
-    body: 'Stockage, froid, routes, contacts et capacites sont reunis dans un espace logistique.',
+    kicker: 'Données',
+    title: 'Export et synchronisation.',
+    body: 'Exportez vos données en JSON.',
   },
   '/compte': {
     image: publicImages.account,
-    kicker: 'Mon compte',
-    title: 'Gerer son profil, ses coordonnees et son activite.',
-    body: 'Chaque acteur complete son compte avant de vendre, commander ou soumettre des documents.',
+    kicker: 'Compte',
+    title: 'Votre profil et vos coordonnées.',
+    body: 'Complétez votre profil pour commencer.',
   },
 };
 
 const roleHomeMeta = {
   admin: {
     image: publicImages.impact,
-    kicker: 'Accueil admin',
-    title: 'Piloter les revenus, la confiance et les opportunites FresCoop.',
-    body: 'Un centre de decision pour convertir commandes, activer vendeurs, suivre valeur du marche et produire un rapport POESAM defendable.',
+    kicker: 'Admin',
+    title: 'Pilotez la plateforme FresCoop.',
+    body: 'Revenus, agriculteurs, financement et rapport UEMOA.',
   },
   agriculteur: {
     image: publicImages.agriculture,
-    kicker: 'Accueil agriculteur',
-    title: 'Vendre plus, prouver ses revenus et devenir financable.',
-    body: 'Un espace vendeur qui transforme stock, commandes, messages clients et preuves en opportunites commerciales concretes.',
+    kicker: 'Agriculteur',
+    title: 'Vendez et construisez votre crédit.',
+    body: 'Produits, commandes et preuves économiques.',
   },
   agentTerrain: {
     image: publicImages.operations,
-    kicker: 'Accueil agent terrain',
-    title: 'Confirmer les commandes meme quand l agriculteur n est pas connecte.',
-    body: 'Un espace de coordination pour appeler l agriculteur, verifier le stock, contacter le transporteur et organiser la livraison.',
+    kicker: 'Agent terrain',
+    title: 'Coordonnez les commandes sur le terrain.',
+    body: 'Appels, vérification stock et livraisons.',
   },
   client: {
     image: publicImages.market,
-    kicker: 'Accueil client',
-    title: 'Acheter localement, suivre ses commandes et parler aux vendeurs.',
-    body: 'Un espace simple pour trouver les produits disponibles, confirmer un panier, suivre les commandes et garder les conversations avec les vendeurs.',
-  },
-  transporteur: {
-    image: publicImages.logistics,
-    kicker: 'Accueil transporteur',
-    title: 'Organiser les livraisons, les hubs et la chaine du froid.',
-    body: 'Un tableau de bord terrain pour reperer les commandes a acheminer, suivre les sites operationnels et anticiper les alertes de capacite.',
+    kicker: 'Client',
+    title: 'Achetez frais, près de chez vous.',
+    body: 'Marché, panier et suivi de commandes.',
   },
   acheteurB2B: {
     image: publicImages.market,
-    kicker: 'Accueil acheteur B2B',
-    title: 'Réserver des lots fiables et relancer les achats rentables.',
-    body: 'Un catalogue de lots disponibles avec qualite, volume, localisation, fenetre de consommation et re-achat en un clic.',
+    kicker: 'Acheteur B2B',
+    title: 'Lots fiables en volume.',
+    body: 'Catalogue, réservation et re-achat.',
   },
   partenaire: {
     image: publicImages.proofs,
-    kicker: 'Accueil partenaire',
-    title: 'Consulter uniquement les preuves consenties et explicables.',
-    body: 'Un espace finance ou assurance pour voir activite agregee, indice economique explicable et referrals consentis.',
+    kicker: 'Partenaire',
+    title: 'Dossiers vérifiés des agriculteurs.',
+    body: 'Scores, preuves et recommandations.',
   },
 };
 
@@ -437,35 +400,82 @@ const orderStatuses = ['Paiement en attente', 'Nouvelle', 'Confirmee', 'En prepa
 const paymentStatuses = ['Paye', 'Partiel', 'En attente', 'Litige'];
 const MARKET_PRICE_MAX_MARGIN = 100;
 const marketPriceReferences = [
-  { key: 'oignon', label: 'Oignon', price: 350, unit: 'kg', source: 'Reference marche Dakar-Thies' },
-  { key: 'riz', label: 'Riz local', price: 330, unit: 'kg', source: 'Reference marche Saint-Louis' },
-  { key: 'carotte', label: 'Carotte', price: 220, unit: 'kg', source: 'Reference marche Dakar' },
-  { key: 'tomate', label: 'Tomate', price: 260, unit: 'kg', source: 'Reference marche Thies' },
-  { key: 'mangue', label: 'Mangue', price: 500, unit: 'kg', source: 'Reference marche Casamance' },
+  { key: 'oignon', label: 'Oignon', price: 350, unit: 'kg', source: 'Référence marché Dakar-Thiès' },
+  { key: 'riz', label: 'Riz local', price: 330, unit: 'kg', source: 'Référence marché Saint-Louis' },
+  { key: 'carotte', label: 'Carotte', price: 220, unit: 'kg', source: 'Référence marché Dakar' },
+  { key: 'tomate', label: 'Tomate', price: 260, unit: 'kg', source: 'Référence marché Thiès' },
+  { key: 'mangue', label: 'Mangue', price: 500, unit: 'kg', source: 'Référence marché Casamance' },
 ];
-const evidenceTypes = ['Piece identite', 'Registre coopérative', 'Photo activite', 'Facture', 'Recu paiement', 'Contrat', 'Autre preuve'];
+const evidenceTypes = ['Piece identité', 'Registre coopérative', 'Photo activité', 'Facture', 'Recu paiement', 'Contrat', 'Autre preuve'];
 const chartColors = ['#1f835d', '#258399', '#e54d35', '#d99912', '#74526f'];
 
 const imageStories = [
-  { image: publicImages.agriculture, title: 'Agriculture', body: 'Recoltes, coopératives et preuves terrain.' },
+  { image: publicImages.agriculture, title: 'Agriculture', body: 'Récoltes, coopératives et preuves terrain.' },
   { image: publicImages.commerce, title: 'Commerce', body: 'Catalogue, commandes et relation client.' },
   { image: publicImages.logistics, title: 'Logistique', body: 'Hubs, transport, stockage et froid.' },
   { image: publicImages.dossiers, title: 'Dossiers', body: 'Pieces justificatives et validation documentaire.' },
-  { image: publicImages.proofs, title: 'Preuves economiques', body: 'Transactions et attestations financieres.' },
-  { image: publicImages.impact, title: 'Pilotage', body: 'Indicateurs reels et donnees exportables.' },
+  { image: publicImages.proofs, title: 'Preuves économiques', body: 'Transactions et attestations financières.' },
+  { image: publicImages.impact, title: 'Pilotage', body: 'Indicateurs réels et données exportables.' },
 ];
 
 const publicSitePaths = [
   '/public',
-  '/demo-jury',
+  '/probleme',
+  '/solution',
+  '/comment',
+  '/modele',
+  '/impact-page',
   '/contact',
   '/sondage',
   '/questionnaire',
 ];
 
+function useScrollReveal() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => { entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('revealed'); observer.unobserve(e.target); } }); },
+      { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+    );
+    el.querySelectorAll('.reveal').forEach((child) => observer.observe(child));
+    return () => observer.disconnect();
+  }, []);
+  return ref;
+}
+
+function AnimatedCounter({ end, suffix = '', prefix = '', duration = 2000 }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const started = useRef(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !started.current) {
+        started.current = true;
+        const startTime = performance.now();
+        const numEnd = parseFloat(String(end).replace(/[^0-9.-]/g, ''));
+        function tick(now) {
+          const progress = Math.min((now - startTime) / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          setCount(Math.round(numEnd * eased));
+          if (progress < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+        observer.disconnect();
+      }
+    }, { threshold: 0.3 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [end, duration]);
+  return <span ref={ref}>{prefix}{count}{suffix}</span>;
+}
+
 function App() {
   const [route, setRoute] = useState(getCurrentRoute);
-  const [store, setStore] = useProductionStore();
+  const [store, setStore, forceReplaceStore] = useProductionStore();
   const [sessionUserId, setSessionUserId] = useState(() => window.localStorage.getItem(SESSION_KEY) || '');
   const [toast, setToast] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -486,6 +496,20 @@ function App() {
     else window.localStorage.removeItem(SESSION_KEY);
   }, [sessionUserId]);
 
+  // Redirection automatique quand un compte "En attente" est approuvé
+  const prevStatusRef = useRef(currentUser?.status);
+  useEffect(() => {
+    if (!currentUser) return;
+    if (currentUser.role === 'admin') { prevStatusRef.current = currentUser.status; return; }
+    const prev = normalize(prevStatusRef.current || '');
+    const curr = normalize(currentUser.status || 'Actif');
+    if (prev === 'en attente' && curr === 'actif') {
+      setToast({ message: 'Votre compte a été validé ! Bienvenue.', type: 'success' });
+      navigate(getRoleHomePath(currentUser.role));
+    }
+    prevStatusRef.current = currentUser.status;
+  }, [currentUser?.status]);
+
   // Deconnexion forcee si le compte courant est suspendu/rejete/bloque (mais pas "En attente")
   useEffect(() => {
     if (!currentUser) return;
@@ -504,7 +528,7 @@ function App() {
     if (store.users.length && !currentUser && route.pathname !== '/login') navigate('/login');
   }, [currentUser, route.pathname, store.users.length]);
 
-  // Redirect client and transporteur from dashboard to their home pages
+  // Redirect client from dashboard to their home pages
   useEffect(() => {
     if (currentUser && route.pathname === '/') {
       const homePath = getRoleHomePath(currentUser.role);
@@ -515,12 +539,10 @@ function App() {
   }, [currentUser, route.pathname]);
 
   function navigate(path, options = {}) {
-    const nextUrl = new URL(path, window.location.href);
-    const samePage = nextUrl.pathname === route.pathname;
     window.history.pushState({}, '', path);
     setRoute(getCurrentRoute());
     setMenuOpen(false);
-    if (!options.preserveScroll && !samePage && !nextUrl.search) {
+    if (!options.preserveScroll) {
       window.scrollTo({ top: 0, behavior: 'instant' });
     }
   }
@@ -535,9 +557,9 @@ function App() {
     navigate('/login');
   }
 
-  const actions = makeActions(setStore);
+  const actions = makeActions(setStore, forceReplaceStore);
 
-  if (route.pathname === '/verifier') {
+  if (route.pathname === '/verifier' || route.pathname === '/vérifier') {
     return (
       <>
         <VerifyReceiptPage navigate={navigate} route={route} store={store} />
@@ -576,16 +598,16 @@ function App() {
   if (!currentUser) {
     return (
       <AuthShell meta={basePageMeta['/login']}>
-        <LoginPage actions={actions} notify={notify} onLogin={(id) => { setSessionUserId(id); navigate(getRoleHomePath(store.users.find((u) => u.id === id)?.role || 'client')); }} store={store} />
+        <LoginPage actions={actions} notify={notify} onLogin={(id, user) => { if (user) { actions.setUsers((items) => items.some((u) => u.id === id) ? items : [user, ...items]); } setSessionUserId(id); const role = user?.role || store.users.find((u) => u.id === id)?.role || 'client'; const status = normalize(user?.status || store.users.find((u) => u.id === id)?.status || 'Actif'); if (status !== 'en attente') navigate(getRoleHomePath(role)); }} store={store} />
         {toast && <Toast toast={toast} />}
       </AuthShell>
     );
   }
 
-  if (normalize(currentUser.status) === 'en attente') {
+  if (normalize(currentUser.status) === 'en attente' && route.pathname !== '/verification') {
     return (
       <AuthShell meta={{ title: 'Inscription en attente', description: 'Votre compte est en cours de validation.', image: publicImages.auth }}>
-        <PendingApprovalPage user={currentUser} logout={logout} />
+        <PendingApprovalPage user={currentUser} logout={logout} navigate={navigate} actions={actions} notify={notify} store={store} />
         {toast && <Toast toast={toast} />}
       </AuthShell>
     );
@@ -613,7 +635,7 @@ function App() {
       />
       <main id="main-content" tabIndex="-1">
         <PageHero meta={pageMeta} stats={stats} store={store} user={currentUser} />
-        {!accessAllowed && <AccessDenied navigate={navigate} user={currentUser} />}
+        {!accessAllowed && (() => { navigate(getRoleHomePath(currentUser.role)); return null; })()}
         {accessAllowed && route.pathname === '/' && <DashboardPage currentUser={currentUser} navigate={navigate} stats={stats} store={store} />}
         {accessAllowed && route.pathname === '/marche' && <MarketplacePage actions={actions} currentUser={currentUser} navigate={navigate} notify={notify} store={store} />}
         {accessAllowed && route.pathname === '/produits' && <ProductsPage actions={actions} currentUser={currentUser} notify={notify} store={store} />}
@@ -622,22 +644,21 @@ function App() {
         {accessAllowed && route.pathname === '/preuves' && <ProofsPage actions={actions} currentUser={currentUser} notify={notify} store={store} />}
         {accessAllowed && route.pathname === '/commandes' && <OrdersPage actions={actions} currentUser={currentUser} navigate={navigate} notify={notify} route={route} store={store} />}
         {accessAllowed && route.pathname === '/paiement' && <PaymentPage actions={actions} currentUser={currentUser} navigate={navigate} notify={notify} route={route} store={store} />}
+        {accessAllowed && route.pathname === '/verification' && <ActivityProofPage actions={actions} currentUser={currentUser} navigate={navigate} notify={notify} store={store} />}
         {accessAllowed && route.pathname === '/operations' && <OperationsPage actions={actions} currentUser={currentUser} notify={notify} store={store} />}
         {accessAllowed && route.pathname === '/lots' && <LotIntelligencePage actions={actions} currentUser={currentUser} notify={notify} store={store} />}
-        {accessAllowed && route.pathname === '/utilisateurs' && <UsersPage actions={actions} currentUser={currentUser} notify={notify} store={store} />}
+        {accessAllowed && route.pathname === '/utilisateurs' && <UsersPage actions={actions} currentUser={currentUser} navigate={navigate} notify={notify} store={store} />}
         {accessAllowed && route.pathname === '/impact' && <ImpactPage stats={stats} store={store} />}
-        {accessAllowed && route.pathname === '/anti-gaspi' && <AntiWastePage actions={actions} currentUser={currentUser} navigate={navigate} notify={notify} store={store} />}
         {accessAllowed && route.pathname === '/bancabilite' && <BancabilitePage actions={actions} currentUser={currentUser} notify={notify} store={store} />}
+        {accessAllowed && route.pathname === '/collecte-agriscore' && <AgriScoreCollectePage actions={actions} currentUser={currentUser} notify={notify} store={store} />}
         {accessAllowed && route.pathname === '/ussd' && <UssdSimulatorPage currentUser={currentUser} store={store} />}
         {accessAllowed && route.pathname === '/donnees' && <DataPage actions={actions} currentUser={currentUser} notify={notify} store={store} />}
-        {accessAllowed && route.pathname === '/secteurs/agriculture' && <SectorPage currentUser={currentUser} kind="agriculture" navigate={navigate} store={store} />}
-        {accessAllowed && route.pathname === '/secteurs/commerce' && <SectorPage currentUser={currentUser} kind="commerce" navigate={navigate} store={store} />}
-        {accessAllowed && route.pathname === '/secteurs/logistique' && <SectorPage currentUser={currentUser} kind="logistique" navigate={navigate} store={store} />}
         {accessAllowed && route.pathname === '/compte' && <AccountPage actions={actions} currentUser={currentUser} notify={notify} store={store} />}
       </main>
       <AppFooter currentUser={currentUser} navigate={navigate} />
       <LanguageAssistant currentUser={currentUser} store={store} />
       <ConfirmModalHost />
+      <RatingModalHost />
       {toast && <Toast toast={toast} />}
     </div>
   );
@@ -646,6 +667,17 @@ function App() {
 function VerifyReceiptPage({ navigate, route, store }) {
   const params = new URLSearchParams(route.search || '');
   const code = (params.get('code') || '').trim().toUpperCase();
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    if ((store.paymentRecords || []).length > 0 || (store.users || []).length > 1) {
+      setReady(true);
+    } else {
+      const timer = setTimeout(() => setReady(true), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [store.paymentRecords, store.users]);
+
   const payment = useMemo(() => {
     if (!code) return null;
     return (store.paymentRecords || []).find((record) => String(record.receiptCode || '').toUpperCase() === code) || null;
@@ -656,7 +688,7 @@ function VerifyReceiptPage({ navigate, route, store }) {
   const payer = payment ? store.users.find((user) => user.id === payment.payerId) : null;
   const seller = payment ? store.users.find((user) => user.id === payment.sellerId) : null;
 
-  const status = !code ? 'missing' : (payment ? 'valid' : 'unknown');
+  const status = !code ? 'missing' : payment ? 'valid' : !ready ? 'loading' : 'unknown';
 
   return (
     <main className="verify-page">
@@ -669,6 +701,14 @@ function VerifyReceiptPage({ navigate, route, store }) {
       </header>
 
       <section className="verify-card">
+        {status === 'loading' && (
+          <>
+            <div className="verify-icon verify-icon-warn"><Loader2 size={56} strokeWidth={2} className="spin" /></div>
+            <h1>Vérification en cours...</h1>
+            <p>Recherche du reçu <code>{code}</code> dans le système FresCoop. Veuillez patienter.</p>
+          </>
+        )}
+
         {status === 'missing' && (
           <>
             <div className="verify-icon verify-icon-warn"><CircleAlert size={56} strokeWidth={2} /></div>
@@ -705,12 +745,12 @@ function VerifyReceiptPage({ navigate, route, store }) {
               <div><em>Code de reçu</em><b>{payment.receiptCode}</b></div>
               <div><em>Date du paiement</em><b>{formatDate(payment.createdAt)}</b></div>
               <div><em>Statut</em><b className="status-valid">✓ {payment.status || 'Payé'}</b></div>
-              <div><em>Mode de paiement</em><b>{payment.partner || 'PayDunya'}</b></div>
+              <div><em>Mode de paiement</em><b>{payment.partner || 'GIM-Pay'}</b></div>
               {product && <div><em>Produit</em><b>{product.name}</b></div>}
               {linkedOrder && <div><em>Quantité</em><b>{formatNumber(linkedOrder.quantity)} {linkedOrder.unit || product?.unit || 'kg'}</b></div>}
               {payer && <div><em>Client</em><b>{payer.name}</b></div>}
               {seller && <div><em>Vendeur</em><b>{seller.name}</b></div>}
-              {payment.paydunyaToken && <div><em>Référence PayDunya</em><b className="ref-token">{payment.paydunyaToken}</b></div>}
+              {payment.gimpayToken && <div><em>Référence GIM-Pay</em><b className="ref-token">{payment.gimpayToken}</b></div>}
             </div>
 
             <div className="verify-seal">
@@ -738,126 +778,258 @@ function VerifyReceiptPage({ navigate, route, store }) {
   );
 }
 
-function PublicSitePage({ navigate, path }) {
-  useEffect(() => {
-    const sectionMap = { '/demo-jury': 'demo-jury', '/contact': 'contact' };
-    const sectionId = sectionMap[path];
-    if (sectionId) {
-      setTimeout(() => document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' }), 120);
-    }
-  }, [path]);
+function ModelSimulator() {
+  const [farmers, setFarmers] = useState(100);
+  const [sfds, setSfds] = useState(3);
+  const [avgTransaction, setAvgTransaction] = useState(25000);
 
-  function scrollTo(id) {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  const txPerFarmerPerMonth = 4;
+  const commissionRate = 0.035;
+  const sfdFee = 300000;
+  const svaRate = 0.02;
+
+  const monthlyTx = farmers * txPerFarmerPerMonth;
+  const revenueCommission = monthlyTx * avgTransaction * commissionRate;
+  const revenueSfd = sfds * sfdFee;
+  const revenueSva = farmers * avgTransaction * svaRate;
+  const totalMonthly = revenueCommission + revenueSfd + revenueSva;
+  const totalAnnual = totalMonthly * 12;
+  const fixedCosts = 2500000;
+  const profit = totalMonthly - fixedCosts;
+  const isProfitable = profit > 0;
+
+  const creditPerFarmer = 500000;
+  const totalCreditUnlocked = farmers * 0.65 * creditPerFarmer;
+  const revenuePerFarmer = avgTransaction * txPerFarmerPerMonth * 0.3;
+  const socialImpact = farmers * 5;
+
+  function fmt(n) {
+    if (n >= 1000000000) return (n / 1000000000).toFixed(1) + ' Mds';
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+    if (n >= 1000) return Math.round(n / 1000) + 'K';
+    return Math.round(n).toString();
   }
 
+  return (
+    <div className="modele-simulator reveal">
+      <div className="modele-simulator__header">
+        <div>
+          <h3>Simulateur de revenus en temps réel</h3>
+          <p>Déplacez les curseurs pour voir l'impact financier et social de FresCoop</p>
+        </div>
+        <div className={`modele-simulator__status ${isProfitable ? 'profitable' : 'pre-profit'}`}>
+          {isProfitable ? '✓ Rentable' : '○ Pré-rentabilité'}
+        </div>
+      </div>
+
+      <div className="modele-simulator__controls">
+        <div className="modele-simulator__slider">
+          <label>Agriculteurs actifs <strong>{farmers.toLocaleString()}</strong></label>
+          <input type="range" min="100" max="50000" step="100" value={farmers} onChange={e => setFarmers(Number(e.target.value))} />
+          <div className="modele-simulator__range"><span>100</span><span>50 000</span></div>
+        </div>
+        <div className="modele-simulator__slider">
+          <label>SFD / Banques partenaires <strong>{sfds}</strong></label>
+          <input type="range" min="1" max="20" step="1" value={sfds} onChange={e => setSfds(Number(e.target.value))} />
+          <div className="modele-simulator__range"><span>1</span><span>20</span></div>
+        </div>
+        <div className="modele-simulator__slider">
+          <label>Transaction moyenne <strong>{avgTransaction.toLocaleString()} FCFA</strong></label>
+          <input type="range" min="5000" max="100000" step="5000" value={avgTransaction} onChange={e => setAvgTransaction(Number(e.target.value))} />
+          <div className="modele-simulator__range"><span>5 000</span><span>100 000</span></div>
+        </div>
+      </div>
+
+      <div className="modele-simulator__results">
+        <div className="modele-simulator__result-card main">
+          <span>Revenu mensuel</span>
+          <strong>{fmt(totalMonthly)} FCFA</strong>
+          <em>soit {fmt(totalAnnual)} FCFA/an</em>
+        </div>
+        <div className="modele-simulator__result-card">
+          <span>Commission marketplace</span>
+          <strong>{fmt(revenueCommission)} FCFA</strong>
+        </div>
+        <div className="modele-simulator__result-card">
+          <span>Scoring SFD</span>
+          <strong>{fmt(revenueSfd)} FCFA</strong>
+        </div>
+        <div className="modele-simulator__result-card">
+          <span>Services VA</span>
+          <strong>{fmt(revenueSva)} FCFA</strong>
+        </div>
+      </div>
+
+      <div className="modele-simulator__impact">
+        <div className="modele-simulator__impact-item">
+          <span>Crédit total débloqué</span>
+          <strong>{fmt(totalCreditUnlocked)} FCFA</strong>
+          <em>65% des agriculteurs deviennent bancables</em>
+        </div>
+        <div className="modele-simulator__impact-item">
+          <span>Revenus par agriculteur</span>
+          <strong>+{fmt(revenuePerFarmer)} FCFA/mois</strong>
+          <em>Grâce à la vente directe sur le marché</em>
+        </div>
+        <div className="modele-simulator__impact-item">
+          <span>Personnes impactées</span>
+          <strong>{fmt(socialImpact)} personnes</strong>
+          <em>Familles ayant accès au financement</em>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PublicSiteNav({ navigate, path }) {
+  const [publicMenuOpen, setPublicMenuOpen] = useState(false);
+
   const navItems = [
-    ['accueil', 'Accueil'],
-    ['probleme', 'Le probleme'],
-    ['mvp', 'Notre MVP'],
-    ['demo-jury', 'Demo jury'],
-    ['objectifs', 'Objectifs'],
-    ['contact', 'Contact'],
-  ];
-
-  const mvpBlocs = [
-    { Icon: FolderPlus, title: 'Creation de lot', desc: 'La productrice ou le producteur depose, pese et photographie son lot au hub.' },
-    { Icon: ClipboardCheck, title: 'QR + fiche qualite', desc: 'Un QR unique est genere. La qualite est evaluee visuellement.' },
-    { Icon: ShoppingCart, title: 'Reservation B2B', desc: 'Un acheteur reserve le lot avec prix, quantite et date de retrait.' },
-    { Icon: Landmark, title: 'Paiement partenaire', desc: 'Le paiement est opere par un partenaire agree, pas par FresCoop.' },
-    { Icon: FileCheck2, title: 'Preuve economique', desc: 'L\'historique complet du lot devient une preuve exportable et portable.' },
-  ];
-
-  const parcoursSteps = [
-    'La productrice ou le producteur cree un lot au hub',
-    'Pesee et photo qualite',
-    'QR code genere et imprime',
-    'Evaluation qualite enregistree',
-    'Acheteur B2B reserve le lot',
-    'Paiement via partenaire agree',
-    'Recu et preuve economique exportes',
-    'KPI pilote mis a jour',
-  ];
-
-  const objectifs = [
-    { label: 'Productrices et producteurs enregistres', target: 100 },
-    { label: 'Lots traces et QR generes', target: 300 },
-    { label: 'Commandes B2B confirmees', target: 150 },
-    { label: 'Paiements partenaires', target: 100 },
-    { label: 'Preuves economiques exportees', target: 100 },
-    { label: 'Acheteurs B2B actifs', target: 20 },
-    { label: 'Cooperatives pilotes', target: 3 },
-  ];
-
-  const roadmapItems = [
-    { title: 'Capteurs IoT temps reel', desc: 'Temperature et humidite dans les hubs.' },
-    { title: 'Acces USSD *384#', desc: 'Saisie et consultation sans smartphone.' },
-    { title: 'Score credit multi-saison', desc: 'Historique pour banques et SFD.' },
-    { title: 'IA predictive', desc: 'Estimation duree de vie des lots.' },
-    { title: 'Marketplace B2B elargie', desc: 'Interconnexion regionale.' },
+    ['/', 'Accueil'],
+    ['/probleme', 'Problème'],
+    ['/solution', 'Solution'],
+    ['/comment', 'Comment ça marche'],
+    ['/modele', 'Modèle économique'],
+    ['/impact-page', 'Impact'],
+    ['/contact', 'Contact'],
   ];
 
   return (
-    <main className="public-site">
-      <nav className="public-nav">
-        <button className="brand" type="button" onClick={() => scrollTo('accueil')}><span>F</span><strong>FresCoop</strong></button>
-        <div>
-          {navItems.map(([id, label]) => <button key={id} type="button" onClick={() => scrollTo(id)}>{label}</button>)}
-        </div>
-        <div className="public-nav-auth">
-          <Button variant="secondary" onClick={() => navigate('/sondage')}><FileText size={17} /> Questionnaire</Button>
-          <Button variant="secondary" onClick={() => navigate('/login')}><LockKeyhole size={17} /> Se connecter</Button>
-          <Button onClick={() => navigate('/login')}><UserCheck size={17} /> S'inscrire</Button>
-        </div>
-      </nav>
-
-      <section id="accueil" className="public-hero" style={{ backgroundImage: `linear-gradient(90deg, rgba(5,23,18,0.92), rgba(5,23,18,0.28)), url("${publicImages.hero}")` }}>
-        <div>
-          <span className="eyebrow">Plateforme agri-tech POESAM 2026</span>
-          <h1>FresCoop transforme chaque recolte vendue en preuve economique verifiable.</h1>
-          <p>Nous aidons les productrices et producteurs a vendre plus vite, reduire les pertes et construire un historique economique utile pour acceder au financement.</p>
-          <div className="button-row">
-            <Button onClick={() => navigate('/login')}><Eye size={18} /> Voir la demo jury</Button>
-            <Button variant="secondary" onClick={() => navigate('/sondage')}><FileText size={18} /> Remplir le questionnaire</Button>
-            <Button variant="secondary" onClick={() => scrollTo('mvp')}><ArrowRight size={18} /> Decouvrir le parcours d'un lot</Button>
+    <nav className="public-nav">
+      <button className="brand" type="button" onClick={() => navigate('/')}><span>F</span><strong>FresCoop</strong></button>
+      <div className="public-nav-links">
+        {navItems.map(([href, label]) => <button key={href} type="button" className={path === href ? 'active' : ''} onClick={() => navigate(href)}>{label}</button>)}
+      </div>
+      <button className="public-nav-toggle" type="button" onClick={() => setPublicMenuOpen((open) => !open)} aria-expanded={publicMenuOpen} aria-label="Ouvrir la navigation">
+        {publicMenuOpen ? <X size={18} /> : <Menu size={18} />}
+        <span>Menu</span>
+      </button>
+      <div className="public-nav-auth">
+        <Button variant="secondary" onClick={() => navigate('/login')}><LockKeyhole size={17} /> Se connecter</Button>
+        <Button onClick={() => navigate('/login')}><UserCheck size={17} /> S'inscrire</Button>
+      </div>
+      {publicMenuOpen && (
+        <div className="public-nav-mobile">
+          <div className="public-nav-mobile-links">
+            {navItems.map(([href, label]) => <button key={href} type="button" className={path === href ? 'active' : ''} onClick={() => navigate(href)}>{label}</button>)}
           </div>
-          <p className="public-demo-creds">Cliquez pour tester la plateforme avec un compte visiteur.</p>
+          <div className="public-nav-mobile-auth">
+            <Button variant="secondary" onClick={() => navigate('/login')}><LockKeyhole size={17} /> Se connecter</Button>
+            <Button onClick={() => navigate('/login')}><UserCheck size={17} /> S'inscrire</Button>
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+}
+
+function PublicSiteFooter({ navigate }) {
+  return (
+    <footer id="contact" className="public-footer">
+      <div>
+        <div className="brand big"><span>F</span><strong>FresCoop</strong></div>
+        <p>FresCoop rend chaque agriculteur visible, vérifiable et finançable grâce à la preuve économique portable.</p>
+        <p>Contact : <strong>contact@frescoop.sn</strong></p>
+        <p style={{ fontSize: '0.78rem', opacity: 0.7 }}>Hackathon Filières Agricoles GIM-UEMOA 2026 — Point 4 : Accès au financement agricole</p>
+      </div>
+    </footer>
+  );
+}
+
+function PublicPageHero({ navigate }) {
+  const revealRef = useScrollReveal();
+  return (
+    <main className="public-site public-site--page" ref={revealRef}>
+      <PublicSiteNav navigate={navigate} path="/" />
+      <section className="public-hero" style={{ backgroundImage: `linear-gradient(90deg, rgba(5,23,18,0.92), rgba(5,23,18,0.28)), url("${publicImages.hero}")` }}>
+        <div>
+          <span className="eyebrow">Hackathon Filières Agricoles GIM-UEMOA 2026 — Point 4 : Accès au financement</span>
+          <h1>De l'invisible au finançable.<br /><em>En 90 jours.</em></h1>
+          <p>FresCoop transforme chaque vente, chaque livraison, chaque paiement d'un agriculteur en preuve bancaire vérifiable — construisant automatiquement un score de crédit exploitable par toute institution financière de la zone UEMOA.</p>
+          <div className="hero-kpis">
+            <div className="hero-kpi"><AnimatedCounter end={80} suffix="%" /><span>des agriculteurs exclus du crédit</span></div>
+            <div className="hero-kpi"><AnimatedCounter end={60} suffix="M" /><span>d'agriculteurs dans l'UEMOA</span></div>
+            <div className="hero-kpi"><AnimatedCounter end={3} suffix="%" /><span>du crédit va à l'agriculture</span></div>
+          </div>
+          <div className="button-row">
+            <Button onClick={() => navigate('/login')}><UserCheck size={18} /> Voir la démo live</Button>
+            <Button variant="secondary" onClick={() => navigate('/solution')}><ArrowRight size={18} /> Découvrir la solution</Button>
+          </div>
         </div>
       </section>
+      <PublicSiteFooter navigate={navigate} />
+    </main>
+  );
+}
 
-      <section id="probleme" className="public-band">
-        <div>
-          <span className="eyebrow">Le probleme</span>
-          <h2>Au Senegal, les productrices et producteurs perdent leurs recoltes, leurs revenus et leur acces au credit.</h2>
+function PublicPageProbleme({ navigate }) {
+  const revealRef = useScrollReveal();
+  return (
+    <main className="public-site public-site--page" ref={revealRef}>
+      <PublicSiteNav navigate={navigate} path="/probleme" />
+      <section className="public-band probleme-section">
+        <div className="reveal probleme-header">
+          <span className="eyebrow">Problème</span>
+          <h2>Les agriculteurs sont <em>invisibles</em> pour le système financier.</h2>
+          <p className="public-subtitle">Pas parce qu'ils ne sont pas fiables — parce qu'ils n'ont <strong>aucune preuve exploitable</strong> de leur activité économique.</p>
         </div>
-        <div className="public-probleme-grid">
-          <article>
-            <strong>40%</strong>
-            <span>de pertes post-recolte</span>
-            <p>Les fruits et legumes perissent faute de froid, de debouche rapide et de logistique adaptee.</p>
+        <div className="probleme-cards">
+          <article className="reveal probleme-card probleme-card--danger">
+            <div className="probleme-card__icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            </div>
+            <div className="probleme-card__stat"><AnimatedCounter end={80} suffix="%" /></div>
+            <h3 className="probleme-card__title">Sans accès au crédit</h3>
+            <p className="probleme-card__desc">Les institutions financières ne financent pas ceux qu'elles ne peuvent pas évaluer. Pas de relevé bancaire = pas de crédit.</p>
           </article>
-          <article>
-            <strong>0</strong>
-            <span>tracabilite des ventes</span>
-            <p>Aucune preuve de transaction exploitable par une banque, un assureur ou un partenaire.</p>
+          <article className="reveal probleme-card probleme-card--warning">
+            <div className="probleme-card__icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div className="probleme-card__stat"><AnimatedCounter end={3} suffix="%" /></div>
+            <h3 className="probleme-card__title">Du crédit vers l'agriculture</h3>
+            <p className="probleme-card__desc">Alors que l'agriculture représente <strong>35% du PIB</strong> de la zone UEMOA. Un paradoxe inacceptable.</p>
           </article>
-          <article>
-            <strong>&lt; 5%</strong>
-            <span>acces au credit formel</span>
-            <p>Les productrices et producteurs n'ont pas d'historique economique reconnu par les institutions financieres.</p>
+          <article className="reveal probleme-card probleme-card--dark">
+            <div className="probleme-card__icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
+            </div>
+            <div className="probleme-card__stat">0</div>
+            <h3 className="probleme-card__title">Historique financier</h3>
+            <p className="probleme-card__desc">Chaque jour, des millions de transactions en espèces au marché ne laissent aucune trace pour les banques.</p>
           </article>
         </div>
       </section>
+      <div className="public-page-nav reveal">
+        <Button variant="secondary" onClick={() => navigate('/')}><ChevronLeft size={16} /> Accueil</Button>
+        <Button onClick={() => navigate('/solution')}>Solution <ChevronRight size={16} /></Button>
+      </div>
+      <PublicSiteFooter navigate={navigate} />
+    </main>
+  );
+}
 
-      <section id="mvp" className="public-band">
-        <div>
-          <span className="eyebrow">Notre MVP</span>
-          <h2>Cinq blocs. Une chaine de confiance complete.</h2>
-          <p className="public-subtitle">Vendre, tracer, prouver, financer. Chaque bloc est operationnel dans la demo.</p>
+function PublicPageSolution({ navigate }) {
+  const revealRef = useScrollReveal();
+  const solutionBlocs = [
+    { Icon: Activity, title: 'Captation automatique', desc: 'Chaque vente, chaque livraison, chaque paiement génère des données de scoring sans effort supplémentaire.' },
+    { Icon: ShieldCheck, title: 'Scoring intelligent', desc: 'Un score de 0 à 100 calculé en temps réel à partir de votre activité réelle. Pas de déclarations, des preuves.' },
+    { Icon: FileCheck2, title: 'Dossier bancaire portable', desc: 'Un PDF vérifiable par QR code, présentable à toute banque ou SFD. Vous gardez le contrôle.' },
+    { Icon: Landmark, title: 'Accès au crédit', desc: "En 3 mois d'activité, passez d'invisible à finançable. Demande de crédit en 1 clic." },
+    { Icon: UserCheck, title: 'Vérification par agents terrain', desc: 'Des agents spécialisés valident votre identité et accompagnent votre progression.' },
+  ];
+  return (
+    <main className="public-site public-site--page" ref={revealRef}>
+      <PublicSiteNav navigate={navigate} path="/solution" />
+      <section className="public-band">
+        <div className="reveal">
+          <span className="eyebrow">La solution FresCoop</span>
+          <h2>Chaque transaction devient une preuve. Chaque preuve construit un score.</h2>
+          <p className="public-subtitle">FresCoop capture automatiquement l'activité économique réelle et la transforme en dossier bancaire portable — sans changer les habitudes de l'agriculteur.</p>
         </div>
         <div className="public-mvp-grid">
-          {mvpBlocs.map((bloc, i) => (
-            <article key={bloc.title} className="public-mvp-card">
+          {solutionBlocs.map((bloc, i) => (
+            <article key={bloc.title} className="public-mvp-card reveal">
               <span className="public-mvp-number">{i + 1}</span>
               <bloc.Icon size={28} />
               <strong>{bloc.title}</strong>
@@ -866,111 +1038,332 @@ function PublicSitePage({ navigate, path }) {
           ))}
         </div>
       </section>
+      <div className="public-page-nav reveal">
+        <Button variant="secondary" onClick={() => navigate('/probleme')}><ChevronLeft size={16} /> Problème</Button>
+        <Button onClick={() => navigate('/comment')}>Comment ça marche <ChevronRight size={16} /></Button>
+      </div>
+      <PublicSiteFooter navigate={navigate} />
+    </main>
+  );
+}
 
-      <section id="demo-jury" className="public-demo-banner">
-        <div>
-          <span className="eyebrow">Demo jury</span>
-          <h2>Testez le parcours complet d'un lot en 3 minutes.</h2>
-          <p>Connectez-vous avec le compte demo et suivez un lot de la creation a la preuve economique.</p>
-          <div className="public-demo-creds-box">
-            <span><LockKeyhole size={16} /> Compte visiteur disponible sur la page de connexion</span>
-          </div>
-          <Button onClick={() => navigate('/login')}><Eye size={18} /> Lancer la demo</Button>
-        </div>
-      </section>
-
+function PublicPageComment({ navigate }) {
+  const revealRef = useScrollReveal();
+  const parcoursSteps = [
+    "Inscription et vérification d'identité (CNI)",
+    'Publication de vos produits sur le marché',
+    "Réception de commandes d'acheteurs",
+    'Paiement confirmé via GIM-Pay',
+    'Score de bancabilité qui monte',
+    'Dossier de crédit exportable',
+    'Présentation à une banque ou SFD',
+    'Obtention du microcrédit',
+  ];
+  return (
+    <main className="public-site public-site--page" ref={revealRef}>
+      <PublicSiteNav navigate={navigate} path="/comment" />
       <section className="public-band">
-        <div>
-          <span className="eyebrow">Parcours d'un lot</span>
-          <h2>De la recolte a la preuve : 8 etapes.</h2>
+        <div className="reveal">
+          <span className="eyebrow">Comment ça marche</span>
+          <h2>De l'inscription au premier crédit : un parcours fluide en 8 étapes.</h2>
+          <p className="public-subtitle">L'agriculteur n'a rien à apprendre de nouveau. Il utilise la plateforme comme il gère déjà son activité — le scoring se construit en arrière-plan.</p>
         </div>
         <div className="public-steps-8">
           {parcoursSteps.map((step, i) => (
-            <article key={step}><span>{i + 1}</span><strong>{step}</strong></article>
-          ))}
-        </div>
-      </section>
-
-      <section id="objectifs" className="public-band">
-        <div>
-          <span className="eyebrow">Objectifs pilote</span>
-          <h2>Ce que nous visons pour le deploiement initial.</h2>
-          <p className="public-subtitle">Ces chiffres sont des objectifs, pas des resultats. Le pilote demarre apres la competition.</p>
-        </div>
-        <div className="public-objectifs-grid">
-          {objectifs.map((obj) => (
-            <article key={obj.label}>
-              <div className="public-objectif-header">
-                <strong>{obj.label}</strong>
-                <span>Cible : {obj.target}</span>
-              </div>
-              <div className="public-progress-bar"><div className="public-progress-fill" style={{ width: '3%' }} /></div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="public-band public-diff-section">
-        <div>
-          <span className="eyebrow">Differenciation</span>
-          <h2>FresCoop n'est pas un wallet.</h2>
-          <p className="public-subtitle">Les paiements restent operes par des partenaires agrees. La plateforme orchestre froid, marche, preuve et consentement.</p>
-        </div>
-        <div className="public-diff-list">
-          {[
-            'Les productrices et producteurs detiennent leurs preuves economiques, les partagent et les revoquent.',
-            'Chaque lot est un actif economique trace, pas un simple enregistrement.',
-            'Les donnees sont partagees par consentement explicite et revocable.',
-            'Le score de bancabilite est calcule a partir de preuves reelles, pas de declarations.',
-          ].map((point) => (
-            <article key={point}><CheckCircle2 size={20} /><p>{point}</p></article>
+            <article key={step} className="reveal"><span>{i + 1}</span><strong>{step}</strong></article>
           ))}
         </div>
       </section>
 
       <section className="public-band">
-        <div>
-          <span className="eyebrow">Feuille de route</span>
-          <h2>Ce qui arrive apres le pilote.</h2>
+        <div className="reveal">
+          <span className="eyebrow">Garanties</span>
+          <h2>4 couches de sécurité. Zéro risque pour la banque.</h2>
         </div>
-        <div className="public-roadmap-grid">
-          {roadmapItems.map((item) => (
-            <article key={item.title}>
-              <span className="public-roadmap-badge">A venir</span>
-              <strong>{item.title}</strong>
-              <p>{item.desc}</p>
-            </article>
-          ))}
+        <div className="garanties-compact reveal">
+          <div className="garantie-compact-item"><span>1</span><strong>Prélèvement à la source</strong><em>25% retenu automatiquement à chaque transaction</em></div>
+          <div className="garantie-compact-item"><span>2</span><strong>Taux progressif</strong><em>0% sous 75K, 15-30% au-dessus — protège le minimum vital</em></div>
+          <div className="garantie-compact-item"><span>3</span><strong>Caution solidaire digitale</strong><em>Groupes de 5 agriculteurs, 98% de remboursement</em></div>
+          <div className="garantie-compact-item"><span>4</span><strong>Fonds de garantie mutualisé</strong><em>2% par transaction → couvre 20% des impayés</em></div>
+        </div>
+        <div className="garantie-kpis reveal">
+          <div className="garantie-kpi">
+            <strong>&lt; 2%</strong>
+            <span>Taux de défaut</span>
+          </div>
+          <div className="garantie-kpi">
+            <strong>6-8 mois</strong>
+            <span>Remboursement moyen</span>
+          </div>
+          <div className="garantie-kpi">
+            <strong>100%</strong>
+            <span>Couverture banque</span>
+          </div>
         </div>
       </section>
 
-      <footer id="contact" className="public-footer">
-        <div>
-          <div className="brand big"><span>F</span><strong>FresCoop</strong></div>
-          <p>FresCoop ne cree pas seulement un marche agricole. FresCoop cree la preuve economique qui rend les productrices et producteurs visibles, fiables et financables.</p>
-          <p>Contact : <strong>contact@frescoop.sn</strong></p>
-          <p style={{ fontSize: '0.78rem', opacity: 0.7 }}>POESAM 2026 - Dakar, Senegal</p>
-        </div>
-        <div className="public-footer-demo">
-          <strong>Acces demo jury</strong>
-          <p>Identifiant : demovisiteur@gmail.com / Mot de passe : demo123</p>
-          <Button onClick={() => navigate('/login')}><Eye size={18} /> Acceder a la demo</Button>
-        </div>
-      </footer>
+      <div className="public-page-nav reveal">
+        <Button variant="secondary" onClick={() => navigate('/solution')}><ChevronLeft size={16} /> Solution</Button>
+        <Button onClick={() => navigate('/modele')}>Modèle économique <ChevronRight size={16} /></Button>
+      </div>
+      <PublicSiteFooter navigate={navigate} />
     </main>
   );
+}
+
+function PublicPageModele({ navigate }) {
+  const revealRef = useScrollReveal();
+  return (
+    <main className="public-site public-site--page" ref={revealRef}>
+      <PublicSiteNav navigate={navigate} path="/modele" />
+      <section className="public-band modele-section">
+        <div className="reveal modele-header">
+          <span className="eyebrow">Modèle économique</span>
+          <h2>Gratuit pour l'agriculteur. Rentable pour tous.</h2>
+          <p className="public-subtitle">Un modèle tripartite où chaque acteur gagne — conçu pour être viable dès 100 utilisateurs et scalable à 60 millions.</p>
+        </div>
+
+        <div className="modele-flow reveal">
+          <div className="modele-flow__label">Qui paie ?</div>
+          <div className="modele-flow__arrows">
+            <div className="modele-flow__actor">
+              <Sprout size={26} />
+              <strong>Agriculteur</strong>
+              <em>GRATUIT</em>
+            </div>
+            <div className="modele-flow__arrow">&rarr;</div>
+            <div className="modele-flow__actor">
+              <ShoppingCart size={26} />
+              <strong>Acheteur</strong>
+              <em>Paie le produit</em>
+            </div>
+            <div className="modele-flow__arrow">&rarr;</div>
+            <div className="modele-flow__actor">
+              <Landmark size={26} />
+              <strong>SFD / Banque</strong>
+              <em>Paie l'accès au score</em>
+            </div>
+          </div>
+        </div>
+
+        <div className="modele-revenue-grid">
+          <article className="reveal modele-revenue-card">
+            <div className="modele-revenue-header">
+              <div className="modele-revenue-icon"><CircleDollarSign size={22} /></div>
+              <div className="modele-revenue-badge">60% du CA</div>
+            </div>
+            <h3>Commission marketplace</h3>
+            <div className="modele-revenue-pricing">2 à 5% par transaction</div>
+            <div className="modele-revenue-explain">
+              <div className="modele-revenue-who"><Users size={14} /> <span>Qui paie :</span> L'acheteur (inclus dans le prix)</div>
+              <div className="modele-revenue-why"><TrendingUp size={14} /> <span>Pourquoi ça marche :</span> L'agriculteur vend 15-30% plus cher que sur le marché local. La commission est invisible dans le gain de marge.</div>
+            </div>
+          </article>
+          <article className="reveal modele-revenue-card">
+            <div className="modele-revenue-header">
+              <div className="modele-revenue-icon"><Building2 size={22} /></div>
+              <div className="modele-revenue-badge">30% du CA</div>
+            </div>
+            <h3>Scoring-as-a-Service</h3>
+            <div className="modele-revenue-pricing">150 000 – 500 000 FCFA/mois par SFD</div>
+            <div className="modele-revenue-explain">
+              <div className="modele-revenue-who"><Landmark size={14} /> <span>Qui paie :</span> Les banques et SFD partenaires</div>
+              <div className="modele-revenue-why"><TrendingUp size={14} /> <span>Pourquoi ça marche :</span> Elles économisent 80% vs l'enquête terrain et financent 5× plus d'agriculteurs avec le même budget.</div>
+            </div>
+          </article>
+          <article className="reveal modele-revenue-card">
+            <div className="modele-revenue-header">
+              <div className="modele-revenue-icon"><Sprout size={22} /></div>
+              <div className="modele-revenue-badge">10% du CA</div>
+            </div>
+            <h3>Services à valeur ajoutée</h3>
+            <div className="modele-revenue-pricing">Commission d'apport 5-15%</div>
+            <div className="modele-revenue-explain">
+              <div className="modele-revenue-who"><ShieldCheck size={14} /> <span>Qui paie :</span> Assureurs, fournisseurs d'intrants, logisticiens</div>
+              <div className="modele-revenue-why"><TrendingUp size={14} /> <span>Pourquoi ça marche :</span> L'agriculteur bancable accède à l'assurance récolte et aux intrants à crédit — marchés inaccessibles avant FresCoop.</div>
+            </div>
+          </article>
+        </div>
+
+        <div className="modele-viability reveal">
+          <h3>Viabilité et scalabilité</h3>
+          <div className="modele-viability-grid">
+            <div className="modele-viability-item">
+              <strong>Point mort</strong>
+              <span>100 agriculteurs + 3 SFD</span>
+              <em>Atteignable en 6 mois</em>
+            </div>
+            <div className="modele-viability-item">
+              <strong>Coût par agriculteur</strong>
+              <span>~0 FCFA marginal</span>
+              <em>Infrastructure 100% cloud</em>
+            </div>
+            <div className="modele-viability-item">
+              <strong>Marché total (TAM)</strong>
+              <span>60M agriculteurs × 8 pays</span>
+              <em>Zone UEMOA entière</em>
+            </div>
+            <div className="modele-viability-item">
+              <strong>Projection an 1</strong>
+              <span>5 000 utilisateurs</span>
+              <em>CA estimé : 45M FCFA</em>
+            </div>
+          </div>
+        </div>
+
+        <ModelSimulator />
+      </section>
+      <div className="public-page-nav reveal">
+        <Button variant="secondary" onClick={() => navigate('/comment')}><ChevronLeft size={16} /> Comment ça marche</Button>
+        <Button onClick={() => navigate('/impact-page')}>Impact <ChevronRight size={16} /></Button>
+      </div>
+      <PublicSiteFooter navigate={navigate} />
+    </main>
+  );
+}
+
+function PublicPageImpact({ navigate }) {
+  const revealRef = useScrollReveal();
+  return (
+    <main className="public-site public-site--page" ref={revealRef}>
+      <PublicSiteNav navigate={navigate} path="/impact-page" />
+      <section className="public-band public-impact-section">
+        <div className="reveal">
+          <span className="eyebrow">Impact sur les utilisateurs et le marché</span>
+          <h2>Des résultats concrets. Mesurables. Transformateurs.</h2>
+          <p className="public-subtitle">FresCoop ne digitalise pas un processus existant — nous créons un pont qui n'existait pas entre l'activité agricole informelle et le système financier formel.</p>
+        </div>
+        <div className="impact-metrics-row reveal">
+          <div className="impact-metric impact-metric-green">
+            <strong><AnimatedCounter end={65} suffix="%" /></strong>
+            <span>deviennent bancables en 90 jours</span>
+          </div>
+          <div className="impact-metric impact-metric-blue">
+            <strong><AnimatedCounter prefix="-" end={80} suffix="%" /></strong>
+            <span>coût d'évaluation pour les SFD</span>
+          </div>
+          <div className="impact-metric impact-metric-gold">
+            <strong><AnimatedCounter end={90} suffix="j" /></strong>
+            <span>pour obtenir son premier crédit via FresCoop</span>
+          </div>
+          <div className="impact-metric impact-metric-purple">
+            <strong><AnimatedCounter prefix="×" end={5} /></strong>
+            <span>plus d'agriculteurs financés par SFD</span>
+          </div>
+        </div>
+        <div className="impact-social-grid">
+          <article className="reveal impact-social-card">
+            <div className="impact-social-icon"><Users size={22} /></div>
+            <strong>Inclusion des femmes</strong>
+            <p>40% des utilisateurs cibles sont des agricultrices — souvent les plus exclues. Le scoring objectif élimine les biais de genre.</p>
+          </article>
+          <article className="reveal impact-social-card">
+            <div className="impact-social-icon"><ShieldCheck size={22} /></div>
+            <strong>Souveraineté des données</strong>
+            <p>L'agriculteur décide qui voit son dossier. Portabilité totale. Conforme aux principes UEMOA de protection des données.</p>
+          </article>
+          <article className="reveal impact-social-card">
+            <div className="impact-social-icon"><PhoneCall size={22} /></div>
+            <strong>Crédit sans garantie foncière</strong>
+            <p>Le scoring remplace l'exigence de titre foncier — la preuve d'activité économique suffit pour accéder au financement.</p>
+          </article>
+          <article className="reveal impact-social-card">
+            <div className="impact-social-icon"><Sprout size={22} /></div>
+            <strong>Sécurité alimentaire</strong>
+            <p>Plus d'agriculteurs financés = plus d'investissement = plus de production. Impact direct sur la souveraineté alimentaire régionale.</p>
+          </article>
+        </div>
+      </section>
+
+      <section className="public-band public-uemoa-section reveal">
+        <div className="public-uemoa-copy">
+          <img src="/gim-uemoa-logo.png" alt="GIM-UEMOA" className="gim-uemoa-logo" />
+          <span className="eyebrow">Scalabilité UEMOA</span>
+          <h2>Un scoring conçu pour les 8 pays. Un déploiement progressif.</h2>
+          <p className="public-subtitle">FresCoop démarre au Sénégal avec un pilote de 100 agriculteurs, puis s'étend à toute la zone UEMOA grâce à une infrastructure 100% cloud et des partenariats GIM-UEMOA.</p>
+          <div className="public-uemoa-countries">
+            {['Sénégal', 'Côte d\'Ivoire', 'Mali', 'Burkina Faso', 'Bénin', 'Niger', 'Togo', 'Guinée-Bissau'].map((country) => <span key={country}>{country}</span>)}
+          </div>
+        </div>
+        <figure className="public-uemoa-map">
+          <img src={publicImages.uemoaMap} alt="Carte UEMOA" />
+        </figure>
+      </section>
+
+      <section className="public-demo-banner reveal">
+        <div>
+          <span className="eyebrow">Démonstration fonctionnelle</span>
+          <h2>Ce n'est pas un prototype. C'est un produit fonctionnel.</h2>
+          <p>Connectez-vous maintenant et testez le scoring en conditions réelles : publiez un produit, passez une commande, regardez le score monter.</p>
+          <div className="button-row" style={{ justifyContent: 'center' }}>
+            <Button onClick={() => navigate('/login')}><UserCheck size={18} /> Accéder à la démo live</Button>
+          </div>
+        </div>
+      </section>
+
+      <div className="public-page-nav reveal">
+        <Button variant="secondary" onClick={() => navigate('/modele')}><ChevronLeft size={16} /> Modèle économique</Button>
+        <Button onClick={() => navigate('/contact')}>Contact <ChevronRight size={16} /></Button>
+      </div>
+      <PublicSiteFooter navigate={navigate} />
+    </main>
+  );
+}
+
+function PublicPageContact({ navigate }) {
+  const revealRef = useScrollReveal();
+  return (
+    <main className="public-site public-site--page" ref={revealRef}>
+      <PublicSiteNav navigate={navigate} path="/contact" />
+      <section className="public-band public-contact-section">
+        <div className="reveal">
+          <span className="eyebrow">Contact</span>
+          <h2>Nous contacter</h2>
+          <p className="public-subtitle">Pour toute question, partenariat ou information sur FresCoop.</p>
+        </div>
+        <div className="public-contact-info reveal">
+          <p><strong>Email :</strong> contact@frescoop.sn</p>
+          <p><strong>Projet :</strong> Hackathon Filières Agricoles GIM-UEMOA 2026</p>
+          <p><strong>Point :</strong> Accès au financement agricole (Point 4)</p>
+        </div>
+      </section>
+      <div className="public-page-nav reveal">
+        <Button variant="secondary" onClick={() => navigate('/impact-page')}><ChevronLeft size={16} /> Impact</Button>
+        <Button onClick={() => navigate('/')}>Accueil <ChevronRight size={16} /></Button>
+      </div>
+      <PublicSiteFooter navigate={navigate} />
+    </main>
+  );
+}
+
+function PublicSitePage({ navigate, path }) {
+  if (path === '/probleme') return <PublicPageProbleme navigate={navigate} />;
+  if (path === '/solution') return <PublicPageSolution navigate={navigate} />;
+  if (path === '/comment') return <PublicPageComment navigate={navigate} />;
+  if (path === '/modele') return <PublicPageModele navigate={navigate} />;
+  if (path === '/impact-page') return <PublicPageImpact navigate={navigate} />;
+  if (path === '/contact') return <PublicPageContact navigate={navigate} />;
+  return <PublicPageHero navigate={navigate} />;
 }
 
 function AuthShell({ children, meta }) {
   return (
     <div className="auth-layout">
       <section className="auth-visual" style={{ backgroundImage: `linear-gradient(180deg, rgba(6,47,39,0.06), rgba(6,47,39,0.86)), url("${meta.image}")` }}>
-        <span>{meta.kicker}</span>
-        <h1>{meta.title}</h1>
-        <p>{meta.body}</p>
+        <div className="auth-visual-copy">
+          <span>{meta.kicker}</span>
+          <h1>{meta.title}</h1>
+          <p>{meta.body}</p>
+        </div>
       </section>
       <section className="auth-panel">
-        <div className="brand big"><span>F</span><strong>FresCoop</strong></div>
+        <div className="auth-panel-brand">
+          <img src={publicImages.identity} alt="FresCoop" />
+          <div>
+            <strong>FresCoop</strong>
+            <span>Vendre. Tracer. Prouver.</span>
+          </div>
+        </div>
         {children}
       </section>
     </div>
@@ -1027,11 +1420,11 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
   });
 
   const needOptions = [
-    { label: 'Vendre mes produits', icon: Store, desc: 'Publier et vendre sur le marche FresCoop' },
+    { label: 'Vendre mes produits', icon: Store, desc: 'Publier et vendre sur le marché FresCoop' },
     { label: 'Acheter en gros', icon: ShoppingCart, desc: 'Sourcing B2B direct producteurs' },
-    { label: 'Suivre une commande', icon: ClipboardCheck, desc: 'Tracabilite champ-a-client' },
-    { label: 'Reduire les pertes', icon: Leaf, desc: 'Alertes DLC et ventes eclair' },
-    { label: 'Obtenir un financement', icon: Landmark, desc: 'Score bancabilite et dossier credit' },
+    { label: 'Suivre une commande', icon: ClipboardCheck, desc: 'Traçabilité champ-a-client' },
+    { label: 'Reduire les pertes', icon: Leaf, desc: 'Alertes DLC et ventes éclair' },
+    { label: 'Obtenir un financement', icon: Landmark, desc: 'Score bancabilité et dossier credit' },
     { label: 'Transporter ou stocker', icon: Truck, desc: 'Hubs froids et livraison' },
   ];
 
@@ -1049,7 +1442,7 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
   function nextStep() {
     if (step === 0) {
       if (!form.fullName.trim() || !form.phone.trim() || !form.roleInterest) {
-        notify('Nom, telephone et profil sont obligatoires', 'error');
+        notify('Nom, téléphone et profil sont obligatoires', 'error');
         return;
       }
     }
@@ -1061,12 +1454,12 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
     const fullName = form.fullName.trim();
     const phone = form.phone.trim();
     if (!fullName || !phone || !form.roleInterest) {
-      notify('Nom, telephone et profil sont obligatoires', 'error');
+      notify('Nom, téléphone et profil sont obligatoires', 'error');
       setStep(0);
       return;
     }
     if (!form.consent) {
-      notify('Le consentement est requis pour etre recontacte', 'error');
+      notify('Le consentement est requis pour être recontacte', 'error');
       return;
     }
 
@@ -1093,7 +1486,7 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
     actions.setSurveyLeads((items) => [lead, ...items]);
     actions.setNotifications((items) => [
       createAppNotification({
-        body: `${lead.fullName} (${roleLabel(lead.roleInterest)}) veut etre recontacte: ${lead.phone}`,
+        body: `${lead.fullName} (${roleLabel(lead.roleInterest)}) veut être recontacte: ${lead.phone}`,
         path: '/utilisateurs',
         recipientRole: 'admin',
         relatedId: lead.id,
@@ -1118,7 +1511,7 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
       notes: '',
       consent: false,
     });
-    notify('Merci, votre questionnaire est enregistre.', 'success');
+    notify('Merci, votre questionnaire est enregistré.', 'success');
   }
 
   const respondentCount = (store.surveyLeads || []).length;
@@ -1127,7 +1520,7 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
     <main className="survey-page">
       <nav className="public-nav survey-nav">
         <button className="brand" type="button" onClick={() => navigate('/public')}><span>F</span><strong>FresCoop</strong></button>
-        <div />
+        <div className="public-nav-spacer" />
         <div className="public-nav-auth">
           <Button variant="secondary" onClick={() => navigate('/public')}><Home size={17} /> Accueil</Button>
           <Button onClick={() => navigate('/login')}><UserCheck size={17} /> Se connecter</Button>
@@ -1136,9 +1529,9 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
 
       <section className="survey-hero">
         <div>
-          <span className="eyebrow">POESAM 2026 — Questionnaire officiel</span>
+          <span className="eyebrow">Hackathon Filières Agricoles UEMOA 2026 — questionnaire pilote</span>
           <h1>Rejoindre le pilote FresCoop</h1>
-          <p>Identifiez-vous pour que l'equipe FresCoop vous integre au programme pilote. Producteurs, acheteurs, transporteurs et partenaires finance sont les bienvenus.</p>
+          <p>Identifiez-vous pour que l'équipe FresCoop vous intègre au programme pilote. Producteurs, acheteurs et partenaires finance sont les bienvenus.</p>
         </div>
         <aside>
           <strong>{formatNumber(respondentCount)}</strong>
@@ -1150,11 +1543,11 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
         <section className="survey-layout">
           <div className="survey-success-full panel">
             <div className="survey-success-icon"><CheckCircle2 size={44} /></div>
-            <h2>Questionnaire enregistre</h2>
-            <p>Merci pour votre interet. L'equipe FresCoop vous recontactera sous 24 a 48h via le canal que vous avez indique.</p>
+            <h2>Questionnaire enregistré</h2>
+            <p>Merci pour votre intérêt. L'équipe FresCoop vous recontactera sous 24 à 48h via le canal que vous avez indiqué.</p>
             <div className="survey-success-steps">
               <div className="survey-success-step"><span>1</span><strong>Reponse recue</strong></div>
-              <div className="survey-success-step"><span>2</span><strong>Equipe vous contacte</strong></div>
+              <div className="survey-success-step"><span>2</span><strong>Équipe vous contacte</strong></div>
               <div className="survey-success-step"><span>3</span><strong>Compte active</strong></div>
             </div>
             <div className="button-row centered">
@@ -1181,13 +1574,13 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
               <div className="survey-section">
                 <div className="survey-section-header">
                   <Users size={20} />
-                  <div><strong>Vos coordonnees</strong><span>Informations de base pour vous identifier et vous recontacter.</span></div>
+                  <div><strong>Vos coordonnées</strong><span>Informations de base pour vous identifier et vous recontacter.</span></div>
                 </div>
                 <div className="survey-form-grid">
                   <Field label="Nom complet" required>
                     <input value={form.fullName} onChange={(event) => updateForm(setForm, 'fullName', event.target.value)} placeholder="Prenom Nom" />
                   </Field>
-                  <Field label="Telephone / WhatsApp" required>
+                  <Field label="Téléphone / WhatsApp" required>
                     <input value={form.phone} onChange={(event) => updateForm(setForm, 'phone', event.target.value)} placeholder="+221 77 000 00 00" />
                   </Field>
                   <Field label="Email">
@@ -1198,11 +1591,21 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
                       <option value="agriculteur">Agriculteur / producteur</option>
                       <option value="acheteurB2B">Acheteur B2B</option>
                       <option value="client">Client particulier</option>
-                      <option value="transporteur">Transporteur</option>
                       <option value="partenaire">Partenaire finance</option>
                       <option value="agentTerrain">Agent terrain</option>
                     </select>
                   </Field>
+                  {form.role === 'agentTerrain' && (
+                    <Field label="Profil agent terrain" required>
+                      <select value={form.agentProfile || ''} onChange={(event) => updateForm(setForm, 'agentProfile', event.target.value)}>
+                        <option value="">-- Choisir votre spécialité --</option>
+                        <option value="agriculteurs">Accompagnement agriculteurs</option>
+                        <option value="hub">Gestion hub / stock</option>
+                        <option value="logistique">Logistique / livraisons</option>
+                        <option value="b2b">Acheteurs B2B</option>
+                      </select>
+                    </Field>
+                  )}
                   <Field label="Region / ville">
                     <input value={form.region} onChange={(event) => updateForm(setForm, 'region', event.target.value)} placeholder="Dakar, Thies, Saint-Louis..." />
                   </Field>
@@ -1211,7 +1614,7 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
                   </Field>
                 </div>
                 <div className="button-row">
-                  <Button type="button" onClick={nextStep}><ArrowRight size={18} /> Etape suivante</Button>
+                  <Button type="button" onClick={nextStep}><ArrowRight size={18} /> Etapé suivante</Button>
                 </div>
               </div>
             )}
@@ -1220,7 +1623,7 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
               <div className="survey-section">
                 <div className="survey-section-header">
                   <PackageCheck size={20} />
-                  <div><strong>Votre activite</strong><span>Decrivez ce que vous produisez, vendez ou recherchez.</span></div>
+                  <div><strong>Votre activité</strong><span>Decrivez ce que vous produisez, vendez ou recherchez.</span></div>
                 </div>
                 <Field label="Produits ou besoins principaux">
                   <textarea rows={3} value={form.products} onChange={(event) => updateForm(setForm, 'products', event.target.value)} placeholder="Ex: oignon, tomate, riz local, transport froid, achats en gros..." />
@@ -1244,7 +1647,7 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
                 </div>
                 <div className="button-row">
                   <Button type="button" variant="secondary" onClick={() => setStep(0)}><ChevronLeft size={18} /> Retour</Button>
-                  <Button type="button" onClick={nextStep}><ArrowRight size={18} /> Etape suivante</Button>
+                  <Button type="button" onClick={nextStep}><ArrowRight size={18} /> Etapé suivante</Button>
                 </div>
               </div>
             )}
@@ -1253,7 +1656,7 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
               <div className="survey-section">
                 <div className="survey-section-header">
                   <Settings size={20} />
-                  <div><strong>Preferences et validation</strong><span>Derniere etape avant l'envoi de votre questionnaire.</span></div>
+                  <div><strong>Preferences et validation</strong><span>Derniere etapé avant l'envoi de votre questionnaire.</span></div>
                 </div>
                 <div className="survey-form-grid compact">
                   <Field label="Smartphone / Internet">
@@ -1280,11 +1683,11 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
                   </Field>
                 </div>
                 <Field label="Message libre">
-                  <textarea rows={3} value={form.notes} onChange={(event) => updateForm(setForm, 'notes', event.target.value)} placeholder="Expliquez votre activite, vos volumes ou vos difficultes actuelles." />
+                  <textarea rows={3} value={form.notes} onChange={(event) => updateForm(setForm, 'notes', event.target.value)} placeholder="Expliquez votre activité, vos volumes ou vos difficultes actuelles." />
                 </Field>
                 <label className="survey-consent">
                   <input type="checkbox" checked={form.consent} onChange={(event) => updateForm(setForm, 'consent', event.target.checked)} />
-                  <span>J'accepte d'etre recontacte par FresCoop pour l'inscription au pilote.</span>
+                  <span>J'accepte d'être recontacté par FresCoop pour l'inscription au pilote.</span>
                 </label>
                 <div className="button-row">
                   <Button type="button" variant="secondary" onClick={() => setStep(1)}><ChevronLeft size={18} /> Retour</Button>
@@ -1300,7 +1703,7 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
               <div className="survey-why-list">
                 <article>
                   <span className="survey-why-num">1</span>
-                  <div><strong>Identifier les besoins</strong><p>Vente, achat B2B, transport, anti-gaspi ou financement.</p></div>
+                  <div><strong>Identifier les besoins</strong><p>Vente, achat B2B, transport, scoring ou financement.</p></div>
                 </article>
                 <article>
                   <span className="survey-why-num">2</span>
@@ -1308,13 +1711,13 @@ function PublicSurveyPage({ actions, navigate, notify, store }) {
                 </article>
                 <article>
                   <span className="survey-why-num">3</span>
-                  <div><strong>Preparer l'inscription</strong><p>L'equipe peut creer ou valider les comptes plus vite.</p></div>
+                  <div><strong>Préparer l'inscription</strong><p>L'équipe peut créer ou valider les comptes plus vite.</p></div>
                 </article>
               </div>
             </div>
             <div className="survey-side-card panel">
               <PanelTitle icon={ShieldCheck} title="Confidentialite" />
-              <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--muted)', lineHeight: 1.6 }}>Vos donnees sont uniquement utilisees pour vous recontacter dans le cadre du pilote FresCoop. Aucune information n'est partagee avec des tiers.</p>
+              <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--muted)', lineHeight: 1.6 }}>Vos données sont uniquement utilisées pour vous recontacter dans le cadre du pilote FresCoop. Aucune information n'est partagée avec des tiers.</p>
             </div>
             <div className="survey-side-stats">
               <div><strong>{formatNumber(respondentCount)}</strong><span>Reponses</span></div>
@@ -1351,6 +1754,11 @@ function LoginPage({ actions, notify, onLogin, store }) {
     role: 'agriculteur',
     organization: '',
     region: '',
+    gender: '',
+    experienceYears: '',
+    gie: '',
+    gieName: '',
+    foncier: '',
   });
 
   async function login(event) {
@@ -1369,7 +1777,7 @@ function LoginPage({ actions, notify, onLogin, store }) {
       if (data.token) {
         sessionStorage.setItem('frescoop.auth.token', data.token);
       }
-      onLogin(data.user.id);
+      onLogin(data.user.id, data.user);
     } catch {
       notify('Erreur réseau. Vérifiez votre connexion.', 'error');
     }
@@ -1401,6 +1809,12 @@ function LoginPage({ actions, notify, onLogin, store }) {
           phone: registerForm.phone || '',
           organization: registerForm.organization || '',
           region: registerForm.region || '',
+          gender: registerForm.gender || '',
+          experienceYears: Number(registerForm.experienceYears) || 0,
+          gie: registerForm.gie || '',
+          gieName: registerForm.gie === 'Oui' ? (registerForm.gieName || '') : '',
+          foncier: registerForm.foncier || '',
+          agentProfile: registerForm.role === 'agentTerrain' ? (registerForm.agentProfile || '') : '',
         }),
       });
       const data = await resp.json();
@@ -1411,15 +1825,41 @@ function LoginPage({ actions, notify, onLogin, store }) {
       if (data.token) {
         sessionStorage.setItem('frescoop.auth.token', data.token);
       }
+      if (data.user) {
+        actions.setUsers((items) => {
+          if (items.some((u) => u.id === data.user.id)) return items;
+          return [data.user, ...items];
+        });
+        if (normalize(data.user.status) === 'en attente') {
+          actions.setNotifications((items) => [
+            createAppNotification({
+              actor: data.user,
+              body: `${data.user.name} (${data.user.email}) demande à être validé comme ${data.user.role}.`,
+              path: data.user.role === 'agriculteur' ? '/verification' : '/utilisateurs',
+              recipientRole: 'admin',
+              relatedId: data.user.id,
+              title: `Nouvelle inscription ${data.user.role}`,
+              type: 'approval_request',
+            }),
+            ...items,
+          ]);
+        }
+      }
       notify(`Bienvenue ${data.user.name} !`, 'success');
-      onLogin(data.user.id);
+      onLogin(data.user.id, data.user);
     } catch {
       notify('Erreur réseau. Vérifiez votre connexion.', 'error');
     }
   }
 
   return (
-    <div className="auth-card">
+    <div className={`auth-card auth-card-${mode}`}>
+      {mode === 'register' && (
+        <div className="auth-card-context">
+          <strong>Connectez-vous à votre espace FresCoop.</strong>
+          <span>Admin, agriculteur, acheteur B2B et client ont chacun des pages et actions distinctes.</span>
+        </div>
+      )}
       <div className="segmented">
         <button className={mode === 'login' ? 'active' : ''} type="button" onClick={() => setMode('login')}>Connexion</button>
         <button className={mode === 'register' ? 'active' : ''} type="button" onClick={() => setMode('register')}>Créer compte</button>
@@ -1432,19 +1872,54 @@ function LoginPage({ actions, notify, onLogin, store }) {
           <Button type="submit"><LockKeyhole size={18} /> Se connecter</Button>
         </form>
       ) : (
-        <form className="stack-form" onSubmit={register}>
+        <form className="stack-form auth-register-form" onSubmit={register}>
           <PanelTitle icon={UserCheck} title="Nouveau compte" />
-          <Field label="Profil" required>
-            <select value={registerForm.role} onChange={(event) => updateForm(setRegisterForm, 'role', event.target.value)}>
-              {roles.filter((role) => role.id !== 'admin').map((role) => <option key={role.id} value={role.id}>{role.label}</option>)}
-            </select>
-          </Field>
-          <Field label="Nom complet / structure" required><input value={registerForm.name} onChange={(event) => updateForm(setRegisterForm, 'name', event.target.value)} /></Field>
-          <Field label="Email" required><input type="email" value={registerForm.email} onChange={(event) => updateForm(setRegisterForm, 'email', event.target.value)} /></Field>
-          <Field label="Téléphone"><input value={registerForm.phone} onChange={(event) => updateForm(setRegisterForm, 'phone', event.target.value)} /></Field>
-          <Field label="Organisation"><input value={registerForm.organization} onChange={(event) => updateForm(setRegisterForm, 'organization', event.target.value)} /></Field>
-          <Field label="Région"><input value={registerForm.region} onChange={(event) => updateForm(setRegisterForm, 'region', event.target.value)} /></Field>
-          <Field label="Mot de passe" required><PasswordInput value={registerForm.password} onChange={(event) => updateForm(setRegisterForm, 'password', event.target.value)} /></Field>
+          <div className="auth-register-grid">
+            <Field label="Profil" required>
+              <select value={registerForm.role} onChange={(event) => updateForm(setRegisterForm, 'role', event.target.value)}>
+                {roles.filter((role) => role.id !== 'admin').map((role) => <option key={role.id} value={role.id}>{role.label}</option>)}
+              </select>
+            </Field>
+            <Field label="Nom complet / structure" required><input value={registerForm.name} onChange={(event) => updateForm(setRegisterForm, 'name', event.target.value)} /></Field>
+            <Field label="Email" required><input type="email" value={registerForm.email} onChange={(event) => updateForm(setRegisterForm, 'email', event.target.value)} /></Field>
+            <Field label="Téléphone"><input value={registerForm.phone} onChange={(event) => updateForm(setRegisterForm, 'phone', event.target.value)} /></Field>
+            <Field label="Genre" required>
+              <select value={registerForm.gender} onChange={(event) => updateForm(setRegisterForm, 'gender', event.target.value)}>
+                <option value="">— Sélectionner —</option>
+                <option value="Homme">Homme</option>
+                <option value="Femme">Femme</option>
+                <option value="Autre">Autre</option>
+              </select>
+            </Field>
+            <Field label="Organisation"><input value={registerForm.organization} onChange={(event) => updateForm(setRegisterForm, 'organization', event.target.value)} /></Field>
+            <Field label="Région"><input value={registerForm.region} onChange={(event) => updateForm(setRegisterForm, 'region', event.target.value)} /></Field>
+            {(registerForm.role === 'agriculteur') && (
+              <>
+                <Field label="Années d'expérience agricole">
+                  <input type="number" min="0" max="60" value={registerForm.experienceYears} onChange={(event) => updateForm(setRegisterForm, 'experienceYears', event.target.value)} placeholder="Ex: 5" />
+                </Field>
+                <Field label="GIE / Coopérative">
+                  <select value={registerForm.gie} onChange={(event) => updateForm(setRegisterForm, 'gie', event.target.value)}>
+                    <option value="">— Sélectionner —</option>
+                    <option value="Oui">Oui</option>
+                    <option value="Non">Non</option>
+                  </select>
+                </Field>
+                {registerForm.gie === 'Oui' && (
+                  <Field label="Nom du GIE / Coopérative"><input value={registerForm.gieName} onChange={(event) => updateForm(setRegisterForm, 'gieName', event.target.value)} placeholder="Nom de votre coopérative" /></Field>
+                )}
+                <Field label="Foncier">
+                  <select value={registerForm.foncier} onChange={(event) => updateForm(setRegisterForm, 'foncier', event.target.value)}>
+                    <option value="">— Sélectionner —</option>
+                    <option value="Aucun">Aucun</option>
+                    <option value="Coutumier">Coutumier</option>
+                    <option value="Titre formel">Titre formel</option>
+                  </select>
+                </Field>
+              </>
+            )}
+            <Field label="Mot de passe" required><PasswordInput value={registerForm.password} onChange={(event) => updateForm(setRegisterForm, 'password', event.target.value)} /></Field>
+          </div>
           <Button type="submit"><UserCheck size={18} /> Créer mon espace</Button>
         </form>
       )}
@@ -1506,7 +1981,18 @@ function Header({ actions, activePath, currentUser, logout, menuLinks, messages 
 
   function openNotification(item) {
     const now = new Date().toISOString();
-    actions.setNotifications((entries) => entries.map((entry) => entry.id === item.id ? { ...entry, read: true, readAt: entry.readAt || now } : entry));
+    actions.setNotifications((entries) => {
+      const updated = entries.map((entry) => entry.id === item.id ? { ...entry, read: true, readAt: entry.readAt || now } : entry);
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const stored = JSON.parse(raw);
+          stored.notifications = updated;
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+        }
+      } catch {}
+      return updated;
+    });
     const path = getNotificationPath(item, messages);
     if (path) {
       navigate(path);
@@ -1518,22 +2004,53 @@ function Header({ actions, activePath, currentUser, logout, menuLinks, messages 
     event.stopPropagation();
     if (isNotificationRead(notif)) return;
     const now = new Date().toISOString();
-    actions.setNotifications((entries) =>
-      entries.map((entry) =>
+    actions.setNotifications((entries) => {
+      const updated = entries.map((entry) =>
         entry.id === notif.id ? { ...entry, read: true, readAt: entry.readAt || now } : entry,
-      ),
-    );
+      );
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const stored = JSON.parse(raw);
+          stored.notifications = updated;
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+        }
+      } catch {}
+      return updated;
+    });
   }
 
   function markAllRead() {
     const now = new Date().toISOString();
-    actions.setNotifications((entries) => entries.map((entry) => {
-      if (isNotificationRead(entry)) return entry;
-      const matchesUser = entry.recipientId === currentUser.id
-        || (entry.recipientRole && entry.recipientRole === currentUser.role)
-        || (Array.isArray(entry.recipientRoles) && entry.recipientRoles.includes(currentUser.role));
-      return matchesUser ? { ...entry, read: true, readAt: entry.readAt || now } : entry;
-    }));
+    actions.setNotifications((entries) => {
+      const updated = entries.map((entry) => {
+        if (isNotificationRead(entry)) return entry;
+        const matchesUser = entry.recipientId === currentUser.id
+          || (entry.recipientRole && entry.recipientRole === currentUser.role)
+          || (Array.isArray(entry.recipientRoles) && entry.recipientRoles.includes(currentUser.role));
+        return matchesUser ? { ...entry, read: true, readAt: entry.readAt || now } : entry;
+      });
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const stored = JSON.parse(raw);
+          stored.notifications = updated;
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+        }
+      } catch {}
+      setTimeout(() => {
+        try {
+          const payload = window.localStorage.getItem(STORAGE_KEY);
+          if (payload) {
+            const authHeaders = { 'Content-Type': 'application/json' };
+            const savedToken = sessionStorage.getItem('frescoop.auth.token');
+            if (savedToken) authHeaders['Authorization'] = `Bearer ${savedToken}`;
+            fetch(API_BASE + '/api/store?force=true', { method: 'PUT', headers: authHeaders, body: payload });
+          }
+        } catch {}
+      }, 300);
+      return updated;
+    });
   }
 
   return (
@@ -1566,7 +2083,7 @@ function Header({ actions, activePath, currentUser, logout, menuLinks, messages 
                 <div className="notification-head">
                   <div>
                     <strong>Notifications</strong>
-                    <span>{unreadCount ? `${unreadCount} non lue(s)` : 'Tout est a jour'}</span>
+                    <span>{unreadCount ? `${unreadCount} non lue(s)` : 'Tout est à jour'}</span>
                   </div>
                   <div className="notification-actions">
                     {unreadCount > 0 && <button type="button" onClick={markAllRead}>Tout lire</button>}
@@ -1684,10 +2201,6 @@ function DashboardPage({ currentUser, navigate, stats, store }) {
     return <ClientHomePage currentUser={currentUser} navigate={navigate} store={store} />;
   }
 
-  if (currentUser.role === 'transporteur') {
-    return <TransporterHomePage currentUser={currentUser} navigate={navigate} store={store} />;
-  }
-
   if (currentUser.role === 'agriculteur') {
     return <SellerHomePage currentUser={currentUser} navigate={navigate} store={store} />;
   }
@@ -1706,29 +2219,29 @@ function FieldAgentHomePage({ currentUser, navigate, store }) {
       <section className="role-home-panel transport-home-panel">
         <div>
           <span className="eyebrow">Agent Terrain</span>
-          <h2>Coordonner les commandes quand l agriculteur n est pas connecte.</h2>
-          <p>Votre role est d appeler l agriculteur, confirmer le stock, contacter le transporteur et garder la commande reactive jusqu a livraison.</p>
+          <h2>Suivez et coordonnez les commandes.</h2>
+          <p>Appelez les agriculteurs, confirmez les stocks et organisez les livraisons.</p>
           <div className="button-row">
-            <Button onClick={() => navigate('/commandes')}><PhoneCall size={18} /> Voir commandes terrain</Button>
-            <Button variant="secondary" onClick={() => navigate('/operations')}><Truck size={18} /> Transporteurs et hubs</Button>
+            <Button onClick={() => navigate('/commandes')}><PhoneCall size={18} /> Commandes</Button>
+            <Button variant="secondary" onClick={() => navigate('/operations')}><Truck size={18} /> Opérations</Button>
           </div>
         </div>
         <div className="home-highlight">
           <strong>{formatNumber(toCoordinate.length)}</strong>
-          <span>commandes a suivre</span>
+          <span>à suivre</span>
         </div>
       </section>
       <div className="status-grid">
-        <StatCard icon={CheckCircle2} label="Payees a preparer" value={paidToPrepare.length} tone="green" />
+        <StatCard icon={CheckCircle2} label="Payees à préparer" value={paidToPrepare.length} tone="green" />
         <StatCard icon={PhoneCall} label="Agriculteurs a appeler" value={toCoordinate.filter((order) => !order.agentWorkflow?.farmerCalledAt).length} tone="blue" />
-        <StatCard icon={Truck} label="Livraisons organisees" value={organized} tone="gold" />
+        <StatCard icon={Truck} label="Livraisons organisées" value={organized} tone="gold" />
         <StatCard icon={CircleAlert} label="En attente paiement" value={orders.filter((order) => order.status === 'Paiement en attente').length} tone="coral" />
       </div>
       <div className="quick-grid">
-        <QuickAction icon={Users} title="Former les acteurs" body="Accompagner agriculteurs et transporteurs sur les parcours FresCoop et USSD." onClick={() => navigate('/ussd')} />
-        <QuickAction icon={ShieldCheck} title="Verifier les produits" body="Confirmer la disponibilite, la zone, la qualite annoncee et la coherence terrain." onClick={() => navigate('/produits')} />
-        <QuickAction icon={PhoneCall} title="Coordonner commandes" body="Appeler l agriculteur, contacter le transporteur et confirmer la preparation." onClick={() => navigate('/commandes')} />
-        <QuickAction icon={ClipboardCheck} title="Surveys terrain" body="Questionnaires et releves terrain prevus dans une prochaine iteration." onClick={() => navigate('/operations')} />
+        <QuickAction icon={Users} title="Former les acteurs" body="Accompagner agriculteurs sur les parcours FresCoop et USSD." onClick={() => navigate('/ussd')} />
+        <QuickAction icon={ShieldCheck} title="Vérifier les produits" body="Confirmer la disponibilité, la zone, la qualité annoncée et la coherence terrain." onClick={() => navigate('/produits')} />
+        <QuickAction icon={PhoneCall} title="Coordonner commandes" body="Appeler l'agriculteur et confirmer la preparation." onClick={() => navigate('/commandes')} />
+        <QuickAction icon={ClipboardCheck} title="Collecte AgriScore" body="Collecter les données terrain d'un agriculteur pour son dossier de crédit." onClick={() => navigate('/collecte-agriscore')} />
       </div>
     </PageFrame>
   );
@@ -1736,23 +2249,71 @@ function FieldAgentHomePage({ currentUser, navigate, store }) {
 
 function FrescoopRoleHomePage({ currentUser, navigate, store }) {
   const data = getFrescoopOperatingData(store);
+
+  if (currentUser.role === 'partenaire') {
+    const agriculteurs = store.users.filter((u) => u.role === 'agriculteur');
+    const scoredFarmers = agriculteurs.map((farmer) => {
+      const score = buildBancabiliteDossier(farmer, store).score;
+      return { farmer, score };
+    });
+    const bancables = scoredFarmers.filter((f) => f.score >= 75);
+    const consentActifs = data.consentRecords.filter((item) => item.status === 'Actif').length;
+
+    return (
+      <PageFrame>
+        <section className="role-home-panel bancabilite-hero">
+          <div>
+            <span className="eyebrow">Partenaire financier</span>
+            <h2>Dossiers vérifiés des agriculteurs.</h2>
+            <p>Scores basés sur les ventes réelles. Chaque dossier est vérifiable par QR code.</p>
+            <div className="button-row">
+              <Button onClick={() => navigate('/bancabilite')}><Landmark size={18} /> Dossiers bancables</Button>
+              <Button variant="secondary" onClick={() => navigate('/impact')}><BarChart3 size={18} /> Indicateurs</Button>
+            </div>
+          </div>
+          <div className="home-highlight">
+            <strong>{bancables.length}</strong>
+            <span>agriculteurs bancables</span>
+          </div>
+        </section>
+        <div className="status-grid">
+          <StatCard icon={Landmark} label="Bancables (75+)" value={bancables.length} tone="green" />
+          <StatCard icon={Users} label="Agriculteurs suivis" value={agriculteurs.length} tone="blue" />
+          <StatCard icon={ShieldCheck} label="Consentements actifs" value={consentActifs} tone="gold" />
+          <StatCard icon={FileCheck2} label="Preuves économiques" value={store.proofs.length} tone="coral" />
+        </div>
+        {bancables.length > 0 && (
+          <section className="panel">
+            <PanelTitle icon={Activity} title="Agriculteurs eligibles au credit" />
+            <div className="ranking-list">
+              {bancables.sort((a, b) => b.score - a.score).slice(0, 8).map((item, index) => (
+                <article key={item.farmer.id}>
+                  <span>{index + 1}</span>
+                  <div>
+                    <strong>{item.farmer.name}</strong>
+                    <small>{item.farmer.region || 'UEMOA'} - Score {item.score}/100</small>
+                  </div>
+                  <b>{item.score}/100</b>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+      </PageFrame>
+    );
+  }
+
   const roleCopy = {
     acheteurB2B: {
       icon: Store,
       title: 'Catalogue B2B fiable et re-achat',
-      body: 'Identifiez les lots disponibles, la fenetre de consommation et les reservations recurrentes.',
+      body: 'Identifiez les lots disponibles, la fenêtre de consommation et les reservations recurrentes.',
       cta: 'Voir catalogue lots',
-    },
-    partenaire: {
-      icon: Landmark,
-      title: 'Donnees consenties et indice explicable',
-      body: 'Consultez uniquement les flux autorises, la stabilite d activite et les preuves portables.',
-      cta: 'Voir preuves',
     },
   }[currentUser.role] || {
     icon: ClipboardCheck,
     title: 'Espace FresCoop',
-    body: 'Pilotez lots, froid, commandes et preuves economiques.',
+    body: 'Pilotez lots, froid, commandes et preuves économiques.',
     cta: 'Voir les lots',
   };
   const Icon = roleCopy.icon;
@@ -1771,13 +2332,13 @@ function FrescoopRoleHomePage({ currentUser, navigate, store }) {
         </div>
         <div className="home-highlight">
           <strong>{formatNumber(data.lots.length)}</strong>
-          <span>lots suivis en demo</span>
+          <span>lots suivis</span>
         </div>
       </section>
       <div className="status-grid">
         <StatCard icon={ClipboardCheck} label="Lots actifs" value={data.lots.length} tone="green" />
         <StatCard icon={Warehouse} label="Kg proteges" value={formatNumber(sumBy(data.lots, 'weightKg'))} tone="blue" />
-        <StatCard icon={CircleDollarSign} label="Valeur reservee" value={formatMoney(sumBy(data.reservations, 'value'))} tone="gold" />
+        <StatCard icon={CircleDollarSign} label="Valeur réservée" value={formatMoney(sumBy(data.reservations, 'value'))} tone="gold" />
         <StatCard icon={ShieldCheck} label="Consentements" value={data.consentRecords.filter((item) => item.status === 'Actif').length} tone="coral" />
       </div>
     </PageFrame>
@@ -1787,41 +2348,50 @@ function FrescoopRoleHomePage({ currentUser, navigate, store }) {
 function AdminHomePage({ navigate, stats, store }) {
   const revenue = buildRevenueSnapshot(store);
   const opportunities = buildAdminOpportunities(store);
-  const topProducts = buildTopProductsByMoney(store).slice(0, 5);
   const sellerHealth = buildSellerHealth(store).slice(0, 6);
   const pipeline = buildTrustPipeline(store);
 
+  const agriculteurs = store.users.filter((u) => u.role === 'agriculteur');
+  const scoredFarmers = agriculteurs.map((farmer) => {
+    const score = buildBancabiliteDossier(farmer, store).score;
+    return { farmer, score };
+  });
+  const bancables = scoredFarmers.filter((f) => f.score >= 75).length;
+  const enProgression = scoredFarmers.filter((f) => f.score >= 40 && f.score < 75).length;
+  const débutants = scoredFarmers.filter((f) => f.score < 40).length;
+  const avgScore = agriculteurs.length ? Math.round(scoredFarmers.reduce((s, f) => s + f.score, 0) / agriculteurs.length) : 0;
+
   return (
     <PageFrame>
-      <section className="money-hero admin-money-hero">
+      <section className="money-hero admin-money-hero bancabilite-hero">
         <div>
-          <span className="eyebrow">Centre de pilotage revenus</span>
-          <h2>Transformer les produits publies en ventes, preuves et financement.</h2>
-          <p>Le concours doit voir une plateforme qui cree du revenu: FresCoop suit la valeur du catalogue, controle les comptes vendeurs et montre quels acteurs peuvent etre rendus bancables.</p>
+          <span className="eyebrow">Tableau de bord</span>
+          <h2>Pilotez le financement agricole.</h2>
+          <p>Suivez les agriculteurs vers la bancabilité : ventes, preuves et scores en temps réel.</p>
           <div className="button-row">
-            <Button onClick={() => navigate('/produits')}><Store size={18} /> Suivre produits</Button>
-            <Button variant="secondary" onClick={() => navigate('/impact')}><BarChart3 size={18} /> Voir impact</Button>
-            <Button variant="secondary" onClick={() => downloadHtml('rapport-poesam-frescoop.html', renderBusinessReportHtml(store))}><Download size={18} /> Rapport POESAM</Button>
-            <Button variant="secondary" onClick={() => navigate('/donnees')}><Database size={18} /> Export donnees</Button>
+            <Button onClick={() => navigate('/bancabilite')}><Landmark size={18} /> Vue bancabilité</Button>
+            <Button variant="secondary" onClick={() => navigate('/impact')}><BarChart3 size={18} /> Impact</Button>
+            <Button variant="secondary" onClick={() => downloadHtml('rapport-uemoa-frescoop.html', renderBusinessReportHtml(store))}><Download size={18} /> Rapport UEMOA</Button>
+            <Button variant="secondary" onClick={() => navigate('/donnees')}><Database size={18} /> Export</Button>
           </div>
         </div>
-        <div className="money-hero-score">
-          <span>Valeur marche</span>
-          <strong>{formatMoney(revenue.catalogValue)}</strong>
-          <small>{revenue.activeSellerCount}/{revenue.sellerCount} vendeur(s) actifs</small>
+        <div className="money-hero-score bancabilite-ring">
+          <span>Agriculteurs bancables</span>
+          <strong>{bancables}/{agriculteurs.length}</strong>
+          <small>Score moyen : {avgScore}/100</small>
         </div>
       </section>
 
       <div className="money-kpi-grid">
-        <MoneyKpi icon={CircleDollarSign} label="Valeur catalogue" value={formatMoney(revenue.catalogValue)} detail={`${stats.products} produit(s) suivis`} />
-        <MoneyKpi icon={ShoppingCart} label="Produits publies" value={store.products.filter((item) => item.status === 'Publie').length} detail="offres visibles sur le marche" />
-        <MoneyKpi icon={Store} label="Vendeurs avec offre" value={`${revenue.activeSellerCount}/${revenue.sellerCount}`} detail="agriculteurs et commercants" />
-        <MoneyKpi icon={BadgeCheck} label="Bancabilite" value={`${pipeline.validated}/${Math.max(1, pipeline.total)}`} detail="dossiers valides ou attestables" />
+        <MoneyKpi icon={Landmark} label="Bancables" value={bancables} detail="score 75+" />
+        <MoneyKpi icon={Activity} label="En progression" value={enProgression} detail="score 40-74" />
+        <MoneyKpi icon={Users} label="Débutants" value={débutants} detail="score 0-39" />
+        <MoneyKpi icon={CircleDollarSign} label="Valeur marché" value={formatMoney(revenue.catalogValue)} detail={`${stats.products} produit(s)`} />
       </div>
 
       <div className="split-layout">
         <section className="panel opportunity-panel">
-          <PanelTitle icon={BellRing} title="Actions qui rapportent" />
+          <PanelTitle icon={BellRing} title="Actions prioritaires" />
           {opportunities.length ? (
             <div className="opportunity-list">
               {opportunities.map((item) => (
@@ -1841,29 +2411,7 @@ function AdminHomePage({ navigate, stats, store }) {
         </section>
 
         <section className="panel">
-          <PanelTitle icon={LineChartIcon} title="Produits qui portent le chiffre" />
-          {topProducts.length ? (
-            <div className="ranking-list">
-              {topProducts.map((item, index) => (
-                <article key={item.product.id}>
-                  <span>{index + 1}</span>
-                  <div>
-                    <strong>{item.product.name}</strong>
-                    <small>{item.seller?.name || 'Vendeur'} - {formatMoney(item.catalogValue)} en stock</small>
-                  </div>
-                  <b>{formatMoney(item.catalogValue)}</b>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <EmptyState icon={Store} title="Aucun produit" body="Publiez des produits pour creer le marche." />
-          )}
-        </section>
-      </div>
-
-      <div className="split-layout">
-        <section className="panel">
-          <PanelTitle icon={Users} title="Vendeurs a rendre performants" />
+          <PanelTitle icon={Users} title="Agriculteurs : progression scoring" />
           {sellerHealth.length ? (
             <div className="seller-health-list">
               {sellerHealth.map((seller) => (
@@ -1872,25 +2420,51 @@ function AdminHomePage({ navigate, stats, store }) {
                     <strong>{seller.user.name}</strong>
                     <span>{roleLabel(seller.user.role)} - {seller.products.length} produit(s)</span>
                   </div>
-                  <Meter label="Score commercial" value={seller.score} tone={seller.score >= 70 ? 'green' : 'blue'} />
+                  <Meter label="Score bancabilité" value={seller.score} tone={seller.score >= 70 ? 'green' : 'blue'} />
                   <small>{seller.recommendation}</small>
                 </article>
               ))}
             </div>
           ) : (
-            <EmptyState icon={Users} title="Aucun vendeur" body="Ajoutez agriculteurs ou commercants pour lancer le reseau." />
+            <EmptyState icon={Users} title="Aucun vendeur" body="Ajoutez agriculteurs pour lancer le pipeline de financement." />
           )}
+        </section>
+      </div>
+
+      <div className="split-layout">
+        <section className="panel">
+          <PanelTitle icon={ShieldCheck} title="Dossiers et preuves" />
+          <div className="finance-readiness">
+            <article><strong>{pipeline.total}</strong><span>Dossiers deposes</span></article>
+            <article><strong>{pipeline.validated}</strong><span>Validables</span></article>
+            <article><strong>{pipeline.pending}</strong><span>A traiter</span></article>
+            <article><strong>{store.proofs.length}</strong><span>Preuves économiques</span></article>
+          </div>
+          <NoticeCard icon={Landmark} title="Point 4 GIM-UEMOA" body="Plateforme de scoring basee sur les données de production reelles pour susciter la confiance des institutions financieres." />
         </section>
 
         <section className="panel">
-          <PanelTitle icon={ShieldCheck} title="Confiance et financement" />
-          <div className="finance-readiness">
-            <article><strong>{pipeline.total}</strong><span>Dossiers</span></article>
-            <article><strong>{pipeline.validated}</strong><span>Validables</span></article>
-            <article><strong>{pipeline.pending}</strong><span>A traiter</span></article>
-            <article><strong>{store.proofs.length}</strong><span>Preuves economiques</span></article>
-          </div>
-          <NoticeCard icon={Landmark} title="Argument POESAM" body="La valeur n est pas seulement le catalogue: les ventes et preuves creent un historique utilisable pour credit, assurance, contrats et subventions." />
+          <PanelTitle icon={Activity} title="Top agriculteurs par score" />
+          {scoredFarmers.length ? (
+            <div className="ranking-list">
+              {scoredFarmers
+                .slice()
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 5)
+                .map((item, index) => (
+                  <article key={item.farmer.id}>
+                    <span>{index + 1}</span>
+                    <div>
+                      <strong>{item.farmer.name}</strong>
+                      <small>{item.score >= 75 ? 'Bancable' : item.score >= 40 ? 'En progression' : 'Débutant'}</small>
+                    </div>
+                    <b>{item.score}/100</b>
+                  </article>
+                ))}
+            </div>
+          ) : (
+            <EmptyState icon={Users} title="Aucun agriculteur" body="Le scoring démarré des la première vente." />
+          )}
         </section>
       </div>
     </PageFrame>
@@ -1902,43 +2476,46 @@ function SellerHomePage({ currentUser, navigate, store }) {
   const publishedProducts = products.filter((item) => item.status === 'Publie');
   const orders = getVisibleOrders(store.orders, currentUser);
   const openOrders = orders.filter((item) => item.status !== 'Livree' && item.status !== 'Annulee');
-  const sellerMessages = store.messages.filter((item) => item.sellerId === currentUser.id && !item.parentId);
-  const unansweredMessages = sellerMessages.filter((item) => item.status === 'Nouveau');
+  const transactions = store.transactions.filter((item) => item.ownerId === currentUser.id);
+  const dossiers = store.dossiers.filter((item) => item.ownerId === currentUser.id);
   const inventoryValue = products.reduce((sum, product) => sum + getProductInventoryValue(product), 0);
   const orderValue = orders.reduce((sum, order) => sum + getOrderTotal(order, store), 0);
-  const openOrderValue = openOrders.reduce((sum, order) => sum + getOrderTotal(order, store), 0);
   const actions = buildSellerOpportunities(store, currentUser);
+
+  const bancabiliteScore = buildBancabiliteDossier(currentUser, store).score;
+  const scoreLevel = bancabiliteScore >= 75 ? 'Bancable' : bancabiliteScore >= 40 ? 'En progression' : 'Débutant';
+  const scoreTone = bancabiliteScore >= 75 ? 'green' : bancabiliteScore >= 40 ? 'blue' : 'gold';
 
   return (
     <PageFrame>
-      <section className="money-hero seller-money-hero">
+      <section className="money-hero seller-money-hero bancabilite-hero">
         <div>
-          <span className="eyebrow">{roleLabel(currentUser.role)} - revenus</span>
-          <h2>Votre espace pour vendre plus vite et prouver vos revenus.</h2>
-          <p>Les produits publies, les commandes et les preuves economiques deviennent un dossier commercial: plus il est complet, plus vous pouvez negocier, vendre et demander du financement.</p>
+          <span className="eyebrow">Mon espace vendeur</span>
+          <h2>Vendez, prouvez, obtenez un crédit.</h2>
+          <p>Vos ventes et livraisons construisent votre dossier bancaire automatiquement.</p>
           <div className="button-row">
-            <Button onClick={() => navigate('/produits')}><Plus size={18} /> Ajouter produit</Button>
-            <Button variant="secondary" onClick={() => navigate('/commandes')}><ShoppingCart size={18} /> Voir commandes</Button>
-            <Button variant="secondary" onClick={() => navigate('/preuves')}><ReceiptText size={18} /> Preuve revenu</Button>
+            <Button onClick={() => navigate('/bancabilite')}><Landmark size={18} /> Mon score</Button>
+            <Button variant="secondary" onClick={() => navigate('/produits')}><Plus size={18} /> Produits</Button>
+            <Button variant="secondary" onClick={() => navigate('/commandes')}><ShoppingCart size={18} /> Commandes</Button>
           </div>
         </div>
-        <div className="money-hero-score">
-          <span>Stock valorise</span>
-          <strong>{formatMoney(inventoryValue)}</strong>
-          <small>{formatMoney(openOrderValue)} a convertir en commandes</small>
+        <div className="money-hero-score bancabilite-ring">
+          <span>Bancabilité</span>
+          <strong className={`score-${scoreTone}`}>{bancabiliteScore}</strong>
+          <small>{scoreLevel}</small>
         </div>
       </section>
 
       <div className="money-kpi-grid">
-        <MoneyKpi icon={CircleDollarSign} label="Ventes reçues" value={formatMoney(orderValue)} detail={`${orders.length} commande(s)`} />
-        <MoneyKpi icon={ShoppingCart} label="A livrer / confirmer" value={formatMoney(openOrderValue)} detail={`${openOrders.length} commande(s) ouvertes`} />
-        <MoneyKpi icon={Store} label="Produits publies" value={`${publishedProducts.length}/${products.length}`} detail="visibles au marche" />
-        <MoneyKpi icon={MessageSquare} label="Messages a traiter" value={unansweredMessages.length} detail="repondre vite augmente la conversion" />
+        <MoneyKpi icon={Landmark} label="Score" value={`${bancabiliteScore}/100`} detail={scoreLevel} />
+        <MoneyKpi icon={CircleDollarSign} label="Ventes" value={formatMoney(orderValue)} detail={`${orders.length} commande(s)`} />
+        <MoneyKpi icon={Star} label="Avis clients" value={(() => { const r = (store.ratings || []).filter((rt) => rt.sellerId === currentUser.id); return r.length ? `${(r.reduce((s, rt) => s + rt.rating, 0) / r.length).toFixed(1)}/5` : '—'; })()} detail={`${(store.ratings || []).filter((rt) => rt.sellerId === currentUser.id).length} avis`} />
+        <MoneyKpi icon={FileCheck2} label="Preuves" value={transactions.length + dossiers.length} detail="au dossier" />
       </div>
 
       <div className="split-layout">
         <section className="panel opportunity-panel">
-          <PanelTitle icon={BellRing} title="Plan pour gagner plus" />
+          <PanelTitle icon={BellRing} title="Actions pour augmenter votre score" />
           {actions.length ? (
             <div className="opportunity-list">
               {actions.map((item) => (
@@ -1953,12 +2530,12 @@ function SellerHomePage({ currentUser, navigate, store }) {
               ))}
             </div>
           ) : (
-            <EmptyState icon={CheckCircle2} title="Base commerciale solide" body="Continuez a publier, repondre et confirmer les commandes." />
+            <EmptyState icon={CheckCircle2} title="Parcours bien avancé" body="Continuez à vendre et soumettre des preuves pour atteindre 75/100." />
           )}
         </section>
 
         <section className="panel">
-          <PanelTitle icon={PackageCheck} title="Produits rentables" />
+          <PanelTitle icon={PackageCheck} title="Mes produits" />
           {products.length ? (
             <div className="ranking-list">
               {products
@@ -1977,7 +2554,7 @@ function SellerHomePage({ currentUser, navigate, store }) {
                 ))}
             </div>
           ) : (
-            <EmptyState icon={Store} title="Aucun produit" body="Ajoutez vos produits pour commencer a vendre." />
+            <EmptyState icon={Store} title="Aucun produit" body="Publiez vos produits pour générer des ventes et construire votre score." />
           )}
         </section>
       </div>
@@ -1990,15 +2567,36 @@ function SellerHomePage({ currentUser, navigate, store }) {
               {orders.slice(0, 5).map((order) => <OrderLine key={order.id} order={order} store={store} withProgress />)}
             </div>
           ) : (
-            <EmptyState icon={ShoppingCart} title="Aucune commande" body="Les commandes apparaitront des qu un client confirme son panier." />
+            <EmptyState icon={ShoppingCart} title="Aucune commande" body="Chaque commande confirmée augmente votre score de bancabilité." />
           )}
         </section>
 
         <section className="panel">
-          <PanelTitle icon={Landmark} title="Dossier de revenus" />
-          <FinanceScoreCard navigate={navigate} user={currentUser} store={store} />
+          <PanelTitle icon={Landmark} title="Mon crédit" />
+          <div className="finance-score-card">
+            <div className="score-ring" style={{ background: `conic-gradient(${bancabiliteScore >= 75 ? '#1f835d' : bancabiliteScore >= 40 ? '#4fb07e' : bancabiliteScore >= 20 ? '#d99912' : '#e54d35'} 0deg ${Math.round(bancabiliteScore * 3.6)}deg, var(--line, #e5e7eb) ${Math.round(bancabiliteScore * 3.6)}deg)` }}><strong>{bancabiliteScore}</strong><span>/100</span></div>
+            <div>
+              <strong>{bancabiliteScore >= 75 ? "Éligible au crédit" : "Dossier en construction"}</strong>
+              <p>{bancabiliteScore >= 75 ? "Exportez votre dossier." : "Vendez pour augmenter votre score."}</p>
+              <div className="button-row">
+                <Button variant="secondary" onClick={() => navigate('/bancabilite')}><FileCheck2 size={16} /> Dossier</Button>
+                {bancabiliteScore >= 60 && <Button onClick={() => navigate('/bancabilite')}><Landmark size={16} /> Crédit</Button>}
+              </div>
+            </div>
+          </div>
         </section>
       </div>
+
+      <section className="panel">
+        <PanelTitle icon={ShieldCheck} title="Niveaux débloqués" />
+        <div className="permissions-progress-grid">
+          <div className={`perm-item ${bancabiliteScore >= 0 ? 'unlocked' : 'locked'}`}><CheckCircle2 size={16} /><div><strong>Publier</strong><small>0+</small></div></div>
+          <div className={`perm-item ${bancabiliteScore >= 20 ? 'unlocked' : 'locked'}`}>{bancabiliteScore >= 20 ? <CheckCircle2 size={16} /> : <CircleAlert size={16} />}<div><strong>Preuves</strong><small>20+</small></div></div>
+          <div className={`perm-item ${bancabiliteScore >= 40 ? 'unlocked' : 'locked'}`}>{bancabiliteScore >= 40 ? <CheckCircle2 size={16} /> : <CircleAlert size={16} />}<div><strong>Micro-crédit</strong><small>40+</small></div></div>
+          <div className={`perm-item ${bancabiliteScore >= 60 ? 'unlocked' : 'locked'}`}>{bancabiliteScore >= 60 ? <CheckCircle2 size={16} /> : <CircleAlert size={16} />}<div><strong>Export PDF</strong><small>60+</small></div></div>
+          <div className={`perm-item ${bancabiliteScore >= 75 ? 'unlocked' : 'locked'}`}>{bancabiliteScore >= 75 ? <CheckCircle2 size={16} /> : <CircleAlert size={16} />}<div><strong>Partenaires</strong><small>75+</small></div></div>
+        </div>
+      </section>
     </PageFrame>
   );
 }
@@ -2016,32 +2614,32 @@ function ClientHomePage({ currentUser, navigate, store }) {
       <section className="role-home-panel client-home-panel">
         <div>
           <span className="eyebrow">Bonjour {currentUser.name}</span>
-          <h2>Votre espace client FresCoop</h2>
-          <p>Decouvrez les produits publies, preparez un panier, confirmez vos commandes et gardez les echanges avec les vendeurs au meme endroit.</p>
+          <h2>Achetez frais, suivez vos commandes.</h2>
+          <p>Trouvez des produits locaux, commandez et échangez avec les vendeurs.</p>
           <div className="button-row">
-            <Button onClick={() => navigate('/marche')}><ShoppingCart size={18} /> Aller au marche</Button>
-            <Button variant="secondary" onClick={() => navigate('/commandes')}><ReceiptText size={18} /> Mes commandes</Button>
+            <Button onClick={() => navigate('/marche')}><ShoppingCart size={18} /> Marché</Button>
+            <Button variant="secondary" onClick={() => navigate('/commandes')}><ReceiptText size={18} /> Commandes</Button>
           </div>
         </div>
         <div className="home-highlight">
           <ShoppingCart size={28} />
           <strong>{cartCount || 0}</strong>
-          <span>{cartCount === 0 ? 'panier vide' : `article${cartCount > 1 ? 's' : ''} dans le panier`}</span>
+          <span>{cartCount === 0 ? 'panier vide' : `article${cartCount > 1 ? 's' : ''}`}</span>
         </div>
       </section>
 
       <div className="status-grid">
         <StatCard icon={Store} label="Produits disponibles" value={products.length} tone="green" />
         <StatCard icon={ShoppingCart} label="Commandes actives" value={clientHomeOrders.length} tone="blue" />
-        <StatCard icon={MessageSquare} label="Conversations" value={buildConversations(messages).length} tone="gold" />
-        <StatCard icon={ShieldCheck} label="Parcours" value="Client" tone="coral" />
+        <StatCard icon={Star} label="Cashback gagné" value={`${(store.cashbackRecords || []).filter((r) => r.userId === currentUser.id && r.status === 'credited').reduce((s, r) => s + (r.amount || 0), 0).toLocaleString()} F`} tone="gold" />
+        <StatCard icon={MessageSquare} label="Conversations" value={buildConversations(messages).length} tone="coral" />
       </div>
 
       <div className="quick-grid">
-        <QuickAction icon={Search} title="Trouver un produit" body="Filtrer les offres par nom, zone ou categorie." onClick={() => navigate('/marche')} />
-        <QuickAction icon={CheckCircle2} title="Confirmer le panier" body="Verifier quantites, total et vendeur avant envoi." onClick={() => navigate('/commandes')} />
-        <QuickAction icon={MessageSquare} title="Discuter avec vendeur" body="Demander prix, disponibilite ou details produit." onClick={() => navigate('/commandes')} />
-        <QuickAction icon={Settings} title="Completer mon compte" body="Ajouter telephone, region et organisation." onClick={() => navigate('/compte')} />
+        <QuickAction icon={Search} title="Trouver un produit" body="Rechercher par nom, zone ou catégorie." onClick={() => navigate('/marche')} />
+        <QuickAction icon={CheckCircle2} title="Mon panier" body="Voir et confirmer mes articles." onClick={() => navigate('/commandes')} />
+        <QuickAction icon={MessageSquare} title="Messages" body="Parler aux vendeurs." onClick={() => navigate('/commandes')} />
+        <QuickAction icon={Settings} title="Mon compte" body="Profil et coordonnées." onClick={() => navigate('/compte')} />
       </div>
 
       <div className="split-layout">
@@ -2070,76 +2668,6 @@ function ClientHomePage({ currentUser, navigate, store }) {
   );
 }
 
-function TransporterHomePage({ currentUser, navigate, store }) {
-  const orders = getVisibleOrders(store.orders, currentUser);
-  const activeOrders = orders.filter((item) => item.status !== 'Livree' && item.status !== 'Annulee');
-  const hubs = store.hubs.filter((hub) => currentUser.role === 'admin' || hub.ownerId === currentUser.id);
-  const alerts = buildTransportAlerts(store, currentUser);
-  const availableCapacity = hubs.reduce((sum, hub) => sum + Math.max(0, Number(hub.capacityKg || 0) - Number(hub.currentStockKg || 0)), 0);
-
-  return (
-    <PageFrame>
-      <section className="role-home-panel transport-home-panel">
-        <div>
-          <span className="eyebrow">Bonjour {currentUser.name}</span>
-          <h2>Votre espace transporteur</h2>
-          <p>Suivez les commandes a acheminer, gardez vos hubs a jour et surveillez les points sensibles: froid, batterie, capacite et contact terrain.</p>
-          <div className="button-row">
-            <Button onClick={() => navigate('/operations')}><Warehouse size={18} /> Sites operations</Button>
-            <Button variant="secondary" onClick={() => navigate('/commandes')}><Truck size={18} /> Livraisons</Button>
-          </div>
-        </div>
-        <div className="home-highlight">
-          <Truck size={28} />
-          <strong>{activeOrders.length}</strong>
-          <span>mission(s) a suivre</span>
-        </div>
-      </section>
-
-      <div className="status-grid">
-        <StatCard icon={Truck} label="Livraisons ouvertes" value={activeOrders.length} tone="green" />
-        <StatCard icon={Warehouse} label="Mes hubs" value={hubs.length} tone="blue" />
-        <StatCard icon={PackageCheck} label="Capacite libre" value={`${formatCompact(availableCapacity)} kg`} tone="gold" />
-        <StatCard icon={BellRing} label="Alertes terrain" value={alerts.length} tone="coral" />
-      </div>
-
-      <div className="quick-grid">
-        <QuickAction icon={Warehouse} title="Enregistrer un hub" body="Ajouter capacite, stock, temperature et responsable." onClick={() => navigate('/operations')} />
-        <QuickAction icon={ClipboardCheck} title="Voir les livraisons" body="Suivre les commandes pretes ou en preparation." onClick={() => navigate('/commandes')} />
-        <QuickAction icon={FolderPlus} title="Documents" body="Garder les pieces et demandes logistiques." onClick={() => navigate('/dossiers')} />
-        <QuickAction icon={Settings} title="Profil transport" body="Mettre a jour telephone, region et structure." onClick={() => navigate('/compte')} />
-      </div>
-
-      <div className="split-layout">
-        <section className="panel">
-          <PanelTitle icon={BellRing} title="Alertes terrain" />
-          {alerts.length ? (
-            <div className="compact-list">
-              {alerts.map((alert) => (
-                <article key={alert.id}>
-                  <strong>{alert.title}</strong>
-                  <span>{alert.body}</span>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <EmptyState icon={ShieldCheck} title="Aucune alerte" body="Vos hubs ne signalent pas de risque capacite ou froid." />
-          )}
-        </section>
-        <section className="panel">
-          <PanelTitle icon={Truck} title="Livraisons a suivre" />
-          {activeOrders.length ? (
-            <div className="compact-list">
-              {activeOrders.slice(0, 5).map((order) => <OrderLine key={order.id} order={order} store={store} withProgress />)}
-            </div>
-          ) : (
-            <EmptyState icon={Truck} title="Aucune livraison ouverte" body="Les commandes non livrees apparaitront ici pour coordination terrain." />
-          )}
-        </section>
-      </div>
-    </PageFrame>
-  );
-}
 
 function MarketplacePage({ actions, currentUser, navigate, notify, store }) {
   const [search, setSearch] = useState('');
@@ -2211,7 +2739,7 @@ function MarketplacePage({ actions, currentUser, navigate, notify, store }) {
   function openContact(product) {
     setContactDraft({
       product,
-      body: 'Bonjour, je souhaite obtenir plus d informations sur ce produit.',
+      body: "Bonjour, je souhaite obtenir plus d'informations sur ce produit.",
     });
   }
 
@@ -2277,7 +2805,7 @@ function MarketplacePage({ actions, currentUser, navigate, notify, store }) {
       <section className="panel">
         <PanelToolbar
           icon={Search}
-          title="Articles disponibles"
+          title="Articlés disponibles"
           action={(
             <div className="market-controls">
               <Field label="Recherche"><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Produit, secteur, zone" /></Field>
@@ -2323,7 +2851,7 @@ function MarketplacePage({ actions, currentUser, navigate, notify, store }) {
             <CatalogPager page={page} totalPages={totalPages} onPageChange={setPage} />
           </>
         ) : (
-          <EmptyState icon={Store} title="Aucun article publie" body="Les clients verront les produits des vendeurs des qu ils seront publies." />
+          <EmptyState icon={Store} title="Aucun article publie" body="Les clients verront les produits des vendeurs des qu ils seront publiés." />
         )}
       </section>
 
@@ -2522,7 +3050,7 @@ function ProductsPage({ actions, currentUser, notify, store }) {
       fieldVerifiedBy: currentUser.id,
       updatedAt: new Date().toISOString(),
     } : item));
-    notify(status === 'Fiable' ? 'Produit confirme fiable' : 'Produit signale a revoir');
+    notify(status === 'Fiable' ? 'Produit confirmé fiable' : 'Produit signalé a revoir');
   }
 
   function openChat(message) {
@@ -2573,8 +3101,8 @@ function ProductsPage({ actions, currentUser, notify, store }) {
 
   return (
     <PageFrame>
-      {!allowed && !canVerifyProducts && <NoticeCard icon={CircleAlert} title="Acces lecture" body="Les clients commandent depuis le marche. Les transporteurs gerent surtout operations et documents." />}
-      {canVerifyProducts && <NoticeCard icon={ShieldCheck} title="Verification terrain" body="Controlez les produits ajoutes par les agriculteurs: disponibilite, qualite annoncee, zone et coherence du prix." />}
+      {!allowed && !canVerifyProducts && <NoticeCard icon={CircleAlert} title="Accès lecture" body="Les clients commandent depuis le marché." />}
+      {canVerifyProducts && <NoticeCard icon={ShieldCheck} title="Verification terrain" body="Contrôlez les produits ajoutes par les agriculteurs: disponibilité, qualité annoncée, zone et coherence du prix." />}
       {allowed && (
         <form className="panel form-panel" onSubmit={submit}>
           <PanelTitle icon={PackageCheck} title={editingId ? 'Modifier le produit' : 'Ajouter un produit'} />
@@ -2603,7 +3131,7 @@ function ProductsPage({ actions, currentUser, notify, store }) {
             max={6}
           />
           <Field label="Description"><textarea rows="3" value={form.description} onChange={(event) => updateForm(setForm, 'description', event.target.value)} /></Field>
-          <Button type="submit" disabled={saving}><Save size={18} /> {editingId ? 'Mettre a jour' : 'Enregistrer produit'}</Button>
+          <Button type="submit" disabled={saving}><Save size={18} /> {editingId ? 'Mettre à jour' : 'Enregistrer produit'}</Button>
         </form>
       )}
 
@@ -2655,7 +3183,7 @@ function ProductsPage({ actions, currentUser, notify, store }) {
             )}
           </>
         ) : (
-          <EmptyState icon={PackageCheck} title="Aucun produit" body="Ajoutez vos premiers produits pour alimenter le marche client." />
+          <EmptyState icon={PackageCheck} title="Aucun produit" body="Ajoutez vos premiers produits pour alimenter le marché client." />
         )}
       </section>
 
@@ -2789,7 +3317,7 @@ function DossiersPage({ actions, currentUser, navigate, notify, store }) {
             <Field label="Titre dossier" required><input value={form.title} onChange={(event) => updateForm(setForm, 'title', event.target.value)} /></Field>
           </div>
           <div className="field-row">
-            <Field label="Personne concernee" required><input value={form.personName} onChange={(event) => updateForm(setForm, 'personName', event.target.value)} /></Field>
+            <Field label="Personne concernée" required><input value={form.personName} onChange={(event) => updateForm(setForm, 'personName', event.target.value)} /></Field>
             <Field label="CIN / NINEA / ID" required><input value={form.personId} onChange={(event) => updateForm(setForm, 'personId', event.target.value)} /></Field>
           </div>
           <div className="field-row">
@@ -2864,14 +3392,14 @@ function AttestationsPage({ actions, currentUser, notify, store }) {
   return (
     <PageFrame>
       <section className="panel">
-        <PanelTitle icon={BadgeCheck} title="Dossiers eligibles a attestation" />
+        <PanelTitle icon={BadgeCheck} title="Dossiers eligibles à attestation" />
         {dossiers.length ? (
           <div className="record-grid">
             {dossiers.map((dossier) => {
               const score = computeEvidenceScore(dossier, store);
               return (
                 <article className="eligibility-card" key={dossier.id}>
-                  <div className="score-ring"><strong>{score.total}</strong><span>/100</span></div>
+                  <div className="score-ring" style={{ background: `conic-gradient(${score.total >= 75 ? '#1f835d' : score.total >= 40 ? '#4fb07e' : score.total >= 20 ? '#d99912' : '#e54d35'} 0deg ${Math.round(score.total * 3.6)}deg, var(--line, #e5e7eb) ${Math.round(score.total * 3.6)}deg)` }}><strong>{score.total}</strong><span>/100</span></div>
                   <div>
                     <Badge>{score.total >= 70 || dossier.status === 'Valide' ? 'Eligible' : 'Preuves insuffisantes'}</Badge>
                     <h3>{dossier.title}</h3>
@@ -2879,7 +3407,7 @@ function AttestationsPage({ actions, currentUser, notify, store }) {
                     <ul>
                       {score.reasons.map((reason) => <li key={reason}>{reason}</li>)}
                     </ul>
-                    <Button onClick={() => generate(dossier)}><FileCheck2 size={18} /> Generer attestation</Button>
+                    <Button onClick={() => generate(dossier)}><FileCheck2 size={18} /> Générer attestation</Button>
                   </div>
                 </article>
               );
@@ -2909,7 +3437,7 @@ function AttestationsPage({ actions, currentUser, notify, store }) {
             ))}
           </div>
         ) : (
-          <EmptyState icon={FileCheck2} title="Aucune attestation" body="Les attestations generees apparaitront ici." />
+          <EmptyState icon={FileCheck2} title="Aucune attestation" body="Les attestations générées apparaitront ici." />
         )}
       </section>
     </PageFrame>
@@ -3004,7 +3532,7 @@ function ProofsPage({ actions, currentUser, notify, store }) {
           <FileInput label="Justificatif" file={form.file} onChange={(file) => updateForm(setForm, 'file', file)} />
           <div className="button-row">
             <Button type="submit"><Save size={18} /> Enregistrer</Button>
-            <Button variant="secondary" onClick={generateProof}><BadgeCheck size={18} /> Generer preuve</Button>
+            <Button variant="secondary" onClick={generateProof}><BadgeCheck size={18} /> Générer preuve</Button>
           </div>
         </form>
       )}
@@ -3022,12 +3550,12 @@ function ProofsPage({ actions, currentUser, notify, store }) {
             ))}
           </div>
         ) : (
-          <EmptyState icon={ReceiptText} title="Aucune transaction" body="Saisissez des ventes ou paiements reels pour generer une preuve." />
+          <EmptyState icon={ReceiptText} title="Aucune transaction" body="Saisissez des ventes ou paiements réels pour générer une preuve." />
         )}
       </section>
 
       <section className="panel">
-        <PanelTitle icon={FileArchive} title="Preuves economiques" />
+        <PanelTitle icon={FileArchive} title="Preuves économiques" />
         {proofs.length ? (
           <div className="record-grid">
             {proofs.map((proof) => (
@@ -3066,6 +3594,10 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
   const [conversationDrafts, setConversationDrafts] = useState({});
   const [openConversationId, setOpenConversationId] = useState('');
   const [activeOrderTab, setActiveOrderTab] = useState(() => (isBuyerRole(currentUser.role) ? 'cart' : 'orders'));
+  const [voiceRecording, setVoiceRecording] = useState(false);
+  const [voiceBlob, setVoiceBlob] = useState(null);
+  const voiceRecorderRef = useRef(null);
+  const voiceChunksRef = useRef([]);
   const orders = getVisibleOrders(store.orders, currentUser);
   const hiddenOrderSet = useMemo(() => new Set(hiddenOrderIds), [hiddenOrderIds]);
   const scopedOrders = useMemo(() => (
@@ -3273,7 +3805,7 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
         paymentStatus: 'En attente',
         assignedAgentId: assignedAgent?.id || '',
         agentWorkflow: {},
-        message: 'Commande FresCoop en attente de paiement. Règlement sécurisé via PayDunya requis avant préparation.',
+        message: 'Commande FresCoop en attente de paiement. Règlement sécurisé via GIM-Pay requis avant préparation.',
         productSnapshot: snapshotCartProduct(item.product),
       };
     });
@@ -3398,10 +3930,73 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
     notify('Commande mise à jour', 'success');
   }
 
+  function rateOrder(orderId, rating, comment = '') {
+    const order = store.orders.find((item) => item.id === orderId);
+    if (!order || order.status !== 'Livree') return;
+    const existingRating = (store.ratings || []).find((r) => r.orderId === orderId && r.userId === currentUser.id);
+    if (existingRating) { notify('Vous avez déjà noté cette commande.', 'info'); return; }
+    const newRating = {
+      id: uid('rat'),
+      orderId,
+      userId: currentUser.id,
+      sellerId: order.sellerId,
+      rating: Math.min(5, Math.max(1, Number(rating))),
+      comment,
+      createdAt: new Date().toISOString(),
+    };
+    const sellerId = order.sellerId || order.ownerId || '';
+    const updatedRatings = [newRating, ...(store.ratings || [])];
+    const allSellerRatings = updatedRatings.filter((r) => r.sellerId === sellerId);
+    const newAvg = allSellerRatings.length ? (allSellerRatings.reduce((s, r) => s + r.rating, 0) / allSellerRatings.length).toFixed(1) : rating.toFixed(1);
+    const notif = createAppNotification({
+      actor: currentUser,
+      recipientId: sellerId,
+      title: `Nouvelle note : ${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}`,
+      body: `${currentUser.name} vous a attribué ${rating}/5. Votre moyenne globale est maintenant ${newAvg}/5 (${allSellerRatings.length} avis).`,
+      path: '/commandes',
+      relatedId: orderId,
+      type: 'rating',
+    });
+    actions.setStore((s) => ({
+      ...s,
+      ratings: [newRating, ...(s.ratings || [])],
+      notifications: [notif, ...(s.notifications || [])],
+    }));
+    const cashbackAmount = Math.round(Number(order.totalAmount || order.totalPrice || 0) * 0.02);
+    if (cashbackAmount > 0) {
+      const cashback = {
+        id: uid('cb'),
+        userId: currentUser.id,
+        orderId,
+        amount: cashbackAmount,
+        createdAt: new Date().toISOString(),
+        type: 'cashback',
+        status: 'credited',
+      };
+      actions.setStore((s) => ({ ...s, cashbackRecords: [cashback, ...(s.cashbackRecords || [])] }));
+      notify(`Merci pour votre avis ! ${cashbackAmount.toLocaleString()} FCFA de cashback crédités.`, 'success');
+    } else {
+      notify('Merci pour votre avis !', 'success');
+    }
+  }
+
+  function getSellerAverageRating(sellerId) {
+    const sellerRatings = (store.ratings || []).filter((r) => r.sellerId === sellerId);
+    if (sellerRatings.length === 0) return { average: 0, count: 0 };
+    const sum = sellerRatings.reduce((acc, r) => acc + r.rating, 0);
+    return { average: Math.round((sum / sellerRatings.length) * 10) / 10, count: sellerRatings.length };
+  }
+
+  function getUserCashbackBalance(userId) {
+    return (store.cashbackRecords || [])
+      .filter((r) => r.userId === userId && r.status === 'credited')
+      .reduce((sum, r) => sum + (r.amount || 0), 0);
+  }
+
   async function markAgentStep(orderId, step) {
     const stepLabels = {
       farmerCalledAt: 'Agriculteur appelé et stock confirmé',
-      transporterContactedAt: 'Transporteur contacté',
+      transporterContactedAt: 'Logistique confirmée',
       deliveryOrganizedAt: 'Livraison organisée',
     };
     const ok = await askConfirm({
@@ -3427,7 +4022,7 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
       const producerName = getOrderProducerName(order, store);
       broadcastOrderEvent({ ...order, status: stepToStatus[step] || order.status }, {
         title: 'Action agent terrain',
-        body: `${stepLabels[step] || 'Action terrain enregistree'} - producteur: ${producerName}.`,
+        body: `${stepLabels[step] || 'Action terrain enregistrée'} - producteur: ${producerName}.`,
         type: 'agent-step',
       });
     }
@@ -3478,6 +4073,74 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
     notify('Message envoyé');
   }
 
+  async function startVoiceRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      voiceRecorderRef.current = recorder;
+      voiceChunksRef.current = [];
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) voiceChunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(voiceChunksRef.current, { type: 'audio/webm' });
+        setVoiceBlob(blob);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+      recorder.start();
+      setVoiceRecording(true);
+    } catch {
+      notify('Impossible d\'accéder au microphone. Vérifiez les permissions du navigateur.');
+    }
+  }
+
+  function stopVoiceRecording() {
+    if (voiceRecorderRef.current && voiceRecording) {
+      voiceRecorderRef.current.stop();
+      setVoiceRecording(false);
+    }
+  }
+
+  function sendVoiceReply(conversation) {
+    if (!voiceBlob) return;
+    const audioUrl = URL.createObjectURL(voiceBlob);
+    const now = new Date().toISOString();
+    const root = conversation.root;
+    const reply = {
+      id: uid('msg'),
+      createdAt: now,
+      productId: root.productId,
+      sellerId: root.sellerId,
+      clientId: root.clientId,
+      senderId: currentUser.id,
+      senderRole: currentUser.role,
+      subject: root.subject?.startsWith('Re:') ? root.subject : `Re: ${root.subject}`,
+      body: '🎤 Message vocal',
+      audio: audioUrl,
+      status: 'Repondu',
+      parentId: root.id,
+    };
+    actions.setMessages((items) => [
+      reply,
+      ...items.map((item) => item.id === root.id ? { ...item, status: 'Repondu', updatedAt: now } : item),
+    ]);
+    const recipientId = currentUser.id === root.clientId ? root.sellerId : root.clientId;
+    if (recipientId && recipientId !== currentUser.id) {
+      actions.setNotifications((items) => [
+        createMessageNotification({
+          actor: currentUser,
+          body: '🎤 Message vocal',
+          message: reply,
+          recipientId,
+          title: currentUser.id === root.clientId ? 'Nouveau message vocal client' : 'Message vocal vendeur',
+        }),
+        ...items,
+      ]);
+    }
+    setVoiceBlob(null);
+    notify('Message vocal envoyé');
+  }
+
   function selectOrderTab(tabId) {
     setActiveOrderTab(tabId);
     navigate(`/commandes?tab=${encodeURIComponent(tabId)}`, { preserveScroll: true });
@@ -3502,7 +4165,7 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
         <section id="orders-cart" className="orders-workspace">
           <div className="panel cart-review-panel">
             <div className="cart-review-header">
-              <PanelTitle icon={ShoppingCart} title="Panier a confirmer" />
+              <PanelTitle icon={ShoppingCart} title="Panier à confirmer" />
               <button className="cart-compact-toggle" type="button" onClick={() => setShowCart((value) => !value)}>
                 <span className="cart-badge">{cartCount}</span>
                 {showCart ? 'Masquer' : 'Afficher'}
@@ -3539,7 +4202,7 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
                 </div>
               )
             ) : (
-              <EmptyState icon={ShoppingCart} title="Panier vide" body="Ajoutez des produits depuis le marche avant de confirmer une commande." />
+              <EmptyState icon={ShoppingCart} title="Panier vide" body="Ajoutez des produits depuis le marché avant de confirmer une commande." />
             )}
           </div>
 
@@ -3559,7 +4222,7 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
 
       {(activeOrderTab === 'orders' || activeOrderTab === 'tracking') && (
         <section id="orders-list" className="panel order-list-panel">
-          <PanelTitle icon={activeOrderTab === 'tracking' ? ClipboardCheck : currentUser.role === 'transporteur' ? Truck : ShoppingCart} title={activeOrderTab === 'tracking' ? 'Suivi des commandes' : getOrdersTitle(currentUser.role)} />
+          <PanelTitle icon={activeOrderTab === 'tracking' ? ClipboardCheck : ShoppingCart} title={activeOrderTab === 'tracking' ? 'Suivi des commandes' : getOrdersTitle(currentUser.role)} />
           {orders.length ? (
             <>
               <OrderListControls
@@ -3593,12 +4256,10 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
               {filteredOrders.length ? (
                 showOrderList ? (
                   <>
-                    {currentUser.role === 'transporteur' ? (
-                      <DeliveryMissionList onSelect={toggleOrderSelection} onStatusChange={updateOrder} orders={pagedOrders} selectedIds={selectedOrderSet} store={store} />
-                    ) : isBuyerRole(currentUser.role) ? (
-                      <ClientOrderList onCancel={cancelOrder} onPay={(orderId) => navigate(`/paiement?orders=${orderId}`)} onSelect={toggleOrderSelection} orders={pagedOrders} selectedIds={selectedOrderSet} store={store} />
+                    {isBuyerRole(currentUser.role) ? (
+                      <ClientOrderList currentUser={currentUser} onCancel={cancelOrder} onPay={(orderId) => navigate(`/paiement?orders=${orderId}`)} onRate={async (orderId) => { const r = await askRating(); if (r >= 1) rateOrder(orderId, r); }} onSelect={toggleOrderSelection} orders={pagedOrders} selectedIds={selectedOrderSet} store={store} />
                     ) : (
-                      <OrderCardGrid currentUser={currentUser} onAgentStep={markAgentStep} onCancel={cancelOrder} onSelect={toggleOrderSelection} onStatusChange={updateOrder} orders={pagedOrders} selectedIds={selectedOrderSet} store={store} />
+                      <OrderCardGrid currentUser={currentUser} onAgentStep={markAgentStep} onCancel={cancelOrder} onRate={async (orderId) => { const r = await askRating(); if (r >= 1) rateOrder(orderId, r); }} onSelect={toggleOrderSelection} onStatusChange={updateOrder} orders={pagedOrders} selectedIds={selectedOrderSet} store={store} />
                     )}
                     <CatalogPager page={orderPage} totalPages={orderTotalPages} onPageChange={setOrderPage} />
                   </>
@@ -3606,7 +4267,7 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
                   <EmptyState icon={EyeOff} title="Liste reduite" body="Les commandes sont conservees. Utilisez Developper pour les revoir." />
                 )
               ) : (
-                <EmptyState icon={Search} title="Aucun resultat" body="Aucune commande ne correspond a ce filtre." />
+                <EmptyState icon={Search} title="Aucun résultat" body="Aucune commande ne correspond à ce filtre." />
               )}
             </>
           ) : (
@@ -3652,9 +4313,17 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
                             <div key={message.id} className={`conversation-bubble ${isMessageFromUser(message, currentUser) ? 'mine' : ''}`}>
                               <span>{getMessageSenderName(message, store)} - {formatDate(message.createdAt)}</span>
                               <p>{message.body}</p>
+                              {message.audio && <audio src={message.audio} controls style={{ width: '100%', height: '32px', marginTop: '4px' }} />}
                             </div>
                           ))}
                         </div>
+                        {voiceBlob && (
+                          <div className="conversation-voice-preview">
+                            <audio src={URL.createObjectURL(voiceBlob)} controls style={{ height: '32px', flex: 1 }} />
+                            <Button onClick={() => sendVoiceReply(conversation)}><Send size={14} /> Envoyer</Button>
+                            <button type="button" className="voice-btn" onClick={() => setVoiceBlob(null)} aria-label="Annuler"><X size={14} /></button>
+                          </div>
+                        )}
                         <div className="conversation-reply">
                           <textarea
                             rows={2}
@@ -3662,8 +4331,11 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
                             onChange={(event) => setConversationDrafts((items) => ({ ...items, [conversation.id]: event.target.value }))}
                             placeholder="Ecrire un message..."
                           />
+                          <button type="button" onClick={voiceRecording ? stopVoiceRecording : startVoiceRecording} className={voiceRecording ? 'voice-btn recording' : 'voice-btn'} aria-label={voiceRecording ? 'Arrêter' : 'Message vocal'}>
+                            {voiceRecording ? <MicOff size={16} /> : <Mic size={16} />}
+                          </button>
                           <Button onClick={() => sendConversationReply(conversation)} disabled={!draft.trim()}>
-                            <MessageSquare size={16} /> Envoyer
+                            <Send size={16} /> Envoyer
                           </Button>
                         </div>
                       </>
@@ -3681,11 +4353,45 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
   );
 }
 
+function RatingModalHost() {
+  const [request, setRequest] = useState(null);
+  const [hover, setHover] = useState(0);
+  const [selected, setSelected] = useState(0);
+  useEffect(() => {
+    ratingHandler = (opts) => { setSelected(0); setHover(0); setRequest(opts); };
+    return () => { ratingHandler = null; };
+  }, []);
+  if (!request) return null;
+  const { resolve } = request;
+  const close = () => { resolve(0); setRequest(null); };
+  const submit = () => { resolve(selected); setRequest(null); };
+  return (
+    <div className="confirm-modal-backdrop" onClick={close} role="dialog" aria-modal="true">
+      <div className="confirm-modal rating-modal" onClick={(e) => e.stopPropagation()}>
+        <h3>Noter cette commande</h3>
+        <p>Comment évaluez-vous cette transaction ?</p>
+        <div className="rating-stars">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button key={n} type="button" className={`rating-star ${n <= (hover || selected) ? 'active' : ''}`} onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(0)} onClick={() => setSelected(n)} aria-label={`${n} étoile${n > 1 ? 's' : ''}`}>
+              <Star size={28} fill={n <= (hover || selected) ? '#f59e0b' : 'none'} color={n <= (hover || selected) ? '#f59e0b' : '#d1d5db'} />
+            </button>
+          ))}
+        </div>
+        {selected > 0 && <p className="rating-label">{selected === 5 ? 'Excellent !' : selected === 4 ? 'Très bien' : selected === 3 ? 'Correct' : selected === 2 ? 'Décevant' : 'Mauvais'}</p>}
+        <div className="confirm-modal-actions">
+          <button type="button" className="btn btn-secondary" onClick={close}>Annuler</button>
+          <button type="button" className="btn btn-primary" disabled={!selected} onClick={submit}>Valider ({selected}/5)</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
   const [receipt, setReceipt] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [pendingToken, setPendingToken] = useState(() => {
-    try { return sessionStorage.getItem('frescoop.paydunya.token') || ''; } catch { return ''; }
+    try { return sessionStorage.getItem('frescoop.gimpay.token') || ''; } catch { return ''; }
   });
   const orderIds = useMemo(() => new URLSearchParams(route.search || '').get('orders')?.split(',').filter(Boolean) || [], [route.search]);
   const queryStatus = useMemo(() => new URLSearchParams(route.search || '').get('status') || '', [route.search]);
@@ -3697,16 +4403,16 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
   ));
   const total = payableOrders.reduce((sum, order) => sum + getOrderTotal(order, store), 0);
 
-  function finalizePayment(token, paydunyaData) {
+  function finalizePayment(token, gimpayData) {
     // Garde anti-rejouage: si un paymentRecord existe déjà avec ce token, on ne refait rien
-    const alreadyProcessed = (store.paymentRecords || []).some((record) => record.paydunyaToken === token);
+    const alreadyProcessed = (store.paymentRecords || []).some((record) => record.gimpayToken === token);
     if (alreadyProcessed) {
-      const existing = (store.paymentRecords || []).find((record) => record.paydunyaToken === token);
+      const existing = (store.paymentRecords || []).find((record) => record.gimpayToken === token);
       if (existing) {
-        const paidOrders = (store.orders || []).filter((order) => order.paydunyaToken === token);
-        setReceipt({ code: existing.receiptCode, orders: paidOrders, total: existing.amount, paidAt: existing.createdAt, token, paydunyaReceiptUrl: existing.paydunyaReceiptUrl || '' });
+        const paidOrders = (store.orders || []).filter((order) => order.gimpayToken === token);
+        setReceipt({ code: existing.receiptCode, orders: paidOrders, total: existing.amount, paidAt: existing.createdAt, token, gimpayReceiptUrl: existing.gimpayReceiptUrl || '' });
       }
-      try { sessionStorage.removeItem('frescoop.paydunya.token'); } catch {}
+      try { sessionStorage.removeItem('frescoop.gimpay.token'); } catch {}
       setPendingToken('');
       return;
     }
@@ -3719,7 +4425,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
     ));
     if (!eligibleOrders.length) {
       notify('Aucune commande éligible au paiement.', 'info');
-      try { sessionStorage.removeItem('frescoop.paydunya.token'); } catch {}
+      try { sessionStorage.removeItem('frescoop.gimpay.token'); } catch {}
       setPendingToken('');
       return;
     }
@@ -3729,25 +4435,77 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
     const paidIds = new Set(eligibleOrders.map((order) => order.id));
     const totalAmount = eligibleOrders.reduce((sum, order) => sum + getOrderTotal(order, store), 0);
     const notifications = [];
+    const loanRepayments = [];
+    const remainingByLoan = new Map();
     const paymentRecords = eligibleOrders.map((order) => {
       const product = getOrderProduct(order, store);
       const farmer = store.users.find((user) => user.id === order.sellerId);
       const agent = getOrderAgent(order, store);
+      const paymentId = uid('pay');
+      let loanDeduction = calculateLoanSaleDeduction(order, store);
+      if (loanDeduction) {
+        const currentRemaining = remainingByLoan.has(loanDeduction.loan.id)
+          ? remainingByLoan.get(loanDeduction.loan.id)
+          : getLoanRepaymentStats(loanDeduction.loan, store).remaining;
+        const amount = Math.min(currentRemaining, Math.round(loanDeduction.orderTotal * loanDeduction.repaymentPct / 100));
+        loanDeduction = amount > 0 ? { ...loanDeduction, amount, remainingAfter: Math.max(0, currentRemaining - amount) } : null;
+        if (loanDeduction) remainingByLoan.set(loanDeduction.loan.id, loanDeduction.remainingAfter);
+      }
+      if (loanDeduction) {
+        loanRepayments.push({
+          id: uid('repay'),
+          createdAt: now,
+          type: 'sale_deduction',
+          loanId: loanDeduction.loan.id,
+          orderId: order.id,
+          paymentId,
+          farmerId: order.sellerId,
+          farmerName: farmer?.name || loanDeduction.loan.farmerName || 'Agriculteur',
+          partnerId: loanDeduction.loan.partnerId || '',
+          amount: loanDeduction.amount,
+          saleAmount: loanDeduction.orderTotal,
+          repaymentPct: loanDeduction.repaymentPct,
+          remainingAfter: loanDeduction.remainingAfter,
+          status: loanDeduction.remainingAfter <= 0 ? 'Remboursé' : 'Prélevé',
+        });
+      }
       if (farmer) {
         notifications.push(createAppNotification({
           actor: currentUser,
-          body: `${formatNumber(order.quantity)} ${order.unit || product?.unit || 'kg'} de ${product?.name || 'produit'} paye(s). Preparerez le stock.`,
+          body: `${formatNumber(order.quantity)} ${order.unit || product?.unit || 'kg'} de ${product?.name || 'produit'} payé(s). Préparez le stock.`,
           path: `/commandes?tab=orders&order=${encodeURIComponent(order.id)}`,
           relatedId: order.id,
           recipientId: farmer.id,
-          title: 'Commande payee a preparer',
+          title: 'Commande payée à préparer',
           type: 'order',
+        }));
+        if (loanDeduction) {
+          notifications.push(createAppNotification({
+            actor: currentUser,
+            body: `${formatMoney(loanDeduction.amount)} prélevés sur cette vente (${loanDeduction.repaymentPct}%) pour rembourser le prêt ${loanDeduction.loan.contractCode || loanDeduction.loan.id}. Solde restant: ${formatMoney(loanDeduction.remainingAfter)}.`,
+            path: '/bancabilite',
+            relatedId: loanDeduction.loan.id,
+            recipientId: farmer.id,
+            title: 'Remboursement prêt prélevé',
+            type: 'loan-repayment',
+          }));
+        }
+      }
+      if (loanDeduction?.loan?.partnerId) {
+        notifications.push(createAppNotification({
+          actor: currentUser,
+          body: `${formatMoney(loanDeduction.amount)} prélevés sur une vente de ${farmer?.name || 'l agriculteur'} (${loanDeduction.repaymentPct}%). Solde restant: ${formatMoney(loanDeduction.remainingAfter)}.`,
+          path: '/bancabilite',
+          relatedId: loanDeduction.loan.id,
+          recipientId: loanDeduction.loan.partnerId,
+          title: 'Remboursement crédit reçu',
+          type: 'loan-repayment',
         }));
       }
       if (agent) {
         notifications.push(createAppNotification({
           actor: currentUser,
-          body: `Appeler ${farmer?.name || 'l agriculteur'}, confirmer le stock et contacter le transporteur.`,
+          body: `Appeler ${farmer?.name || "l'agriculteur"} et confirmer le stock.`,
           path: `/commandes?tab=tracking&order=${encodeURIComponent(order.id)}`,
           relatedId: order.id,
           recipientId: agent.id,
@@ -3756,7 +4514,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
         }));
       }
       return {
-        id: uid('pay'),
+        id: paymentId,
         createdAt: now,
         orderId: order.id,
         payerId: currentUser.id,
@@ -3764,11 +4522,14 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
         agentId: order.assignedAgentId || agent?.id || '',
         amount: getOrderTotal(order, store),
         status: 'Paye',
-        partner: `PayDunya (${paydunyaData?.mode || 'test'})`,
+        partner: `GIM-Pay (${gimpayData?.mode || 'test'})`,
         receiptCode,
-        paydunyaToken: token,
-        paydunyaReceiptUrl: paydunyaData?.receiptUrl || '',
-        regulatoryNote: 'Paiement execute via PayDunya. FresCoop conserve la preuve de coordination.',
+        gimpayToken: token,
+        gimpayReceiptUrl: gimpayData?.receiptUrl || '',
+        loanDeductionAmount: loanDeduction?.amount || 0,
+        loanDeductionPct: loanDeduction?.repaymentPct || 0,
+        sellerNetAmount: getOrderTotal(order, store) - (loanDeduction?.amount || 0),
+        regulatoryNote: 'Paiement execute via GIM-Pay. FresCoop conserve la preuve de coordination.',
       };
     });
 
@@ -3778,16 +4539,64 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
       paymentStatus: 'Paye',
       paidAt: now,
       receiptCode,
-      paydunyaToken: token,
+      gimpayToken: token,
       assignedAgentId: order.assignedAgentId || getAvailableFieldAgent(store)?.id || '',
       updatedAt: now,
     } : order));
     actions.setPaymentRecords((items) => [...paymentRecords, ...items]);
+    if (loanRepayments.length) {
+      actions.setLoanRepayments((items) => [...loanRepayments, ...items]);
+      const repaymentByLoan = loanRepayments.reduce((map, repayment) => {
+        map.set(repayment.loanId, (map.get(repayment.loanId) || 0) + Number(repayment.amount || 0));
+        return map;
+      }, new Map());
+      actions.setLoans((items) => items.map((loan) => {
+        const repaidNow = repaymentByLoan.get(loan.id);
+        if (!repaidNow) return loan;
+        const stats = getLoanRepaymentStats(loan, store);
+        const repaidAmount = Math.min(Number(loan.amount || 0), stats.paid + repaidNow);
+        const remainingBalance = Math.max(0, Number(loan.amount || 0) - repaidAmount);
+        return {
+          ...loan,
+          repaidAmount,
+          remainingBalance,
+          status: remainingBalance <= 0 ? 'Remboursé' : 'En cours',
+          statusUpdatedAt: now,
+          lastRepaymentAt: now,
+        };
+      }));
+    }
+
+    const sellerTransactions = eligibleOrders.map((order) => {
+      const product = getOrderProduct(order, store);
+      const repayment = loanRepayments.find((item) => item.orderId === order.id);
+      return {
+        id: uid('trx'),
+        createdAt: now,
+        date: now,
+        userId: order.sellerId,
+        ownerId: order.sellerId,
+        label: `Vente ${product?.name || 'produit'} (${formatNumber(order.quantity)} ${order.unit || product?.unit || 'kg'})`,
+        amount: getOrderTotal(order, store),
+        paymentMethod: `GIM-Pay`,
+        status: 'Paye',
+        buyer: currentUser.name || 'Client',
+        orderId: order.id,
+        receiptCode,
+        gimpayToken: token,
+        loanDeductionAmount: repayment?.amount || 0,
+        netAmount: getOrderTotal(order, store) - (repayment?.amount || 0),
+      };
+    });
+    if (sellerTransactions.length) {
+      actions.setTransactions((items) => [...sellerTransactions, ...items]);
+    }
+
     actions.setNotifications((items) => [...notifications, ...items]);
-    actions.setAuditLogs((items) => [createAuditLog(currentUser, 'payment_paydunya_confirmed', `Paiement PayDunya confirmé: ${receiptCode} (token ${token})`, receiptCode), ...items]);
-    setReceipt({ code: receiptCode, orders: eligibleOrders, total: totalAmount, paidAt: now, token, paydunyaReceiptUrl: paydunyaData?.receiptUrl || '' });
+    actions.setAuditLogs((items) => [createAuditLog(currentUser, 'payment_gimpay_confirmed', `Paiement GIM-Pay confirmé: ${receiptCode} (token ${token})`, receiptCode), ...items]);
+    setReceipt({ code: receiptCode, orders: eligibleOrders, total: totalAmount, paidAt: now, token, gimpayReceiptUrl: gimpayData?.receiptUrl || '' });
     notify('Paiement confirmé. Reçu généré.', 'success');
-    try { sessionStorage.removeItem('frescoop.paydunya.token'); } catch {}
+    try { sessionStorage.removeItem('frescoop.gimpay.token'); } catch {}
     setPendingToken('');
   }
 
@@ -3795,17 +4604,17 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
     if (!token) return;
     setProcessing(true);
     try {
-      const res = await fetch(`${API_BASE}/api/paydunya/confirm/${encodeURIComponent(token)}`);
+      const res = await fetch(`${API_BASE}/api/gimpay/confirm/${encodeURIComponent(token)}`);
       const data = await res.json();
       if (data?.confirmed) {
         finalizePayment(token, data);
       } else {
-        notify(`Paiement non confirme (statut: ${data?.status || 'inconnu'}). Aucun recu genere.`);
-        try { sessionStorage.removeItem('frescoop.paydunya.token'); } catch {}
+        notify(`Paiement non confirmé (statut: ${data?.status || 'inconnu'}). Aucun reçu généré.`);
+        try { sessionStorage.removeItem('frescoop.gimpay.token'); } catch {}
         setPendingToken('');
       }
     } catch (error) {
-      notify(`Erreur verification PayDunya: ${error.message}`);
+      notify(`Erreur verification GIM-Pay: ${error.message}`);
     } finally {
       setProcessing(false);
     }
@@ -3814,7 +4623,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
   useEffect(() => {
     if (queryStatus === 'cancel') {
       notify('Paiement annulé. Aucun reçu généré.');
-      try { sessionStorage.removeItem('frescoop.paydunya.token'); } catch {}
+      try { sessionStorage.removeItem('frescoop.gimpay.token'); } catch {}
       setPendingToken('');
       navigate(route.pathname);
       return;
@@ -3842,7 +4651,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
     setProcessing(true);
     try {
       const description = `Commande FresCoop - ${payableOrders.length} article(s)`;
-      const res = await fetch(API_BASE + '/api/paydunya/create-invoice', {
+      const res = await fetch(API_BASE + '/api/gimpay/create-invoice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -3856,16 +4665,16 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
       });
       const data = await res.json();
       if (!data?.ok || !data?.url) {
-        notify(data?.error || 'Echec initialisation PayDunya');
+        notify(data?.error || 'Echec initialisation GIM-Pay');
         setProcessing(false);
         return;
       }
-      try { sessionStorage.setItem('frescoop.paydunya.token', data.token); } catch {}
+      try { sessionStorage.setItem('frescoop.gimpay.token', data.token); } catch {}
       setPendingToken(data.token);
-      notify('Redirection vers PayDunya...');
+      notify('Redirection vers GIM-Pay...');
       window.location.href = data.url;
     } catch (error) {
-      notify(`Erreur PayDunya: ${error.message}`);
+      notify(`Erreur GIM-Pay: ${error.message}`);
       setProcessing(false);
     }
   }
@@ -3900,7 +4709,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
             <div><em>Code de reçu</em><b>{receipt.code}</b></div>
             <div><em>Date & heure</em><b>{formatDate(receipt.paidAt)}</b></div>
             <div><em>Articles</em><b>{receipt.orders.length} produit{receipt.orders.length > 1 ? 's' : ''}</b></div>
-            <div><em>Mode</em><b>{receipt.token?.startsWith('DEMO') ? 'Simulation démo' : 'PayDunya'}</b></div>
+            <div><em>Mode</em><b>{receipt.token?.startsWith('DEMO') ? 'Simulation démo' : 'GIM-Pay'}</b></div>
           </div>
           <div className="payment-success-qr">
             <img
@@ -3930,7 +4739,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
       ) : (
         <section className="panel payment-panel partner-powered">
           <PanelToolbar icon={ReceiptText} title="Paiement sécurisé" action={<Button variant="secondary" onClick={() => navigate('/commandes?tab=cart')}><ShoppingCart size={16} /> Retour commandes</Button>} />
-          <NoticeCard icon={ShieldCheck} title="Paiement via PayDunya" body="Orange Money, Wave, Free Money, carte bancaire. Aucun reçu n'est émis tant que le paiement n'est pas confirmé." />
+          <NoticeCard icon={ShieldCheck} title="Paiement via GIM-Pay" body="Orange Money, Wave, Free Money, carte bancaire. Aucun reçu n'est émis tant que le paiement n'est pas confirmé." />
           {pendingToken && (
             <NoticeCard icon={CircleAlert} title="Paiement en cours de vérification" body={`Référence: ${pendingToken}. Cliquez ci-dessous pour vérifier le statut.`} />
           )}
@@ -3956,7 +4765,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
               <div className="summary-total"><span>Total à payer</span><strong>{formatMoney(total)}</strong></div>
               <div className="button-row">
                 <Button onClick={payNow} disabled={processing}>
-                  <CheckCircle2 size={18} /> {processing ? 'Redirection...' : 'Payer via PayDunya'}
+                  <CheckCircle2 size={18} /> {processing ? 'Redirection...' : 'Payer via GIM-Pay'}
                 </Button>
                 <Button variant="secondary" onClick={simulateAcceptedPayment} disabled={processing}>
                   <CheckCircle2 size={18} /> {processing ? '...' : 'Simuler paiement (démo)'}
@@ -3977,14 +4786,542 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
   );
 }
 
+// ============================================================================
+// ACTIVITY PROOF PAGE - Verification with scoring
+// ============================================================================
+const PROOF_TYPE_CONFIG = [
+  { id: 'attestation_chef', label: 'Attestation du chef de village', points: 20, level: 1, requiresUpload: true, description: "Photo du document signé par le chef de village ou de communauté" },
+  { id: 'carte_cooperative', label: 'Carte de membre coopérative', points: 25, level: 1, requiresUpload: true, description: "Photo de votre carte de membre d'une coopérative agricole" },
+  { id: 'parrainage_agriculteurs', label: 'Parrainage par 2 agriculteurs', points: 15, level: 1, requiresUpload: false, description: "Deux agriculteurs déjà actifs sur FresCoop vous parrainent" },
+  { id: 'mobile_money_agri', label: 'Mobile money (achats agricoles)', points: 15, level: 1, requiresUpload: true, description: "Capture écran de transactions mobile money liées à l'agriculture" },
+  { id: 'historique_livraisons', label: 'Historique livraisons (3+)', points: 20, level: 1, requiresUpload: false, description: "Vérification automatique après 3 livraisons confirmées sur FresCoop" },
+  { id: 'cni', label: "Carte nationale d'identité (CNI)", points: 25, level: 2, requiresUpload: true, description: "Photo recto-verso de votre CNI ou carte d'identité CEDEAO en cours de validité" },
+  { id: 'recu_intrants', label: 'Reçu achat intrants', points: 15, level: 2, requiresUpload: true, description: "Reçu d'achat d'engrais, semences ou produits phytosanitaires" },
+  { id: 'contrat_vente', label: 'Contrat ou reçu de vente', points: 15, level: 2, requiresUpload: true, description: "Contrat avec une coopérative ou reçu de vente de récolte" },
+  { id: 'carte_exploitant', label: "Carte d'exploitant agricole", points: 30, level: 2, requiresUpload: true, description: "Carte officielle délivrée par le Ministère de l'Agriculture" },
+  { id: 'visite_agent', label: 'Visite agent terrain FresCoop', points: 40, level: 2, requiresUpload: false, requiresAgent: true, description: "Choisissez l'agent qui vous a visité. Il recevra une demande de confirmation." },
+];
+
+function getProofConfigForRole() {
+  return PROOF_TYPE_CONFIG;
+}
+
+function computeClientProofScore(proofs, role) {
+  if (!Array.isArray(proofs) || proofs.length === 0) return 0;
+  const valid = proofs.filter((p) => p.status === 'valide' || p.status === 'auto_valide');
+  const config = getProofConfigForRole(role);
+  const scoreMap = Object.fromEntries(config.map((c) => [c.id, c.points]));
+  return Math.min(100, valid.reduce((sum, p) => sum + (scoreMap[p.proofType] || 10), 0));
+}
+
+function getClientVerificationLevel(score) {
+  if (score >= 60) return 2;
+  if (score >= 30) return 1;
+  return 0;
+}
+
+function openAttachment(attachment) {
+  const src = attachment.url || attachment.dataUrl;
+  if (!src) return;
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;';
+
+  const toolbar = document.createElement('div');
+  toolbar.style.cssText = 'position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;background:rgba(0,0,0,0.5);z-index:1;';
+
+  const title = document.createElement('span');
+  title.style.cssText = 'color:#fff;font-size:0.85rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%;';
+  title.textContent = attachment.name || 'Document';
+
+  const btnGroup = document.createElement('div');
+  btnGroup.style.cssText = 'display:flex;gap:0.5rem;';
+
+  const downloadBtn = document.createElement('a');
+  downloadBtn.href = src;
+  downloadBtn.download = attachment.name || 'document';
+  downloadBtn.style.cssText = 'padding:0.4rem 0.8rem;background:#fff;color:#111;border-radius:6px;font-size:0.8rem;font-weight:600;text-decoration:none;';
+  downloadBtn.textContent = 'Télécharger';
+
+  const closeBtn = document.createElement('button');
+  closeBtn.style.cssText = 'padding:0.4rem 0.8rem;background:#ef4444;color:#fff;border:none;border-radius:6px;font-size:0.8rem;font-weight:600;cursor:pointer;';
+  closeBtn.textContent = 'Fermer';
+  closeBtn.onclick = () => overlay.remove();
+
+  btnGroup.append(downloadBtn, closeBtn);
+  toolbar.append(title, btnGroup);
+  overlay.append(toolbar);
+
+  const isImage = src.startsWith('data:image') || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(src);
+  const isPdf = src.startsWith('data:application/pdf') || /\.pdf$/i.test(src);
+
+  if (isImage) {
+    const img = document.createElement('img');
+    img.src = src;
+    img.style.cssText = 'max-width:95%;max-height:85vh;object-fit:contain;border-radius:8px;margin-top:3rem;';
+    overlay.append(img);
+  } else if (isPdf) {
+    const embed = document.createElement('embed');
+    embed.src = src;
+    embed.type = 'application/pdf';
+    embed.style.cssText = 'width:95%;height:85vh;border-radius:8px;margin-top:3rem;';
+    overlay.append(embed);
+  } else {
+    const msg = document.createElement('div');
+    msg.style.cssText = 'color:#fff;text-align:center;margin-top:3rem;font-size:1.1rem;';
+    msg.innerHTML = `<p style="margin-bottom:1rem">Fichier : <strong>${attachment.name || 'document'}</strong></p><p>Cliquez sur "Télécharger" pour ouvrir ce fichier.</p>`;
+    overlay.append(msg);
+  }
+
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+  document.body.append(overlay);
+}
+
+function ActivityProofPage({ actions, currentUser, navigate, notify, store }) {
+  const [selectedType, setSelectedType] = useState('');
+  const [description, setDescription] = useState('');
+  const [file, setFile] = useState(null);
+  const [sponsor1, setSponsor1] = useState('');
+  const [sponsor2, setSponsor2] = useState('');
+  const [selectedAgent, setSelectedAgent] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const proofConfig = getProofConfigForRole(currentUser.role);
+  const userProofs = (store.activityProofs || []).filter((p) => p.userId === currentUser.id);
+  const score = computeClientProofScore(userProofs, currentUser.role);
+  const level = getClientVerificationLevel(score);
+  const isAdmin = currentUser.role === 'admin';
+  const isReviewer = isAdmin || currentUser.role === 'agentTerrain';
+
+  const allProofsForAdmin = isReviewer ? (store.activityProofs || []).filter((p) => p.status === 'en_attente' || p.status === 'en_attente_agent') : [];
+  const agentConfirmProofs = currentUser.role === 'agentTerrain'
+    ? (store.activityProofs || []).filter((p) => p.status === 'en_attente_agent' && p.agentId === currentUser.id)
+    : [];
+
+  const activeAgriculteurs = store.users.filter((u) => u.role === 'agriculteur' && u.status === 'Actif' && u.id !== currentUser.id);
+  const activeAgents = store.users.filter((u) => u.role === 'agentTerrain' && u.status === 'Actif');
+  const submittedTypes = new Set(userProofs.filter((p) => p.status !== 'rejete').map((p) => p.proofType));
+
+
+  async function submitProof(e) {
+    e.preventDefault();
+    if (!selectedType) { notify('Sélectionnez un type de preuve', 'error'); return; }
+
+    const config = proofConfig.find((c) => c.id === selectedType);
+    if (config?.requiresUpload && !file) { notify('Un fichier/photo est requis pour cette preuve', 'error'); return; }
+    if (selectedType === 'parrainage_agriculteurs' && (!sponsor1 || !sponsor2 || sponsor1 === sponsor2)) {
+      notify('Sélectionnez 2 parrains différents', 'error'); return;
+    }
+    if (selectedType === 'visite_agent' && !selectedAgent) {
+      notify('Sélectionnez l\'agent terrain qui vous a visité', 'error'); return;
+    }
+
+    setSubmitting(true);
+    try {
+      let attachment = null;
+      if (file) { attachment = await fileToAttachment(file); }
+
+      const token = sessionStorage.getItem('frescoop.auth.token');
+      const resp = await fetch(API_BASE + '/api/activity-proofs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          proofType: selectedType,
+          description,
+          attachment,
+          sponsorIds: selectedType === 'parrainage_agriculteurs' ? [sponsor1, sponsor2] : [],
+          agentId: selectedType === 'visite_agent' ? selectedAgent : null,
+        }),
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.ok) { notify(data.error || 'Erreur lors de la soumission', 'error'); return; }
+
+      actions.setActivityProofs((items) => [data.proof, ...items]);
+      if (data.level >= 1) {
+        actions.setUsers((items) => items.map((u) => u.id === currentUser.id ? { ...u, verificationScore: data.score, verificationLevel: data.level, status: 'Actif' } : u));
+      }
+      notify('Preuve soumise avec succès !', 'success');
+      setSelectedType(''); setDescription(''); setFile(null); setSponsor1(''); setSponsor2(''); setSelectedAgent('');
+    } catch (err) {
+      notify(err.message || 'Erreur réseau', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleAdminReview(proofId, status) {
+    const actionLabel = status === 'valide' ? 'valider' : 'rejeter';
+    const confirmed = await askConfirm({
+      title: status === 'valide' ? 'Valider la preuve' : 'Rejeter la preuve',
+      message: `Voulez-vous ${actionLabel} cette preuve ?`,
+      confirmLabel: status === 'valide' ? 'Valider' : 'Rejeter',
+      cancelLabel: 'Annuler',
+      variant: status === 'valide' ? 'primary' : 'danger',
+    });
+    if (!confirmed) return;
+    try {
+      const token = sessionStorage.getItem('frescoop.auth.token');
+      const resp = await fetch(API_BASE + '/api/activity-proofs', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ proofId, status }),
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.ok) { notify(data.error || 'Erreur', 'error'); return; }
+      actions.setActivityProofs((items) => items.map((p) => p.id === proofId ? { ...p, status, reviewedAt: new Date().toISOString(), reviewedBy: currentUser.id } : p));
+      const proof = (store.activityProofs || []).find((p) => p.id === proofId);
+      if (proof && data.level >= 1) {
+        actions.setUsers((items) => items.map((u) => u.id === proof.userId ? { ...u, verificationScore: data.score, verificationLevel: data.level, status: 'Actif' } : u));
+      }
+      if (proof) {
+        const notifBody = status === 'valide'
+          ? `Votre preuve "${proof.proofType || 'activité'}" a été validée par un agent. Votre score de bancabilité a été mis à jour.`
+          : `Votre preuve "${proof.proofType || 'activité'}" a été rejetée. Veuillez soumettre un nouveau justificatif.`;
+        actions.setNotifications((items) => [
+          createAppNotification({
+            actor: currentUser,
+            body: notifBody,
+            path: '/verification',
+            recipientId: proof.userId,
+            title: status === 'valide' ? 'Preuve validée' : 'Preuve rejetée',
+            type: 'proof_review',
+          }),
+          ...items,
+        ]);
+      }
+      notify(`Preuve ${status === 'valide' ? 'validée' : 'rejetée'}`, 'success');
+    } catch (err) {
+      notify(err.message || 'Erreur', 'error');
+    }
+  }
+
+  function handleUndoReview(proofId) {
+    const proof = (store.activityProofs || []).find((p) => p.id === proofId);
+    if (!proof || !proof.reviewedAt) return;
+    const hoursSinceReview = (Date.now() - new Date(proof.reviewedAt).getTime()) / (1000 * 60 * 60);
+    if (hoursSinceReview > 24) {
+      notify('Annulation impossible : délai de 24h dépassé.', 'error');
+      return;
+    }
+    if (!window.confirm('Annuler cette décision et remettre la preuve en attente ?')) return;
+    const nextProofs = (store.activityProofs || []).map((p) => (
+      p.id === proofId ? { ...p, status: 'en_attente', reviewedAt: null, reviewedBy: null } : p
+    ));
+    const userProofs = nextProofs.filter((p) => p.userId === proof.userId);
+    const targetUser = store.users.find((u) => u.id === proof.userId);
+    const totalScore = computeClientProofScore(userProofs, targetUser?.role);
+    const level = getClientVerificationLevel(totalScore);
+    actions.setActivityProofs(() => nextProofs);
+    actions.setUsers((items) => items.map((u) => (
+      u.id === proof.userId ? { ...u, verificationScore: totalScore, verificationLevel: level } : u
+    )));
+    notify('Décision annulée — preuve remise en attente.', 'success');
+  }
+
+  const assignedHub = store.hubs.find((h) => h.id === currentUser.assignedHubId);
+
+  const allProofs = store.activityProofs || [];
+  const pendingCount = allProofs.filter((p) => p.status === 'en_attente').length;
+  const validCount = allProofs.filter((p) => p.status === 'valide' || p.status === 'auto_valide').length;
+
+  return (
+    <PageFrame>
+      {isReviewer ? (
+        <section className="panel verification-hero">
+          <PanelToolbar icon={ShieldCheck} title={isAdmin ? "Vérification agriculteurs - Admin" : "Vérification agriculteurs - Agent terrain"} />
+          <div className="status-grid" style={{ padding: '1rem' }}>
+            <StatCard icon={ShieldCheck} label="Preuves validées" value={validCount} tone="green" />
+            <StatCard icon={CircleAlert} label="En attente de review" value={pendingCount} tone="coral" />
+            <StatCard icon={Users} label="Agriculteurs vérifiés" value={store.users.filter((u) => u.role === 'agriculteur' && (u.verificationLevel || 0) >= 1).length} tone="blue" />
+          </div>
+        </section>
+      ) : (
+        <section className="panel verification-hero">
+          <PanelToolbar icon={ShieldCheck} title="Vérification agriculteur" />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1.5rem', alignItems: 'center', padding: '1rem' }}>
+            <div>
+              <h3 style={{ margin: '0 0 0.5rem' }}>{level === 0 ? 'Vérification en cours' : level === 1 ? 'Niveau Basique' : 'Niveau Standard'}</h3>
+              <div style={{ background: 'var(--surface-alt, #eee)', borderRadius: '0.5rem', height: '1rem', overflow: 'hidden', marginBottom: '0.75rem' }}>
+                <div style={{ width: `${score}%`, height: '100%', background: score >= 60 ? 'var(--green, #22c55e)' : score >= 30 ? 'var(--gold, #eab308)' : 'var(--coral, #ef4444)', borderRadius: '0.5rem', transition: 'width 0.3s' }} />
+              </div>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--muted)' }}>
+                {level === 0 && 'Soumettez des preuves pour activer votre compte.'}
+                {level === 1 && "Niveau Basique atteint — Accès limité. Ajoutez des preuves supplémentaires pour débloquer l'accès complet."}
+                {level === 2 && 'Niveau Standard — Accès complet. Votre profil est vérifié.'}
+              </p>
+            </div>
+            <div style={{ textAlign: 'center', padding: '1rem', background: level >= 1 ? 'var(--green-bg, #dcfce7)' : 'var(--coral-bg, #fef2f2)', borderRadius: '0.75rem', minWidth: '120px' }}>
+              <strong style={{ fontSize: '2rem', display: 'block' }}>{level}</strong>
+              <span style={{ fontSize: '0.8rem' }}>Niveau</span>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {assignedHub && (
+        <section className="panel" style={{ padding: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Warehouse size={20} />
+            <div>
+              <strong>Hub assigné : {assignedHub.name}</strong>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--muted)' }}>{assignedHub.region} — Capacité : {assignedHub.capacityKg} kg — Stock : {assignedHub.currentStockKg || 0} kg</p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {!isReviewer && (
+        <section className="panel">
+          <PanelToolbar icon={Upload} title="Soumettre une preuve" />
+          <form onSubmit={submitProof} style={{ padding: '1rem', display: 'grid', gap: '1rem' }}>
+            <div>
+              <label style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.75rem', display: 'block' }}>Type de preuve <span style={{ color: 'var(--coral, #ef4444)' }}>*</span></label>
+              <div style={{ marginBottom: '0.75rem' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--green-700, #15803d)', display: 'block', marginBottom: '0.5rem', paddingLeft: '0.25rem' }}>Niveau 1 — Basique</span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.5rem' }}>
+                  {proofConfig.filter((c) => c.level === 1).map((c) => {
+                    const done = submittedTypes.has(c.id);
+                    const active = selectedType === c.id;
+                    return (
+                      <button key={c.id} type="button" disabled={done} onClick={() => setSelectedType(c.id)}
+                        style={{ textAlign: 'left', padding: '0.75rem', borderRadius: '0.5rem', border: active ? '2px solid var(--green-700, #15803d)' : '1px solid var(--border, #e5e7eb)', background: done ? 'var(--surface-alt, #f3f4f6)' : active ? 'var(--green-bg, #dcfce7)' : '#fff', cursor: done ? 'not-allowed' : 'pointer', opacity: done ? 0.6 : 1, transition: 'all 0.15s' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <strong style={{ fontSize: '0.8rem' }}>{c.label}</strong>
+                          <span style={{ fontSize: '0.7rem', fontWeight: 700, color: active ? 'var(--green-700, #15803d)' : 'var(--muted)', whiteSpace: 'nowrap', marginLeft: '0.5rem' }}>{done ? '✓' : ''}</span>
+                        </div>
+                        <small style={{ display: 'block', color: 'var(--muted)', fontSize: '0.7rem', marginTop: '0.25rem', lineHeight: 1.3 }}>{c.description}</small>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--blue-600, #2563eb)', display: 'block', marginBottom: '0.5rem', paddingLeft: '0.25rem' }}>Niveau 2 — Standard</span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.5rem' }}>
+                  {proofConfig.filter((c) => c.level === 2).map((c) => {
+                    const done = submittedTypes.has(c.id);
+                    const active = selectedType === c.id;
+                    return (
+                      <button key={c.id} type="button" disabled={done} onClick={() => setSelectedType(c.id)}
+                        style={{ textAlign: 'left', padding: '0.75rem', borderRadius: '0.5rem', border: active ? '2px solid var(--blue-600, #2563eb)' : '1px solid var(--border, #e5e7eb)', background: done ? 'var(--surface-alt, #f3f4f6)' : active ? '#eff6ff' : '#fff', cursor: done ? 'not-allowed' : 'pointer', opacity: done ? 0.6 : 1, transition: 'all 0.15s' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <strong style={{ fontSize: '0.8rem' }}>{c.label}</strong>
+                          <span style={{ fontSize: '0.7rem', fontWeight: 700, color: active ? 'var(--blue-600, #2563eb)' : 'var(--muted)', whiteSpace: 'nowrap', marginLeft: '0.5rem' }}>{done ? '✓' : ''}</span>
+                        </div>
+                        <small style={{ display: 'block', color: 'var(--muted)', fontSize: '0.7rem', marginTop: '0.25rem', lineHeight: 1.3 }}>{c.description}</small>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {selectedType === 'parrainage_agriculteurs' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <Field label="Parrain 1" required>
+                  <select value={sponsor1} onChange={(e) => setSponsor1(e.target.value)}>
+                    <option value="">-- Choisir --</option>
+                    {activeAgriculteurs.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.region})</option>)}
+                  </select>
+                </Field>
+                <Field label="Parrain 2" required>
+                  <select value={sponsor2} onChange={(e) => setSponsor2(e.target.value)}>
+                    <option value="">-- Choisir --</option>
+                    {activeAgriculteurs.filter((u) => u.id !== sponsor1).map((u) => <option key={u.id} value={u.id}>{u.name} ({u.region})</option>)}
+                  </select>
+                </Field>
+              </div>
+            )}
+
+            {selectedType === 'visite_agent' && (
+              <Field label="Agent terrain qui vous a visité" required>
+                {activeAgents.length === 0 ? (
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--coral, #ef4444)' }}>{"Aucun agent terrain actif. Contactez l'administration FresCoop."}</p>
+                ) : (
+                  <select value={selectedAgent} onChange={(e) => setSelectedAgent(e.target.value)}>
+                    <option value="">-- Choisir un agent --</option>
+                    {activeAgents.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.region || 'Région non précisée'})</option>)}
+                  </select>
+                )}
+              </Field>
+            )}
+
+            {proofConfig.find((c) => c.id === selectedType)?.requiresUpload && (
+              <FileInput accept="image/*,application/pdf" file={file} label="Photo ou document" onChange={setFile} />
+            )}
+
+
+            <Field label="Description (optionnel)">
+              <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Details supplémentaires..." />
+            </Field>
+
+            <Button type="submit" disabled={submitting}><Upload size={18} /> {submitting ? 'Envoi...' : 'Soumettre la preuve'}</Button>
+          </form>
+        </section>
+      )}
+
+      {!isReviewer && (
+        <section className="panel">
+          <PanelToolbar icon={FileCheck2} title={`Mes preuves soumises (${userProofs.length})`} />
+          {userProofs.length === 0 ? (
+            <EmptyState icon={ShieldCheck} title="Aucune preuve" body="Soumettez votre première preuve d'activité agricole pour activer votre compte." />
+          ) : (
+            <div className="compact-list" style={{ padding: '0.5rem' }}>
+              {userProofs.map((proof) => {
+                const config = proofConfig.find((c) => c.id === proof.proofType);
+                return (
+                  <article key={proof.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', borderBottom: '1px solid var(--border, #e5e7eb)' }}>
+                    <div>
+                      <strong>{config?.label || proof.proofType}</strong>
+                      <small style={{ display: 'block', color: 'var(--muted)' }}>{new Date(proof.createdAt).toLocaleDateString('fr-FR')}</small>
+                      {proof.description && <small style={{ display: 'block' }}>{proof.description}</small>}
+                    </div>
+                    <Badge>{proof.status === 'valide' || proof.status === 'auto_valide' ? 'Validé' : proof.status === 'rejete' ? 'Rejeté' : proof.status === 'en_attente_agent' ? 'Attente agent' : 'En attente'}</Badge>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {isReviewer && allProofsForAdmin.length > 0 && (
+        <section className="panel">
+          <PanelToolbar icon={UserCheck} title={`Preuves à valider (${allProofsForAdmin.length})`} />
+          <div className="compact-list" style={{ padding: '0.5rem' }}>
+            {allProofsForAdmin.map((proof) => {
+              const proofOwner = store.users.find((u) => u.id === proof.userId);
+              const ownerConfig = getProofConfigForRole(proofOwner?.role);
+              const config = ownerConfig.find((c) => c.id === proof.proofType);
+              const farmer = proofOwner;
+              return (
+                <article key={proof.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', borderBottom: '1px solid var(--border, #e5e7eb)' }}>
+                  <div>
+                    <strong>{farmer?.name || 'Agriculteur'}</strong> - {config?.label || proof.proofType}
+                    {proof.status === 'en_attente_agent' && <Badge style={{ marginLeft: '0.5rem', fontSize: '0.65rem' }}>Attente confirmation agent</Badge>}
+                    <small style={{ display: 'block', color: 'var(--muted)' }}>{new Date(proof.createdAt).toLocaleDateString('fr-FR')} - {farmer?.region || ''}</small>
+                    {proof.attachment && <small style={{ display: 'block' }}><button type="button" onClick={() => openAttachment(proof.attachment)} style={{ background: 'none', border: 'none', color: 'var(--blue-600, #2563eb)', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontSize: 'inherit' }}>Voir pièce jointe</button></small>}
+                    {proof.agentId && <small style={{ display: 'block' }}>Agent désigné : {store.users.find((u) => u.id === proof.agentId)?.name || proof.agentId}</small>}
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <Button variant="primary" onClick={() => handleAdminReview(proof.id, 'valide')}><CheckCircle2 size={14} /> Valider</Button>
+                    <Button variant="secondary" onClick={() => handleAdminReview(proof.id, 'rejete')}><X size={14} /> Rejeter</Button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {isReviewer && (
+        <section className="panel">
+          <PanelToolbar icon={FileCheck2} title={`Toutes les preuves soumises (${allProofs.length})`} />
+          {allProofs.length === 0 ? (
+            <EmptyState icon={FileCheck2} title="Aucune preuve" body="Aucun agriculteur n'a encore soumis de preuve." />
+          ) : (
+            <div className="compact-list" style={{ padding: '0.5rem', maxHeight: '500px', overflowY: 'auto' }}>
+              {allProofs.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).map((proof) => {
+                const proofOwner = store.users.find((u) => u.id === proof.userId);
+                const ownerConfig = getProofConfigForRole(proofOwner?.role);
+                const config = ownerConfig.find((c) => c.id === proof.proofType);
+                const farmer = proofOwner;
+                const statusLabel = proof.status === 'valide' || proof.status === 'auto_valide' ? 'Validé' : proof.status === 'rejete' ? 'Rejeté' : proof.status === 'en_attente_agent' ? 'Attente agent' : 'En attente';
+                const statusColor = proof.status === 'valide' || proof.status === 'auto_valide' ? 'var(--green-700, #15803d)' : proof.status === 'rejete' ? '#dc2626' : '#ca8a04';
+                return (
+                  <article key={proof.id} style={{ padding: '0.75rem', borderBottom: '1px solid var(--border, #e5e7eb)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <strong>{farmer?.name || 'Agriculteur'}</strong>
+                        <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', fontWeight: 600, color: statusColor }}>{statusLabel}</span>
+                        <small style={{ display: 'block', color: 'var(--muted)' }}>{config?.label || proof.proofType} — +{config?.points || 0} pts — {new Date(proof.createdAt).toLocaleDateString('fr-FR')}</small>
+                        {proof.description && <small style={{ display: 'block', marginTop: '0.25rem' }}>{proof.description}</small>}
+                        {proof.agentId && <small style={{ display: 'block', color: 'var(--muted)' }}>Agent: {store.users.find((u) => u.id === proof.agentId)?.name || '-'}</small>}
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        {proof.attachment && (
+                          <button type="button" onClick={() => openAttachment(proof.attachment)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.75rem', background: 'var(--surface-alt, #f3f4f6)', borderRadius: '0.375rem', fontSize: '0.75rem', fontWeight: 600, color: 'var(--blue-600, #2563eb)', border: 'none', cursor: 'pointer' }}>
+                            <Eye size={14} /> Voir document
+                          </button>
+                        )}
+                        {(proof.status === 'en_attente' || proof.status === 'en_attente_agent') && (
+                          <>
+                            <Button variant="primary" onClick={() => handleAdminReview(proof.id, 'valide')} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}><CheckCircle2 size={12} /> Valider</Button>
+                            <Button variant="secondary" onClick={() => handleAdminReview(proof.id, 'rejete')} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}><X size={12} /> Rejeter</Button>
+                          </>
+                        )}
+                        {(proof.status === 'valide' || proof.status === 'rejete') && proof.reviewedAt && ((Date.now() - new Date(proof.reviewedAt).getTime()) / (1000 * 60 * 60)) <= 24 && (
+                          <Button variant="secondary" onClick={() => handleUndoReview(proof.id)} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', color: '#d97706' }}><RotateCcw size={12} /> Annuler</Button>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {agentConfirmProofs.length > 0 && (
+        <section className="panel">
+          <PanelToolbar icon={UserCheck} title={`Visites à confirmer (${agentConfirmProofs.length})`} />
+          <div className="compact-list" style={{ padding: '0.5rem' }}>
+            {agentConfirmProofs.map((proof) => {
+              const farmer = store.users.find((u) => u.id === proof.userId);
+              return (
+                <article key={proof.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', borderBottom: '1px solid var(--border, #e5e7eb)' }}>
+                  <div>
+                    <strong>{farmer?.name || 'Agriculteur'}</strong>
+                    <small style={{ display: 'block', color: 'var(--muted)' }}>{new Date(proof.createdAt).toLocaleDateString('fr-FR')} - {farmer?.region || ''}</small>
+                    <small style={{ display: 'block' }}>{"Cet agriculteur affirme que vous avez visité son exploitation. Confirmez-vous ?"}</small>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <Button variant="primary" onClick={() => handleAdminReview(proof.id, 'valide')}><CheckCircle2 size={14} /> Confirmer</Button>
+                    <Button variant="secondary" onClick={() => handleAdminReview(proof.id, 'rejete')}><X size={14} /> Refuser</Button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      <section className="panel" style={{ padding: '1rem' }}>
+        <h4 style={{ margin: '0 0 0.75rem' }}>Comment fonctionne la vérification ?</h4>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
+          <div style={{ padding: '1rem', background: 'var(--surface-alt, #f8faf9)', borderRadius: '0.5rem' }}>
+            <strong>Niveau 1 — Basique</strong>
+            <p style={{ fontSize: '0.85rem', margin: '0.5rem 0 0' }}>Accès limité. Au choix : attestation chef de village, carte coopérative, parrainage par 2 agriculteurs, mobile money ou historique livraisons.</p>
+          </div>
+          <div style={{ padding: '1rem', background: 'var(--surface-alt, #f8faf9)', borderRadius: '0.5rem' }}>
+            <strong>Niveau 2 — Standard</strong>
+            <p style={{ fontSize: '0.85rem', margin: '0.5rem 0 0' }}>Accès complet. Niveau 1 + CNI, reçu intrants, contrat vente, carte exploitant ou visite agent.</p>
+          </div>
+        </div>
+      </section>
+    </PageFrame>
+  );
+}
+
 function OperationsPage({ actions, currentUser, notify, store }) {
   const [form, setForm] = useState(emptyHubForm());
-  const canManage = currentUser.role === 'admin' || currentUser.role === 'transporteur';
+  const canManage = currentUser.role === 'admin' || currentUser.role === 'agentTerrain';
+
+  const hubs = store.hubs || [];
+  const farmers = store.users.filter((u) => u.role === 'agriculteur' && u.status === 'Actif');
+  const hubStats = hubs.map((hub) => {
+    const assignedFarmers = store.users.filter((u) => u.assignedHubId === hub.id);
+    const usage = hub.capacityKg ? ((hub.currentStockKg || 0) / hub.capacityKg) * 100 : 0;
+    return { ...hub, assignedFarmers: assignedFarmers.length, usagePercent: Math.round(usage) };
+  });
+  const saturatedHubs = hubStats.filter((h) => h.usagePercent > 85);
+  const unassignedFarmers = farmers.filter((u) => !u.assignedHubId);
 
   async function submit(event) {
     event.preventDefault();
     if (!canManage) {
-      notify('Accès opérations réservé admin/transporteur');
+      notify('Accès opérations réservé admin/agent terrain');
       return;
     }
     if (!form.name || !form.region || !form.capacityKg) {
@@ -4004,6 +5341,8 @@ function OperationsPage({ actions, currentUser, notify, store }) {
       currentStockKg: Number(form.currentStockKg || 0),
       temperature: form.temperature.trim(),
       batteryPercent: Number(form.batteryPercent || 0),
+      gpsLat: form.gpsLat ? Number(form.gpsLat) : null,
+      gpsLng: form.gpsLng ? Number(form.gpsLng) : null,
       image,
     };
     actions.setHubs((items) => [hub, ...items]);
@@ -4011,11 +5350,82 @@ function OperationsPage({ actions, currentUser, notify, store }) {
     notify('Hub enregistré');
   }
 
+  function autoAssignFarmers() {
+    if (hubs.length === 0) { notify('Aucun hub disponible', 'error'); return; }
+    const gpsHubs = hubs.filter((h) => h.gpsLat && h.gpsLng);
+    if (gpsHubs.length === 0) { notify('Aucun hub avec coordonnées GPS', 'error'); return; }
+    let assigned = 0;
+    actions.setUsers((users) => users.map((u) => {
+      if (u.role !== 'agriculteur' || u.assignedHubId || !u.gpsLat || !u.gpsLng) return u;
+      let minDist = Infinity;
+      let bestHub = null;
+      for (const hub of gpsHubs) {
+        const dist = haversineKm(u.gpsLat, u.gpsLng, hub.gpsLat, hub.gpsLng);
+        if (dist < minDist && dist <= 25) { minDist = dist; bestHub = hub.id; }
+      }
+      if (bestHub) { assigned++; return { ...u, assignedHubId: bestHub }; }
+      return u;
+    }));
+    notify(`${assigned} agriculteur(s) affecte(s) automatiquement`, 'success');
+  }
+
   return (
     <PageFrame>
       {canManage && (
+        <section className="panel" style={{ padding: '1rem' }}>
+          <PanelToolbar icon={BarChart3} title="Dashboard capacité hubs" action={
+            <Button variant="secondary" onClick={autoAssignFarmers}><MapPin size={16} /> Auto-affecter agriculteurs</Button>
+          } />
+          <div className="status-grid" style={{ marginTop: '1rem' }}>
+            <StatCard icon={Warehouse} label="Hubs actifs" value={hubs.length} tone="green" />
+            <StatCard icon={Users} label="Agriculteurs affectes" value={farmers.length - unassignedFarmers.length} tone="blue" />
+            <StatCard icon={CircleAlert} label="Non affectes" value={unassignedFarmers.length} tone="coral" />
+            <StatCard icon={Activity} label="Hubs satures (>85%)" value={saturatedHubs.length} tone={saturatedHubs.length > 0 ? 'coral' : 'green'} />
+          </div>
+          {saturatedHubs.length > 0 && (
+            <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--coral-bg, #fef2f2)', borderRadius: '0.5rem', fontSize: '0.85rem' }}>
+              <strong>Alertes saturation:</strong>
+              {saturatedHubs.map((h) => (
+                <span key={h.id} style={{ display: 'block', marginTop: '0.25rem' }}>
+                  {h.name} ({h.region}) - {h.usagePercent}% capacité - {h.assignedFarmers} agriculteurs
+                </span>
+              ))}
+            </div>
+          )}
+          {hubStats.length > 0 && (
+            <div style={{ marginTop: '1rem', overflowX: 'auto' }}>
+              <table style={{ width: '100%', fontSize: '0.85rem', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--border, #e5e7eb)' }}>
+                    <th style={{ textAlign: 'left', padding: '0.5rem' }}>Hub</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem' }}>Region</th>
+                    <th style={{ textAlign: 'right', padding: '0.5rem' }}>Capacite</th>
+                    <th style={{ textAlign: 'right', padding: '0.5rem' }}>Stock</th>
+                    <th style={{ textAlign: 'right', padding: '0.5rem' }}>Usage</th>
+                    <th style={{ textAlign: 'right', padding: '0.5rem' }}>Agriculteurs</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {hubStats.map((h) => (
+                    <tr key={h.id} style={{ borderBottom: '1px solid var(--border, #e5e7eb)' }}>
+                      <td style={{ padding: '0.5rem' }}>{h.name}</td>
+                      <td style={{ padding: '0.5rem' }}>{h.region}</td>
+                      <td style={{ textAlign: 'right', padding: '0.5rem' }}>{h.capacityKg} kg</td>
+                      <td style={{ textAlign: 'right', padding: '0.5rem' }}>{h.currentStockKg || 0} kg</td>
+                      <td style={{ textAlign: 'right', padding: '0.5rem', color: h.usagePercent > 85 ? 'var(--coral, #ef4444)' : 'inherit' }}>{h.usagePercent}%</td>
+                      <td style={{ textAlign: 'right', padding: '0.5rem' }}>{h.assignedFarmers}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+
+      {canManage && (
         <form className="panel form-panel" onSubmit={submit}>
-          <PanelTitle icon={Warehouse} title="Ajouter site operationnel" />
+          <PanelTitle icon={Warehouse} title="Ajouter site opérationnel" />
           <div className="field-row">
             <Field label="Nom hub" required><input value={form.name} onChange={(event) => updateForm(setForm, 'name', event.target.value)} /></Field>
             <Field label="Région" required><input value={form.region} onChange={(event) => updateForm(setForm, 'region', event.target.value)} /></Field>
@@ -4027,6 +5437,10 @@ function OperationsPage({ actions, currentUser, notify, store }) {
           <div className="field-row">
             <Field label="Capacite kg" required><input inputMode="decimal" value={form.capacityKg} onChange={(event) => updateForm(setForm, 'capacityKg', event.target.value)} /></Field>
             <Field label="Stock kg"><input inputMode="decimal" value={form.currentStockKg} onChange={(event) => updateForm(setForm, 'currentStockKg', event.target.value)} /></Field>
+          </div>
+          <div className="field-row">
+            <Field label="GPS Latitude"><input inputMode="decimal" value={form.gpsLat} onChange={(event) => updateForm(setForm, 'gpsLat', event.target.value)} placeholder="ex: 14.6937" /></Field>
+            <Field label="GPS Longitude"><input inputMode="decimal" value={form.gpsLng} onChange={(event) => updateForm(setForm, 'gpsLng', event.target.value)} placeholder="ex: -17.4441" /></Field>
           </div>
           <div className="field-row">
             <Field label="Temperature"><input value={form.temperature} onChange={(event) => updateForm(setForm, 'temperature', event.target.value)} /></Field>
@@ -4043,25 +5457,144 @@ function OperationsPage({ actions, currentUser, notify, store }) {
             {store.hubs.map((hub) => <HubCard key={hub.id} hub={hub} onDelete={() => actions.setHubs((items) => items.filter((item) => item.id !== hub.id))} />)}
           </div>
         ) : (
-          <EmptyState icon={Warehouse} title="Aucun site" body="Ajoutez des hubs ou sites logistiques reels." />
+          <EmptyState icon={Warehouse} title="Aucun site" body="Ajoutez des hubs ou sites logistiques réels." />
         )}
       </section>
     </PageFrame>
   );
 }
 
+const LOT_STATUSES = ['Depose', 'En froid', 'Contrôle qualité', 'Reserve', 'Vente partielle', 'Sorti', 'Livre', 'Paye'];
+
+function generateLotCode(hub) {
+  const prefix = (hub?.region || 'SN').slice(0, 3).toUpperCase();
+  const date = new Date();
+  const dateStr = `${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+  const seq = Math.random().toString(36).slice(2, 5).toUpperCase();
+  return `FCP-${prefix}-${dateStr}-${seq}`;
+}
+
 function LotIntelligencePage({ actions, currentUser, notify, store }) {
   const [selectedLotId, setSelectedLotId] = useState('');
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [lotForm, setLotForm] = useState(emptyLotForm());
+  const [movementForm, setMovementForm] = useState({ status: '', note: '' });
   const data = getFrescoopOperatingData(store);
-  const lots = data.lots;
+
+  const realLots = store.lots || [];
+  const demoLots = data.lots;
+  const allLots = realLots.length > 0 ? realLots : demoLots;
+  const lots = allLots;
   const selectedLot = lots.find((lot) => lot.id === selectedLotId) || lots[0] || null;
-  const activeLots = lots.filter((lot) => lot.status !== 'Sorti');
+  const activeLots = lots.filter((lot) => lot.status !== 'Sorti' && lot.status !== 'Livre' && lot.status !== 'Paye');
   const protectedKg = sumBy(lots, 'weightKg');
   const avoidedLossKg = lots.reduce((sum, lot) => sum + Number(lot.weightKg || 0) * (Number(lot.lossAvoidedPercent || 0) / 100), 0);
   const pipelineValue = data.reservations.reduce((sum, item) => sum + Number(item.value || 0), 0);
 
+  const hubs = store.hubs || [];
+  const agriculteurs = store.users.filter((u) => u.role === 'agriculteur' && u.status === 'Actif');
+  const canCreateLot = currentUser.role === 'admin' || currentUser.role === 'agent' || currentUser.role === 'agentTerrain';
+
+  function submitLot(e) {
+    e.preventDefault();
+    if (!lotForm.productName.trim()) { notify('Nom du produit requis', 'error'); return; }
+    if (!lotForm.ownerId) { notify('Sélectionnez le producteur', 'error'); return; }
+    if (!lotForm.hubId) { notify('Sélectionnez le hub de depot', 'error'); return; }
+    if (!lotForm.weightKg || Number(lotForm.weightKg) <= 0) { notify('Quantite invalide', 'error'); return; }
+
+    const hub = hubs.find((h) => h.id === lotForm.hubId);
+    const owner = agriculteurs.find((u) => u.id === lotForm.ownerId);
+    const now = new Date().toISOString();
+    const code = generateLotCode(hub);
+
+    const lot = {
+      id: uid('lot'),
+      code,
+      createdAt: now,
+      ownerId: lotForm.ownerId,
+      producerName: owner?.name || '',
+      coopérativeId: lotForm.cooperativeId || '',
+      coopérativeName: lotForm.cooperativeName || '',
+      productName: lotForm.productName.trim(),
+      crop: lotForm.crop.trim() || lotForm.productName.trim(),
+      hubId: lotForm.hubId,
+      hubName: hub?.name || '',
+      chamber: lotForm.chamber.trim(),
+      placement: lotForm.placement.trim(),
+      crateCount: Number(lotForm.crateCount || 1),
+      weightKg: Number(lotForm.weightKg),
+      harvestDate: lotForm.harvestDate || null,
+      qualityGrade: lotForm.qualityGrade || 'Standard',
+      status: 'Depose',
+      temperatureC: lotForm.temperatureC ? Number(lotForm.temperatureC) : null,
+      humidityPercent: lotForm.humidityPercent ? Number(lotForm.humidityPercent) : null,
+      shelfLifeDays: Number(lotForm.shelfLifeDays || 7),
+      lossRiskPercent: 0,
+      lossAvoidedPercent: 0,
+      baselinePrice: Number(lotForm.baselinePrice || 0),
+      recommendedPrice: Number(lotForm.recommendedPrice || 0),
+      routeRecommendation: '',
+      routeReason: '',
+      paymentPartner: '',
+      remainingKg: Number(lotForm.weightKg),
+      movements: [
+        { timestamp: now, status: 'Depose', actor: currentUser.name, note: `Depot initial: ${lotForm.weightKg} kg au hub ${hub?.name || ''}. Emplacement: ${lotForm.chamber || '-'} / ${lotForm.placement || '-'}` },
+      ],
+    };
+
+    actions.setLots((items) => [lot, ...items]);
+    actions.setAuditLogs((items) => [createAuditLog(currentUser, 'lot_created', `Lot ${code} créé: ${lot.productName} (${lot.weightKg} kg) - Producteur: ${lot.producerName} - Hub: ${lot.hubName}`, lot.id), ...items]);
+
+    const notif = {
+      id: uid('notif'),
+      createdAt: now,
+      type: 'lot_created',
+      title: 'Nouveau lot depose',
+      body: `${lot.producerName}: ${lot.weightKg} kg de ${lot.productName} depose au hub ${lot.hubName} (${code})`,
+      recipientId: lot.ownerId,
+      path: '/lots',
+      read: false,
+    };
+    actions.setNotifications((items) => [notif, ...items]);
+
+    notify(`Lot ${code} crée avec succes`);
+    setLotForm(emptyLotForm());
+    setShowCreateForm(false);
+    setSelectedLotId(lot.id);
+  }
+
+  function recordMovement(e) {
+    e.preventDefault();
+    if (!selectedLot) return;
+    if (!movementForm.status) { notify('Sélectionnez le nouveau statut', 'error'); return; }
+
+    const now = new Date().toISOString();
+    const movement = {
+      timestamp: now,
+      status: movementForm.status,
+      actor: currentUser.name,
+      note: movementForm.note.trim() || `Statut mis à jour: ${movementForm.status}`,
+    };
+
+    actions.setLots((items) => items.map((lot) => {
+      if (lot.id !== selectedLot.id) return lot;
+      return {
+        ...lot,
+        status: movementForm.status,
+        movements: [...(lot.movements || []), movement],
+      };
+    }));
+    actions.setAuditLogs((items) => [createAuditLog(currentUser, 'lot_movement', `Lot ${selectedLot.code}: ${selectedLot.status} -> ${movementForm.status}. ${movementForm.note || ''}`, selectedLot.id), ...items]);
+    notify(`Lot ${selectedLot.code} mis à jour: ${movementForm.status}`);
+    setMovementForm({ status: '', note: '' });
+  }
+
   function reserveLot(lot) {
     if (!lot) return;
+    if (!['acheteurB2B', 'partenaire', 'admin'].includes(currentUser.role)) {
+      notify('Réservation réservée aux acheteurs B2B et partenaires', 'error');
+      return;
+    }
     const now = new Date().toISOString();
     const reservation = {
       id: uid('rsv'),
@@ -4072,7 +5605,7 @@ function LotIntelligencePage({ actions, currentUser, notify, store }) {
       quantityKg: Math.min(200, Number(lot.weightKg || 0)),
       value: Math.min(200, Number(lot.weightKg || 0)) * Number(lot.recommendedPrice || lot.baselinePrice || 0),
       paymentMode: 'Partner-powered',
-      paymentPartner: lot.paymentPartner || 'Orange Money / banque partenaire agreee',
+      paymentPartner: lot.paymentPartner || 'Orange Money / banque partenaire agréée',
     };
     actions.setReservations((items) => [reservation, ...items]);
     actions.setBuyerOrders((items) => [{
@@ -4081,11 +5614,16 @@ function LotIntelligencePage({ actions, currentUser, notify, store }) {
       reservationId: reservation.id,
       buyerId: reservation.buyerId,
       lotId: lot.id,
-      status: 'Reservation emise',
+      status: 'Réservation émise',
       recurrence: 'Ponctuelle',
     }, ...items]);
-    actions.setAuditLogs((items) => [createAuditLog(currentUser, 'reservation_b2b', 'Reservation B2B creee', lot.id), ...items]);
-    notify('Réservation B2B créée avec paiement partenaire');
+    actions.setLots((items) => items.map((l) => l.id !== lot.id ? l : {
+      ...l,
+      status: 'Reserve',
+      movements: [...(l.movements || []), { timestamp: now, status: 'Reserve', actor: currentUser.name, note: `Réservation B2B: ${reservation.quantityKg} kg` }],
+    }));
+    actions.setAuditLogs((items) => [createAuditLog(currentUser, 'reservation_b2b', 'Réservation B2B créée', lot.id), ...items]);
+    notify('Réservation B2B créée avec paiement partenaire', 'success');
   }
 
   function shareConsent(lot) {
@@ -4108,9 +5646,12 @@ function LotIntelligencePage({ actions, currentUser, notify, store }) {
       status: 'Actif',
       revocable: true,
     }, ...items]);
-    actions.setAuditLogs((items) => [createAuditLog(currentUser, 'consent_create', 'Consentement partenaire cree', lot.id), ...items]);
+    actions.setAuditLogs((items) => [createAuditLog(currentUser, 'consent_create', 'Consentement partenaire créé', lot.id), ...items]);
     notify('Partage basé sur consentement activé pour partenaire agréé');
   }
+
+  const currentLotStatusIndex = selectedLot ? LOT_STATUSES.indexOf(selectedLot.status) : -1;
+  const nextStatuses = currentLotStatusIndex >= 0 ? LOT_STATUSES.slice(currentLotStatusIndex + 1) : LOT_STATUSES;
 
   return (
     <PageFrame>
@@ -4118,14 +5659,100 @@ function LotIntelligencePage({ actions, currentUser, notify, store }) {
         <StatCard icon={ClipboardCheck} label="Lots actifs" value={activeLots.length} tone="green" />
         <StatCard icon={Warehouse} label="Kg proteges" value={formatNumber(protectedKg)} tone="blue" />
         <StatCard icon={Leaf} label="Pertes evitees" value={`${formatNumber(avoidedLossKg)} kg`} tone="gold" />
-        <StatCard icon={CircleDollarSign} label="Reservations" value={formatMoney(pipelineValue)} tone="coral" />
+        <StatCard icon={CircleDollarSign} label="Réservations" value={formatMoney(pipelineValue)} tone="coral" />
       </div>
+
+      {canCreateLot && (
+        <section className="panel">
+          <PanelToolbar
+            icon={FolderPlus}
+            title="Enregistrer un depot de lot"
+            action={<Button variant={showCreateForm ? 'secondary' : 'primary'} onClick={() => setShowCreateForm(!showCreateForm)}>{showCreateForm ? <X size={16} /> : <Plus size={16} />} {showCreateForm ? 'Fermer' : 'Nouveau lot'}</Button>}
+          />
+          {showCreateForm && (
+            <form onSubmit={submitLot} style={{ padding: '1rem', display: 'grid', gap: '1rem' }}>
+              <div className="field-row">
+                <Field label="Producteur" required>
+                  <select value={lotForm.ownerId} onChange={(e) => setLotForm({ ...lotForm, ownerId: e.target.value })}>
+                    <option value="">-- Choisir --</option>
+                    {agriculteurs.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.region || 'region?'})</option>)}
+                  </select>
+                </Field>
+                <Field label="Cooperative">
+                  <input value={lotForm.cooperativeName} onChange={(e) => setLotForm({ ...lotForm, cooperativeName: e.target.value })} placeholder="Nom cooperative (optionnel)" />
+                </Field>
+              </div>
+              <div className="field-row">
+                <Field label="Produit" required>
+                  <input value={lotForm.productName} onChange={(e) => setLotForm({ ...lotForm, productName: e.target.value })} placeholder="ex: Oignon violet calibre A" />
+                </Field>
+                <Field label="Filiere / culture">
+                  <input value={lotForm.crop} onChange={(e) => setLotForm({ ...lotForm, crop: e.target.value })} placeholder="ex: Oignon, Tomate, Riz..." />
+                </Field>
+              </div>
+              <div className="field-row">
+                <Field label="Quantite (kg)" required>
+                  <input inputMode="decimal" value={lotForm.weightKg} onChange={(e) => setLotForm({ ...lotForm, weightKg: e.target.value })} placeholder="ex: 500" />
+                </Field>
+                <Field label="Nombre de caisses/contenants">
+                  <input inputMode="numeric" value={lotForm.crateCount} onChange={(e) => setLotForm({ ...lotForm, crateCount: e.target.value })} placeholder="ex: 20" />
+                </Field>
+                <Field label="Date de recolte">
+                  <input type="date" value={lotForm.harvestDate} onChange={(e) => setLotForm({ ...lotForm, harvestDate: e.target.value })} />
+                </Field>
+              </div>
+              <div className="field-row">
+                <Field label="Hub de depot" required>
+                  <select value={lotForm.hubId} onChange={(e) => setLotForm({ ...lotForm, hubId: e.target.value })}>
+                    <option value="">-- Choisir --</option>
+                    {hubs.map((h) => <option key={h.id} value={h.id}>{h.name} ({h.region})</option>)}
+                  </select>
+                </Field>
+                <Field label="Chambre / zone">
+                  <input value={lotForm.chamber} onChange={(e) => setLotForm({ ...lotForm, chamber: e.target.value })} placeholder="ex: CF-02, Sec-01" />
+                </Field>
+                <Field label="Emplacement exact">
+                  <input value={lotForm.placement} onChange={(e) => setLotForm({ ...lotForm, placement: e.target.value })} placeholder="ex: Rack B3, Bac 12, Caisse H" />
+                </Field>
+              </div>
+              <div className="field-row">
+                <Field label="Qualite initiale">
+                  <select value={lotForm.qualityGrade} onChange={(e) => setLotForm({ ...lotForm, qualityGrade: e.target.value })}>
+                    <option value="Premium">Premium</option>
+                    <option value="Standard+">Standard+</option>
+                    <option value="Standard">Standard</option>
+                    <option value="Vente rapide">Vente rapide</option>
+                  </select>
+                </Field>
+                <Field label="Temperature C">
+                  <input inputMode="decimal" value={lotForm.temperatureC} onChange={(e) => setLotForm({ ...lotForm, temperatureC: e.target.value })} placeholder="ex: 4.2" />
+                </Field>
+                <Field label="Humidite %">
+                  <input inputMode="decimal" value={lotForm.humidityPercent} onChange={(e) => setLotForm({ ...lotForm, humidityPercent: e.target.value })} placeholder="ex: 82" />
+                </Field>
+              </div>
+              <div className="field-row">
+                <Field label="Duree de vie estimee (jours)">
+                  <input inputMode="numeric" value={lotForm.shelfLifeDays} onChange={(e) => setLotForm({ ...lotForm, shelfLifeDays: e.target.value })} placeholder="7" />
+                </Field>
+                <Field label="Prix base (FCFA/kg)">
+                  <input inputMode="decimal" value={lotForm.baselinePrice} onChange={(e) => setLotForm({ ...lotForm, baselinePrice: e.target.value })} placeholder="ex: 350" />
+                </Field>
+                <Field label="Prix recommande (FCFA/kg)">
+                  <input inputMode="decimal" value={lotForm.recommendedPrice} onChange={(e) => setLotForm({ ...lotForm, recommendedPrice: e.target.value })} placeholder="ex: 420" />
+                </Field>
+              </div>
+              <Button type="submit"><PackageCheck size={18} /> Enregistrer le lot et générer QR</Button>
+            </form>
+          )}
+        </section>
+      )}
 
       <section className="panel lot-command-center">
         <PanelToolbar
           icon={ClipboardCheck}
-          title="Jumeaux numeriques des lots"
-          action={<Button variant="secondary" onClick={() => actions.replaceStore(createFrescoopDemoStore(store))}><RefreshCcw size={16} /> Charger demo jury</Button>}
+          title={`Lots traces (${lots.length})`}
+          action={null}
         />
         <div className="lot-layout">
           <div className="lot-list">
@@ -4133,25 +5760,67 @@ function LotIntelligencePage({ actions, currentUser, notify, store }) {
               <button key={lot.id} className={selectedLot?.id === lot.id ? 'active' : ''} type="button" onClick={() => setSelectedLotId(lot.id)}>
                 <span><Badge>{lot.status}</Badge><strong>{lot.code}</strong></span>
                 <small>{lot.productName} - {formatNumber(lot.weightKg)} kg - {lot.hubName}</small>
+                <small style={{ color: 'var(--muted)' }}>{lot.producerName}</small>
               </button>
             ))}
+            {lots.length === 0 && <EmptyState icon={ClipboardCheck} title="Aucun lot" body="Creez un lot via le formulaire ci-dessus ou chargez la demo jury." />}
           </div>
           {selectedLot ? (
             <LotDigitalTwinCard
               lot={selectedLot}
+              canReserve={['acheteurB2B', 'partenaire', 'admin'].includes(currentUser.role)}
+              canConsent={currentUser.role === 'admin' || currentUser.id === selectedLot.ownerId}
               onReserve={() => reserveLot(selectedLot)}
               onShareConsent={() => shareConsent(selectedLot)}
             />
           ) : (
-            <EmptyState icon={ClipboardCheck} title="Aucun lot" body="Chargez la demo jury pour afficher les lots froids intelligents." />
+            <EmptyState icon={ClipboardCheck} title="Sélectionnez un lot" body="Choisissez un lot pour voir son jumeau numerique." />
           )}
         </div>
       </section>
 
+      {selectedLot && canCreateLot && (
+        <section className="panel" style={{ padding: '1rem' }}>
+          <PanelToolbar icon={Truck} title={`Scanner mouvement - ${selectedLot.code}`} />
+          <form onSubmit={recordMovement} style={{ display: 'grid', gridTemplateColumns: '1fr 2fr auto', gap: '0.75rem', alignItems: 'end', marginTop: '0.75rem' }}>
+            <Field label="Nouveau statut" required>
+              <select value={movementForm.status} onChange={(e) => setMovementForm({ ...movementForm, status: e.target.value })}>
+                <option value="">-- Etapé --</option>
+                {nextStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </Field>
+            <Field label="Note / observation">
+              <input value={movementForm.note} onChange={(e) => setMovementForm({ ...movementForm, note: e.target.value })} placeholder="ex: Temperature OK, verification poids..." />
+            </Field>
+            <Button type="submit"><Send size={16} /> Enregistrer</Button>
+          </form>
+        </section>
+      )}
+
+      {selectedLot && (selectedLot.movements || []).length > 0 && (
+        <section className="panel" style={{ padding: '1rem' }}>
+          <PanelToolbar icon={Activity} title={`Historique complet - ${selectedLot.code}`} />
+          <div style={{ marginTop: '0.75rem' }}>
+            {(selectedLot.movements || []).map((mv, idx) => (
+              <div key={idx} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '0.75rem', paddingBottom: '0.75rem', borderBottom: idx < (selectedLot.movements.length - 1) ? '1px solid var(--border, #e5e7eb)' : 'none', marginBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <span style={{ width: '2rem', height: '2rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 'bold', background: 'var(--green-bg, #dcfce7)', color: 'var(--green-700, #15803d)' }}>{idx + 1}</span>
+                </div>
+                <div>
+                  <strong style={{ fontSize: '0.9rem' }}>{mv.status}</strong>
+                  <small style={{ display: 'block', color: 'var(--muted)' }}>{new Date(mv.timestamp).toLocaleString('fr-FR')} - {mv.actor}</small>
+                  {mv.note && <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem' }}>{mv.note}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <div className="split-layout">
         <section className="panel">
           <PanelTitle icon={Activity} title="Timeline de vie du lot" />
-          {selectedLot ? <LotTimeline lot={selectedLot} /> : <EmptyState icon={Activity} title="Aucun lot selectionne" body="Selectionnez un lot pour voir son parcours." />}
+          {selectedLot ? <LotTimeline lot={selectedLot} /> : <EmptyState icon={Activity} title="Aucun lot sélectionné" body="Sélectionnez un lot pour voir son parcours." />}
         </section>
         <section className="panel">
           <PanelTitle icon={ShieldCheck} title="Consentements et audit" />
@@ -4160,7 +5829,7 @@ function LotIntelligencePage({ actions, currentUser, notify, store }) {
               <article key={item.id}>
                 <strong>{item.partnerName}</strong>
                 <span>{item.status} - {item.scope?.join(', ')}</span>
-                <p>Revocable, trace et limite aux donnees autorisees.</p>
+                <p>Révocable, tracé et limité aux données autorisées.</p>
               </article>
             ))}
             {data.auditLogs.slice(0, 4).map((item) => (
@@ -4177,7 +5846,7 @@ function LotIntelligencePage({ actions, currentUser, notify, store }) {
   );
 }
 
-function UsersPage({ actions, currentUser, notify, store }) {
+function UsersPage({ actions, currentUser, navigate, notify, store }) {
   const [roleFilter, setRoleFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [showAddUser, setShowAddUser] = useState(false);
@@ -4198,7 +5867,7 @@ function UsersPage({ actions, currentUser, notify, store }) {
     }
   }, [highlightId]);
 
-  if (currentUser.role !== 'admin') return <AccessDenied />;
+  if (currentUser.role !== 'admin') return null;
   const filteredUsers = filterUsersForAdmin(store.users, roleFilter, search);
   const groupedUsers = groupUsersByRole(filteredUsers);
   const roleCounts = countUsersByRole(store.users);
@@ -4297,11 +5966,11 @@ function UsersPage({ actions, currentUser, notify, store }) {
         createAppNotification({
           actor: currentUser,
           body: status === 'Actif'
-            ? 'Votre compte agriculteur est maintenant actif. Vous pouvez vous connecter et utiliser FresCoop.'
-            : 'Votre demande de compte agriculteur a ete rejetee. Contactez un administrateur FresCoop pour plus d informations.',
-          path: '/',
+            ? `Votre compte ${roleLabel(user.role)} est maintenant actif. Vous pouvez vous connecter et utiliser FresCoop.`
+            : `Votre demande de compte ${roleLabel(user.role)} a été rejetée. Contactez un administrateur FresCoop pour plus d'informations.`,
+          path: status === 'Actif' ? '/verification' : '/compte',
           recipientId: user.id,
-          title: status === 'Actif' ? 'Compte agriculteur approuve' : 'Inscription agriculteur rejetee',
+          title: status === 'Actif' ? `Compte ${roleLabel(user.role)} approuvé` : `Inscription ${roleLabel(user.role)} rejetée`,
           type: 'account-status',
         }),
         ...resolved,
@@ -4310,10 +5979,10 @@ function UsersPage({ actions, currentUser, notify, store }) {
 
     notify(
       status === 'Actif' && wasPending
-        ? `${user.name} approuve. Le compte est actif.`
+        ? `${user.name} approuvé. Le compte est actif.`
         : status === 'Rejete' && wasPending
-          ? `${user.name} rejete. Le compte reste bloque.`
-          : `Statut de ${user.name} mis a jour: ${status}`,
+          ? `${user.name} rejeté. Le compte reste bloqué.`
+          : `Statut de ${user.name} mis à jour: ${status}`,
       status === 'Rejete' ? 'info' : 'success',
     );
   }
@@ -4367,46 +6036,7 @@ function UsersPage({ actions, currentUser, notify, store }) {
           </label>
         </div>
 
-        {(() => {
-          const userAuditLogs = (store.auditLogs || []).filter((log) =>
-            ['user_deleted', 'user_suspended', 'user_reactivated', 'user_approved', 'user_rejected', 'user_status_changed'].includes(log.action),
-          ).slice(0, 8);
-          if (userAuditLogs.length === 0) return null;
-          return (
-            <section className="user-audit-panel">
-              <div className="user-audit-head">
-                <strong>🕒 Journal d'audit · actions admin sur les comptes</strong>
-                <small>Traçabilité complète des {userAuditLogs.length} dernière(s) action(s).</small>
-              </div>
-              <ul className="user-audit-list">
-                {userAuditLogs.map((log) => {
-                  const icon = log.action === 'user_deleted' ? '🗑️' : log.action === 'user_suspended' || log.action === 'user_rejected' ? '⛔' : '✅';
-                  const label = log.action === 'user_deleted'
-                    ? 'Suppression'
-                    : log.action === 'user_suspended'
-                      ? 'Suspension'
-                      : log.action === 'user_approved'
-                        ? 'Approbation'
-                        : log.action === 'user_rejected'
-                          ? 'Rejet'
-                          : log.action === 'user_status_changed'
-                            ? 'Statut'
-                            : 'Réactivation';
-                  return (
-                    <li key={log.id} className={`audit-row audit-${log.action}`}>
-                      <span className="audit-icon">{icon}</span>
-                      <div>
-                        <strong>{label}</strong>
-                        <p>{log.detail}</p>
-                        <small>par {log.actorName || 'Admin'} · {formatDate(log.createdAt)}</small>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          );
-        })()}
+        <AuditLogCollapsible logs={(store.auditLogs || []).filter((log) => ['user_deleted', 'user_suspended', 'user_reactivated', 'user_approved', 'user_rejected', 'user_status_changed'].includes(log.action))} />
 
         <section className="survey-leads-panel">
           <div className="user-role-heading">
@@ -4463,11 +6093,12 @@ function UsersPage({ actions, currentUser, notify, store }) {
                       <UserCompactRow
                         key={user.id}
                         canDelete={canDelete}
+                        onViewProofs={user.role === 'agriculteur' ? () => navigate('/verification') : undefined}
                         onStatusChange={(status) => handleUserStatusChange(user, status)}
                         onDelete={async () => {
                           if (!canDelete) return;
 
-                          // Étape 1 : avertissement avec impact détaillé
+                          // Étapé 1 : avertissement avec impact détaillé
                           const relatedProducts = (store.products || []).filter((p) => p.ownerId === user.id).length;
                           const relatedOrders = (store.orders || []).filter((o) => o.clientId === user.id || o.sellerId === user.id).length;
                           const relatedLots = (store.lots || []).filter((l) => l.ownerId === user.id).length;
@@ -4487,7 +6118,7 @@ function UsersPage({ actions, currentUser, notify, store }) {
                           });
                           if (!ok) return;
 
-                          // Étape 2 : saisie du nom (protection anti-suppression accidentelle)
+                          // Étapé 2 : saisie du nom (protection anti-suppression accidentelle)
                           const typed = window.prompt(
                             `Pour confirmer la suppression, tapez exactement le nom :\n\n${user.name}`,
                             '',
@@ -4498,7 +6129,7 @@ function UsersPage({ actions, currentUser, notify, store }) {
                             return;
                           }
 
-                          // Étape 3 : journal d'audit + suppression effective
+                          // Étapé 3 : journal d'audit + suppression effective
                           actions.setAuditLogs((items) => [
                             createAuditLog(
                               currentUser,
@@ -4509,6 +6140,7 @@ function UsersPage({ actions, currentUser, notify, store }) {
                             ...items,
                           ]);
                           actions.setUsers((items) => items.filter((item) => item.id !== user.id));
+                          actions.setProducts((items) => items.filter((item) => item.ownerId !== user.id && item.sellerId !== user.id));
                           notify(`${user.name} a été supprimé. Action tracée dans l'audit.`, 'success');
                         }}
                         user={user}
@@ -4533,38 +6165,42 @@ function ImpactPage({ stats, store }) {
     name: product.name,
     value: Number(product.price || 0) * Number(product.quantity || 0),
   }));
-  const impact = computePoesamImpact(store);
+  const impact = computeUemoaImpact(store);
 
   return (
     <PageFrame>
-      <section className="panel poesam-hero">
+      <section className="panel uemoa-hero">
         <div>
-          <span className="poesam-badge">IMPACT POESAM</span>
-          <h2>FresCoop en chiffres — indicateurs mesurables</h2>
-          <p>Chaque lot trace, chaque paiement PayDunya, chaque capteur froid convertit des pertes en revenu pour les producteurs senegalais. Aucun chiffre fictif: ces KPI sont calcules en temps reel sur l activite du compte.</p>
+          <span className="uemoa-badge">IMPACT FILIERES UEMOA</span>
+          <h2>FresCoop en chiffres: indicateurs mesurables</h2>
+          <p>Chaque lot trace, chaque paiement partenaire, chaque capteur froid convertit des pertes en revenu pour les acteurs agricoles UEMOA. Aucun chiffre fictif: ces KPI sont calcules en temps reel sur l activité du compte.</p>
+          <div className="gimpay-counter" style={{ marginTop: '1rem', padding: '0.75rem 1.25rem', background: 'var(--surface)', borderRadius: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+            <ReceiptText size={18} />
+            <span><strong>{impact.gimpayTxCount}</strong> paiements GIM-Pay (Wave, OM, Free Money)</span>
+          </div>
         </div>
       </section>
 
       <div className="status-grid">
-        <StatCard icon={Leaf} label="Pertes post-recolte evitees" value={`${impact.lossesAvertedPercent}%`} tone="green" />
+        <StatCard icon={Leaf} label="Pertes post-récolte évitées" value={`${impact.lossesAvertedPercent}%`} tone="green" />
         <StatCard icon={CircleDollarSign} label="Revenu additionnel producteurs" value={`${formatCompact(impact.additionalFarmerRevenue)} FCFA`} tone="gold" />
         <StatCard icon={Users} label="Femmes productrices actives" value={`${impact.womenProducers} / ${impact.totalProducers}`} tone="coral" />
-        <StatCard icon={Sprout} label="CO2 evite (kg eq.)" value={formatCompact(impact.co2SavedKg)} tone="blue" />
-        <StatCard icon={Tractor} label="Coopératives connectees" value={impact.coopérativeCount} tone="green" />
-        <StatCard icon={Truck} label="Kg traces jusqu au marche" value={formatCompact(impact.tracedKg)} tone="blue" />
-        <StatCard icon={ReceiptText} label="Transactions PayDunya" value={impact.paydunyaTxCount} tone="gold" />
-        <StatCard icon={ShieldCheck} label="Preuves economiques emises" value={stats.proofs} tone="coral" />
+        <StatCard icon={Sprout} label="CO2 évité (kg eq.)" value={formatCompact(impact.co2SavedKg)} tone="blue" />
+        <StatCard icon={Tractor} label="Coopératives connectées" value={impact.coopérativeCount} tone="green" />
+        <StatCard icon={Truck} label="Kg tracés jusqu'au marché" value={formatCompact(impact.tracedKg)} tone="blue" />
+        <StatCard icon={ReceiptText} label="Transactions partenaires" value={impact.gimpayTxCount} tone="gold" />
+        <StatCard icon={ShieldCheck} label="Preuves économiques émises" value={stats.proofs} tone="coral" />
       </div>
 
       <section className="panel">
-        <PanelTitle icon={BarChart3} title="Objectifs de developpement durable (ODD) contribues" />
+        <PanelTitle icon={BarChart3} title="Objectifs de développement durable (ODD) contribués" />
         <div className="odd-grid">
-          <article><strong>ODD 1 · Pas de pauvrete</strong><p>Revenu additionnel par agriculteur, inclusion financiere PayDunya.</p></article>
-          <article><strong>ODD 2 · Faim zero</strong><p>Reduction des pertes post-recolte, preservation qualite alimentaire.</p></article>
-          <article><strong>ODD 5 · Egalite des sexes</strong><p>Visibilite et traçabilite du revenu des productrices.</p></article>
-          <article><strong>ODD 8 · Travail decent</strong><p>Preuves economiques bancarisables pour coopératives.</p></article>
-          <article><strong>ODD 12 · Consommation responsable</strong><p>Traçabilite froid, anti-gaspillage, transparence marche.</p></article>
-          <article><strong>ODD 13 · Action climat</strong><p>CO2 evite par optimisation logistique et reduction pertes.</p></article>
+          <article><strong>ODD 1 · Pas de pauvreté</strong><p>Revenu additionnel par agriculteur, inclusion financière via paiement partenaire.</p></article>
+          <article><strong>ODD 2 · Faim zéro</strong><p>Réduction des pertes post-récolte, préservation de la qualité alimentaire.</p></article>
+          <article><strong>ODD 5 · Égalité des sexes</strong><p>Visibilité et traçabilité du revenu des productrices.</p></article>
+          <article><strong>ODD 8 · Travail décent</strong><p>Preuves économiques bancarisables pour coopératives.</p></article>
+          <article><strong>ODD 12 · Consommation responsable</strong><p>Traçabilité froid, anti-gaspillage, transparence marché.</p></article>
+          <article><strong>ODD 13 · Action climat</strong><p>CO2 évité par optimisation logistique et réduction des pertes.</p></article>
         </div>
       </section>
 
@@ -4599,21 +6235,21 @@ function ImpactPage({ stats, store }) {
       </div>
 
       <section className="panel">
-        <PanelTitle icon={ShieldCheck} title="Pitch POESAM — pourquoi FresCoop coche toutes les cases" />
-        <div className="poesam-pitch-grid">
-          <article><strong>Impact mesurable</strong><p>Chaque KPI ci-dessus est calcule sur les transactions et lots reels — pas de projection theorique.</p></article>
-          <article><strong>Innovation tech</strong><p>IoT froid + QR traçabilite + IA duree de vie + PayDunya = stack pragmatique, pas gadget.</p></article>
-          <article><strong>Scalabilite</strong><p>Modele reproductible Mali, Cote d Ivoire, Burkina. API et base deja decouplees.</p></article>
-          <article><strong>Inclusion financiere</strong><p>Exports dossier bancabilite pour SFD et banques partenaires, paiement mobile sans wallet proprietaire.</p></article>
-          <article><strong>Genre</strong><p>Indicateur femmes productrices visible, eligible Prix Feminin International.</p></article>
-          <article><strong>Anti-gaspillage</strong><p>Alertes DLC courte + prix degressifs, echo direct du gagnant 2024 SAVEY.</p></article>
+        <PanelTitle icon={ShieldCheck} title="Pitch GIM-UEMOA — du lot agricole au paiement vérifiable" />
+        <div className="uemoa-pitch-grid">
+          <article><strong>Impact mesurable</strong><p>Chaque KPI ci-dessus est calculé sur les transactions et lots réels, pas sur une projection théorique.</p></article>
+          <article><strong>Innovation utile</strong><p>IoT froid + QR traçabilité + IA durée de vie + paiement partenaire: une stack pragmatique, pas gadget.</p></article>
+          <article><strong>Scalabilité</strong><p>Modèle reproductible dans les 8 pays UEMOA. API, données et parcours sont déjà découplés pour un déploiement régional.</p></article>
+          <article><strong>Inclusion financière</strong><p>Historique de ventes exportable pour banques, SFD et partenaires, avec paiement mobile sans wallet propriétaire.</p></article>
+          <article><strong>Genre</strong><p>Indicateur femmes productrices visible, utile pour inclusion, subventions et programmes d'appui régionaux.</p></article>
+          <article><strong>Anti-gaspillage</strong><p>Alertes durée courte + prix dégressifs pour sauver des lots avant perte et orienter la demande régionale.</p></article>
         </div>
       </section>
     </PageFrame>
   );
 }
 
-function computePoesamImpact(store) {
+function computeUemoaImpact(store) {
   const products = store.products || [];
   const orders = store.orders || [];
   const lots = store.lots || [];
@@ -4629,9 +6265,9 @@ function computePoesamImpact(store) {
   const lossesAvertedPercent = lots.length || paidOrders.length ? Math.min(32, 12 + Math.round((lots.length + paidOrders.length) * 0.8)) : 0;
   const co2SavedKg = Math.round(tracedKg * 0.22);
   const producers = users.filter((user) => user.role === 'agriculteur');
-  const womenProducers = producers.filter((user) => user.gender === 'F' || /(^|\s)(fatou|aissatou|aïssatou|aminata|awa|khady|marieme|mariéme|mariame|mame|ndeye|fama|ndèye|fatoumata|diarra|binta|astou|bintou|soda|coumba|rokhaya|rokhia|aida|aïda|yacine|khadija|khadidja|penda|dior|oumy|mareme|marème)/i.test(String(user.name || ''))).length;
+  const womenProducers = producers.filter((user) => user.gender === 'Femme' || user.gender === 'F' || /(^|\s)(fatou|aissatou|aïssatou|aminata|awa|khady|marieme|mariéme|mariame|mame|ndeye|fama|ndèye|fatoumata|diarra|binta|astou|bintou|soda|coumba|rokhaya|rokhia|aida|aïda|yacine|khadija|khadidja|penda|dior|oumy|mareme|marème)/i.test(String(user.name || ''))).length;
   const coopérativeCount = (store.coopératives || []).length;
-  const paydunyaTxCount = paymentRecords.filter((record) => record.paydunyaToken || /paydunya/i.test(record.partner || '')).length;
+  const gimpayTxCount = paymentRecords.filter((record) => record.gimpayToken || /gimpay/i.test(record.partner || '')).length;
 
   return {
     lossesAvertedPercent,
@@ -4641,7 +6277,7 @@ function computePoesamImpact(store) {
     totalProducers: producers.length,
     womenProducers,
     coopérativeCount,
-    paydunyaTxCount,
+    gimpayTxCount,
     transactionsCount: transactions.length,
     revenue: totalRevenue,
   };
@@ -4667,11 +6303,11 @@ function AntiWastePage({ actions, currentUser, navigate, notify, store }) {
       body: `${product.name} -${alert.suggestedDiscountPct}% (anti-gaspi). Disponible immediatement.`,
       path: '/marche',
       recipientRole: 'acheteurB2B',
-      title: 'Vente eclair anti-gaspi',
+      title: 'Vente éclair anti-gaspi',
       type: 'anti-waste',
     });
     actions.setNotifications((items) => [notif, ...items]);
-    notify(`Prix reduit de ${alert.suggestedDiscountPct}%. Acheteurs B2B notifies.`);
+    notify(`Prix reduit de ${alert.suggestedDiscountPct}%. Acheteurs B2B notifiés.`);
   }
 
   function buyFlash(alert) {
@@ -4693,7 +6329,7 @@ function AntiWastePage({ actions, currentUser, navigate, notify, store }) {
   function loadAntiWasteFixtures() {
     const fixtures = createAntiWasteFixtureProducts(store, currentUser);
     if (!fixtures.length) {
-      notify('Les lots fictifs anti-gaspi sont deja disponibles.');
+      notify('Les lots fictifs anti-gaspi sont déjà disponibles.');
       return;
     }
     actions.setProducts((items) => [...fixtures, ...items]);
@@ -4713,17 +6349,13 @@ function AntiWastePage({ actions, currentUser, navigate, notify, store }) {
       title: 'Lots à risque à superviser',
       body: 'Contactez les producteurs concernés, organisez une vente groupée ou proposez un transfert vers un hub froid avant péremption.',
     },
-    transporteur: {
-      title: 'Priorités logistiques anti-gaspi',
-      body: 'Ces lots doivent arriver chez un acheteur en 1 à 3 jours. Priorisez-les dans vos tournées et allouez un véhicule réfrigéré si disponible.',
-    },
     client: {
       title: 'Produits à sauver · prix réduits',
       body: 'Achetez ces produits à prix cassé et aidez à réduire le gaspillage. Chaque achat évite des pertes et soutient un producteur.',
     },
     acheteurB2B: {
       title: 'Opportunités sourcing anti-gaspi',
-      body: 'Jusqu\'à -40% sur des lots frais de qualité. Sécurisez un volume immédiat et valorisez votre engagement RSE.',
+      body: 'Jusqu\'à -40% sur des lots frais de qualité. Sécurisez un volume immédiat et valoriséz votre engagement RSE.',
     },
     partenaire: {
       title: 'Vue risque post-récolte',
@@ -4736,14 +6368,14 @@ function AntiWastePage({ actions, currentUser, navigate, notify, store }) {
   };
   const copy = heroCopy[currentUser.role] || {
     title: 'Lots proches de péremption · alertes et ventes éclair',
-    body: '30 à 40% des récoltes sont perdues au Sénégal après récolte. FresCoop détecte les lots à DLC courte et propose des ventes éclair à prix dégressif.',
+    body: '30 à 40% des récoltes peuvent être perdues après récolte dans plusieurs filières. FresCoop détecte les lots à durée courte et propose des ventes éclair à prix dégressif.',
   };
 
   return (
     <PageFrame>
-      <section className="panel poesam-hero">
+      <section className="panel uemoa-hero">
         <div>
-          <span className="poesam-badge">ANTI-GASPI</span>
+          <span className="uemoa-badge">ANTI-GASPI</span>
           <h2>{copy.title}</h2>
           <p>{copy.body}</p>
         </div>
@@ -4777,7 +6409,7 @@ function AntiWastePage({ actions, currentUser, navigate, notify, store }) {
                 <div className="button-row">
                   {canPublish && <Button variant="secondary" onClick={() => applyFlashDiscount(alert)}><RefreshCcw size={16} /> Appliquer -{alert.suggestedDiscountPct}%</Button>}
                   {canBuy && <Button onClick={() => buyFlash(alert)}><ShoppingCart size={16} /> Acheter maintenant</Button>}
-                  {currentUser.role === 'transporteur' && <Button variant="secondary" onClick={() => navigate('/commandes')}><Truck size={16} /> Planifier livraison</Button>}
+
                   {currentUser.role === 'agentTerrain' && <Button variant="secondary" onClick={() => navigate('/commandes')}><PhoneCall size={16} /> Contacter producteur</Button>}
                 </div>
               </article>
@@ -4840,7 +6472,7 @@ function createAntiWasteFixtureProducts(store, currentUser) {
   const fixtures = [
     { id: 'demo-antigaspi-tomates', name: 'Tomates cerises test anti-gaspi', category: 'Legumes', quantity: 42, unit: 'kg', price: 950, daysAgo: 4, shelfLifeDays: 5, zone: 'Dakar' },
     { id: 'demo-antigaspi-mangues', name: 'Mangues Kent fin de date', category: 'Fruits', quantity: 65, unit: 'kg', price: 1200, daysAgo: 6, shelfLifeDays: 8, zone: 'Thies' },
-    { id: 'demo-antigaspi-salade', name: 'Laitue fraiche a ecouler', category: 'Legumes', quantity: 28, unit: 'kg', price: 700, daysAgo: 3, shelfLifeDays: 5, zone: 'Rufisque' },
+    { id: 'demo-antigaspi-salade', name: 'Laitue fraiche a écouler', category: 'Legumes', quantity: 28, unit: 'kg', price: 700, daysAgo: 3, shelfLifeDays: 5, zone: 'Rufisque' },
   ];
 
   return fixtures
@@ -4856,7 +6488,7 @@ function createAntiWasteFixtureProducts(store, currentUser) {
       unit: item.unit,
       price: item.price,
       zone: item.zone || owner?.region || 'Senegal',
-      description: 'Lot fictif ajoute pour verifier les alertes anti-gaspi et les ventes eclair.',
+      description: 'Lot fictif ajoute pour vérifier les alertes anti-gaspi et les ventes éclair.',
       status: 'Publie',
       shelfLifeDays: item.shelfLifeDays,
       expiryDate: new Date(now + Math.max(0, item.shelfLifeDays - item.daysAgo) * 86400000).toISOString().slice(0, 10),
@@ -4876,11 +6508,329 @@ function estimateShelfLife(key) {
   return 10;
 }
 
+function sanitizeRepaymentPct(value) {
+  const pct = Number(value);
+  if (!Number.isFinite(pct)) return 30;
+  return Math.min(40, Math.max(5, Math.round(pct)));
+}
+
+function suggestLoanRepaymentPct(dossier, months) {
+  const score = Number(dossier?.score || 0);
+  const duration = Number(months || 6);
+  if (score >= 80 && duration <= 6) return 15;
+  if (score >= 60) return duration > 12 ? 25 : 20;
+  return duration > 12 ? 30 : 25;
+}
+
+const LOAN_CLOSED_STATUSES = new Set(['Refusé', 'Remboursé', 'Annulé', 'repaid', 'rejected', 'cancelled']);
+const LOAN_BLOCKING_STATUSES = new Set(['En attente', 'Approuvé', 'En cours', 'Retard', 'Défaut', 'active', 'pending', 'approved', 'overdue', 'defaulted']);
+const LOAN_APPROVED_STATUSES = new Set(['Approuvé', 'En cours', 'active', 'approved']);
+const DEFAULT_LOAN_TRANCHES = [
+  { id: 1, pct: 40, label: 'Achat intrants' },
+  { id: 2, pct: 30, label: 'Exploitation' },
+  { id: 3, pct: 30, label: 'Récolte et livraison' },
+];
+
+function getLoanFarmerId(loan) {
+  return loan?.farmerId || loan?.userId || '';
+}
+
+function buildDefaultLoanTranches(status = 'En attente', now = '') {
+  const firstStatus = LOAN_APPROVED_STATUSES.has(status) ? 'disbursed' : 'pending';
+  return DEFAULT_LOAN_TRANCHES.map((tranche, index) => ({
+    ...tranche,
+    status: index === 0 ? firstStatus : 'locked',
+    proofStatus: '',
+    proofSubmittedAt: '',
+    ...(index === 0 && firstStatus === 'disbursed' && now ? { disbursedAt: now } : {}),
+  }));
+}
+
+function ensureLoanTranches(loan, now = '') {
+  const existing = Array.isArray(loan?.tranches) ? loan.tranches : [];
+  const defaults = buildDefaultLoanTranches(loan?.status, now);
+  return defaults.map((fallback) => {
+    const current = existing.find((tranche) => String(tranche?.id) === String(fallback.id));
+    if (!current) return fallback;
+    return {
+      ...fallback,
+      ...current,
+      id: current.id ?? fallback.id,
+      pct: Number(current.pct || fallback.pct),
+      label: current.label || fallback.label,
+      status: current.status || fallback.status,
+      proofStatus: current.proofStatus || '',
+      proofSubmittedAt: current.proofSubmittedAt || '',
+    };
+  });
+}
+
+function getLoanDisbursedPctFromTranches(tranches) {
+  return (Array.isArray(tranches) ? tranches : []).reduce((sum, tranche) => (
+    ['disbursed', 'completed'].includes(tranche?.status) ? sum + Number(tranche.pct || 0) : sum
+  ), 0);
+}
+
+function normalizeLoanForStore(loan) {
+  if (!loan || typeof loan !== 'object') return loan;
+  const tranches = ensureLoanTranches(loan);
+  const farmerId = getLoanFarmerId(loan);
+  const amount = Number(loan.amount || 0);
+  return {
+    ...loan,
+    farmerId,
+    tranches,
+    disbursedPct: Number.isFinite(Number(loan.disbursedPct))
+      ? Number(loan.disbursedPct)
+      : getLoanDisbursedPctFromTranches(tranches),
+    remainingBalance: Number.isFinite(Number(loan.remainingBalance)) ? Number(loan.remainingBalance) : amount,
+    repaidAmount: Number(loan.repaidAmount || 0),
+  };
+}
+
+function findBlockingLoanForFarmer(farmerId, store) {
+  return (store.loans || []).find((loan) => {
+    if (getLoanFarmerId(loan) !== farmerId) return false;
+    if (LOAN_CLOSED_STATUSES.has(loan.status)) return false;
+    if (!LOAN_BLOCKING_STATUSES.has(loan.status)) return false;
+    if (loan.status === 'En attente' || loan.status === 'pending') return true;
+    return getLoanRepaymentStats(loan, store).remaining > 0;
+  });
+}
+
+function buildLoanContractSnapshot({ contractCode, dossier, farmer, loan, partner, repaymentPct, signedAt = '', status = 'propose' }) {
+  const amount = Number(loan?.amount || 0);
+  const months = Number(loan?.months || 0);
+  const tranches = ensureLoanTranches(loan);
+  return {
+    code: contractCode || loan?.contractCode || buildVerificationCode('CTR'),
+    status,
+    createdAt: loan?.createdAt || new Date().toISOString(),
+    signedAt,
+    farmerId: farmer?.id || getLoanFarmerId(loan),
+    farmerName: farmer?.name || loan?.farmerName || '',
+    partnerId: partner?.id || loan?.partnerId || '',
+    partnerName: partner?.name || '',
+    amount,
+    months,
+    purpose: loan?.purpose || '',
+    repaymentPct: sanitizeRepaymentPct(repaymentPct ?? loan?.repaymentPct),
+    totalDue: amount,
+    interestRatePct: Number(loan?.interestRatePct || 0),
+    currency: 'FCFA',
+    score: loan?.score || dossier?.score || 0,
+    grade: loan?.grade || dossier?.grade || '',
+    verificationCode: loan?.verificationCode || dossier?.verificationCode || '',
+    deductionMethod: 'prelevement_automatique_ventes_frescoop',
+    terms: [
+      'Le remboursement se fait automatiquement sur les ventes payees dans FresCoop.',
+      'Le pourcentage contractuel est applique sur chaque paiement client jusqu au remboursement total.',
+      'Le prelevement ne depasse jamais le solde restant du pret.',
+      'Chaque prelevement cree une ligne de remboursement visible par l agriculteur et le partenaire.',
+      'Les tranches suivantes restent conditionnees a la validation des preuves de decaissement.',
+      'Aucun interet additionnel n est ajoute dans ce contrat FresCoop, sauf modification explicite signee par les parties.',
+    ],
+    tranches: tranches.map((tranche) => ({
+      id: tranche.id,
+      pct: Number(tranche.pct || 0),
+      label: tranche.label || '',
+      amount: Math.round(amount * Number(tranche.pct || 0) / 100),
+    })),
+  };
+}
+
+function getLoanContract(loan, store) {
+  const farmer = (store.users || []).find((user) => user.id === getLoanFarmerId(loan));
+  const partner = (store.users || []).find((user) => user.id === loan.partnerId);
+  const dossier = farmer ? buildBancabiliteDossier(farmer, store) : null;
+  return {
+    ...buildLoanContractSnapshot({
+      contractCode: loan.contractCode || loan.contract?.code,
+      dossier,
+      farmer,
+      loan,
+      partner,
+      repaymentPct: loan.repaymentPct,
+      signedAt: loan.contract?.signedAt || loan.decidedAt || '',
+      status: loan.contract?.status || (['Approuvé', 'En cours', 'approved', 'active'].includes(loan.status) ? 'actif' : 'propose'),
+    }),
+    ...(loan.contract || {}),
+    partnerName: loan.contract?.partnerName || partner?.name || '',
+  };
+}
+
+function getLoanRepaymentStats(loan, store) {
+  const repayments = (store.loanRepayments || []).filter((item) => item.loanId === loan.id && item.type === 'sale_deduction');
+  const paidByRows = repayments.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const total = Number(loan.amount || 0);
+  const isRepaid = ['Remboursé', 'repaid'].includes(loan.status);
+  const paid = isRepaid ? total : Math.max(Number(loan.repaidAmount || 0), paidByRows);
+  const remaining = isRepaid ? 0 : Number.isFinite(Number(loan.remainingBalance))
+    ? Math.max(0, Number(loan.remainingBalance))
+    : Math.max(0, total - paid);
+  return {
+    paid,
+    remaining,
+    total,
+    pct: total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0,
+    repayments,
+  };
+}
+
+function findRepayableLoanForSeller(sellerId, store) {
+  return (store.loans || [])
+    .filter((loan) => getLoanFarmerId(loan) === sellerId && ['Approuvé', 'En cours', 'approved', 'active'].includes(loan.status))
+    .sort((a, b) => new Date(a.decidedAt || a.createdAt || 0) - new Date(b.decidedAt || b.createdAt || 0))
+    .find((loan) => getLoanRepaymentStats(loan, store).remaining > 0);
+}
+
+function calculateLoanSaleDeduction(order, store) {
+  const loan = findRepayableLoanForSeller(order.sellerId, store);
+  if (!loan) return null;
+  const stats = getLoanRepaymentStats(loan, store);
+  const repaymentPct = sanitizeRepaymentPct(loan.repaymentPct);
+  const orderTotal = getOrderTotal(order, store);
+  const amount = Math.min(stats.remaining, Math.round(orderTotal * repaymentPct / 100));
+  if (amount <= 0) return null;
+  return { loan, amount, repaymentPct, orderTotal, remainingAfter: Math.max(0, stats.remaining - amount) };
+}
+
+function RepayLoanBlock({ loan, actions, currentUser, store, notify }) {
+  const [showForm, setShowForm] = useState(false);
+  const [repayAmount, setRepayAmount] = useState('');
+  const [processing, setProcessing] = useState(false);
+  const remaining = loan.remainingBalance || loan.amount || 0;
+
+  function executeRepayment(amount, method) {
+    const now = new Date().toISOString();
+    const newRemaining = Math.max(0, remaining - amount);
+    const newRepaid = (loan.repaidAmount || 0) + amount;
+    const isFullyRepaid = newRemaining <= 0;
+    const updatedLoan = normalizeLoanForStore({
+      ...loan,
+      remainingBalance: newRemaining,
+      repaidAmount: newRepaid,
+      status: isFullyRepaid ? 'Remboursé' : loan.status,
+      statusUpdatedAt: now,
+    });
+    const repayment = {
+      id: `repay-${Date.now().toString(36)}`,
+      createdAt: now,
+      loanId: loan.id,
+      farmerId: getLoanFarmerId(loan) || currentUser.id,
+      farmerName: currentUser.name,
+      partnerId: loan.partnerId,
+      amount,
+      type: method,
+      status: isFullyRepaid ? 'Remboursé' : 'Partiel',
+    };
+    const notif = loan.partnerId ? createAppNotification({
+        actor: currentUser,
+        body: `${currentUser.name} a remboursé ${formatMoney(amount)}${isFullyRepaid ? ' (solde complet)' : ''} sur le prêt ${loan.contractCode || ''}. Mode: ${method === 'gimpay' ? 'GIM-Pay' : 'Simulation'}.`,
+        path: '/bancabilite',
+        recipientId: loan.partnerId,
+        relatedId: loan.id,
+        title: isFullyRepaid ? 'Prêt intégralement remboursé' : 'Remboursement reçu',
+        type: 'loan-status-update',
+      }) : null;
+    actions.forceReplaceStore(normalizeStore({
+      ...store,
+      loans: (store.loans || []).map((item) => item.id === loan.id ? updatedLoan : item),
+      loanRepayments: [repayment, ...(store.loanRepayments || [])],
+      notifications: notif ? [notif, ...(store.notifications || [])] : (store.notifications || []),
+      auditLogs: [createAuditLog(currentUser, 'loan_repayment', `Remboursement ${formatMoney(amount)} sur ${loan.contractCode || loan.id}`, loan.id), ...(store.auditLogs || [])],
+    }));
+    notify(isFullyRepaid ? 'Prêt intégralement remboursé !' : `Remboursement de ${formatMoney(amount)} enregistré.`);
+    setRepayAmount('');
+    setShowForm(false);
+  }
+
+  async function handleGimPay() {
+    const amount = Number(repayAmount);
+    if (!amount || amount <= 0) { notify('Montant invalide.', 'error'); return; }
+    if (amount > remaining) { notify(`Le montant dépasse le solde restant (${formatMoney(remaining)}).`, 'error'); return; }
+    setProcessing(true);
+    try {
+      const res = await fetch(API_BASE + '/api/gimpay/create-invoice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: Math.round(amount),
+          description: `Remboursement prêt ${loan.contractCode || loan.id} - ${currentUser.name}`,
+          orderIds: [],
+          payerId: currentUser.id,
+          storePhone: currentUser.phone || '',
+          storeAddress: currentUser.region || 'Senegal',
+        }),
+      });
+      const data = await res.json();
+      if (!data?.ok || !data?.url) {
+        notify(data?.error || 'Echec initialisation GIM-Pay', 'error');
+        setProcessing(false);
+        return;
+      }
+      executeRepayment(amount, 'gimpay');
+      notify('Redirection vers GIM-Pay...');
+      window.location.href = data.url;
+    } catch (error) {
+      notify(`Erreur GIM-Pay: ${error.message}`, 'error');
+      setProcessing(false);
+    }
+  }
+
+  function handleSimulation() {
+    const amount = Number(repayAmount);
+    if (!amount || amount <= 0) { notify('Montant invalide.', 'error'); return; }
+    if (amount > remaining) { notify(`Le montant dépasse le solde restant (${formatMoney(remaining)}).`, 'error'); return; }
+    setProcessing(true);
+    setTimeout(() => {
+      executeRepayment(amount, 'simulation');
+      setProcessing(false);
+    }, 1000);
+  }
+
+  return (
+    <div className="loan-repay-block">
+      {!showForm ? (
+        <button type="button" className="btn btn-secondary" onClick={() => setShowForm(true)} style={{ marginTop: '0.5rem', fontSize: '0.85rem' }}>
+          <CircleDollarSign size={15} /> Rembourser
+        </button>
+      ) : (
+        <div className="loan-repay-form">
+          <div style={{ marginBottom: '0.5rem' }}>
+            <input
+              type="number"
+              min="1"
+              max={remaining}
+              value={repayAmount}
+              onChange={(e) => setRepayAmount(e.target.value)}
+              placeholder={`Montant à rembourser (max ${formatMoney(remaining)})`}
+              style={{ width: '100%', padding: '0.5rem 0.7rem', borderRadius: '6px', border: '1px solid var(--line)', fontSize: '0.88rem' }}
+              autoFocus
+            />
+            <small style={{ color: 'var(--muted)', marginTop: '0.3rem', display: 'block' }}>Solde restant : {formatMoney(remaining)}</small>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <button type="button" className="btn btn-primary" onClick={handleGimPay} disabled={processing} style={{ fontSize: '0.82rem', padding: '0.45rem 0.8rem' }}>
+              {processing ? '...' : '💳 Payer via GIM-Pay'}
+            </button>
+            <button type="button" className="btn btn-secondary" onClick={handleSimulation} disabled={processing} style={{ fontSize: '0.82rem', padding: '0.45rem 0.8rem' }}>
+              {processing ? '...' : '⚡ Simulation paiement'}
+            </button>
+            <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)} disabled={processing} style={{ fontSize: '0.82rem', padding: '0.45rem 0.8rem' }}>Annuler</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BancabilitePage({ actions, currentUser, notify, store }) {
   const isFinancePartner = currentUser.role === 'partenaire';
   const isAgriculteur = currentUser.role === 'agriculteur';
   const [filter, setFilter] = useState('all');
-  const [loanForm, setLoanForm] = useState({ amount: '', purpose: '', months: '6' });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loanForm, setLoanForm] = useState({ amount: '', purpose: '', months: '6', repaymentPct: '30' });
   const [showLoanForm, setShowLoanForm] = useState(false);
 
   const scope = useMemo(() => {
@@ -4889,20 +6839,45 @@ function BancabilitePage({ actions, currentUser, notify, store }) {
   }, [isAgriculteur, currentUser, store.users]);
 
   const loans = store.loans || [];
-  const myLoans = loans.filter((loan) => loan.farmerId === currentUser.id || loan.partnerId === currentUser.id);
+  const myLoans = isFinancePartner
+    ? loans.filter((loan) => loan.partnerId === currentUser.id || ['En attente', 'Approuvé', 'En cours', 'pending', 'approved', 'active'].includes(loan.status))
+    : loans.filter((loan) => getLoanFarmerId(loan) === currentUser.id);
 
   const enriched = scope.map((user) => ({ user, dossier: buildBancabiliteDossier(user, store) }));
-  const visible = enriched.filter(({ dossier }) => {
-    if (filter === 'eligible') return dossier.score >= 60;
-    if (filter === 'pending') return dossier.score >= 40 && dossier.score < 60;
-    if (filter === 'risky') return dossier.score < 40;
+  const visible = enriched.filter(({ user, dossier }) => {
+    if (filter === 'eligible' && dossier.score < 60) return false;
+    if (filter === 'pending' && (dossier.score < 40 || dossier.score >= 60)) return false;
+    if (filter === 'risky' && dossier.score >= 40) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      return user.name.toLowerCase().includes(q) || user.id.toLowerCase().includes(q) || (user.region || '').toLowerCase().includes(q) || (user.email || '').toLowerCase().includes(q);
+    }
     return true;
   });
+
+  function commitLoanWorkflow(mutator) {
+    const base = normalizeStore({
+      ...store,
+      loans: store.loans || [],
+      notifications: store.notifications || [],
+      loanRepayments: store.loanRepayments || [],
+      auditLogs: store.auditLogs || [],
+    });
+    const next = normalizeStore(mutator(base) || base);
+    actions.forceReplaceStore(next);
+    return next;
+  }
 
   function exportDossier(user) {
     const dossier = buildBancabiliteDossier(user, store);
     downloadHtml(`bancabilite-${user.id}.html`, renderBancabiliteHtml(dossier));
-    notify(`Dossier bancabilite genere pour ${user.name}`);
+    notify(`Dossier bancabilité généré pour ${user.name}`);
+  }
+
+  function exportLoanContract(loan) {
+    const contract = getLoanContract(loan, store);
+    downloadHtml(`contrat-pret-${contract.code || loan.id}.html`, renderLoanContractHtml(loan, store));
+    notify('Contrat de prêt généré');
   }
 
   function submitLoanRequest(event) {
@@ -4911,32 +6886,57 @@ function BancabilitePage({ actions, currentUser, notify, store }) {
       notify('Montant et objet obligatoires', 'error');
       return;
     }
-    // Bloquer si une demande est déjà en cours de traitement
-    const pendingExisting = (store.loans || []).some((item) => item.farmerId === currentUser.id && item.status === 'En attente');
-    if (pendingExisting) {
-      notify('Vous avez déjà une demande en attente. Attendez la décision des partenaires.', 'info');
+    const blockingLoan = findBlockingLoanForFarmer(currentUser.id, store);
+    if (blockingLoan) {
+      const remaining = getLoanRepaymentStats(blockingLoan, store).remaining;
+      notify(
+        blockingLoan.status === 'En attente'
+          ? 'Vous avez déjà une demande de prêt en attente.'
+          : `Vous avez déjà un prêt non remboursé (${formatMoney(remaining)} restant). Remboursez-le entièrement avant une nouvelle demande.`,
+        'info',
+      );
       return;
     }
     const dossier = buildBancabiliteDossier(currentUser, store);
-    if (dossier.score < 40) {
-      notify('Score insuffisant (< 40). Complétez votre activité FresCoop avant de demander un prêt.', 'error');
+    if (dossier.score < 60) {
+      notify(`Score insuffisant (${dossier.score}/100, Grade ${dossier.grade}). Un grade B minimum (≥ 60) est requis pour demander un prêt.`, 'error');
       return;
     }
+    const hasCni = (store.activityProofs || []).some((p) => p.userId === currentUser.id && /cni/i.test(p.proofType) && (p.status === 'valide' || p.status === 'auto_valide'));
+    if (!hasCni) {
+      notify('CNI obligatoire. Soumettez votre carte nationale d\'identité dans Vérification avant de demander un prêt.', 'error');
+      return;
+    }
+    const paidOrders = (store.orders || []).filter((o) => o.sellerId === currentUser.id && (o.paymentStatus === 'Paye' || o.status === 'Livree'));
+    if (paidOrders.length < 2) {
+      notify('Au moins 2 ventes confirmées requises avant de demander un prêt.', 'error');
+      return;
+    }
+    const now = new Date().toISOString();
+    const amount = Number(loanForm.amount);
+    const repaymentPct = sanitizeRepaymentPct(loanForm.repaymentPct || suggestLoanRepaymentPct(dossier, loanForm.months));
+    const contractCode = buildVerificationCode('CTR');
     const loan = {
       id: uid('loan'),
-      createdAt: new Date().toISOString(),
+      createdAt: now,
       farmerId: currentUser.id,
       farmerName: currentUser.name,
       partnerId: '',
-      amount: Number(loanForm.amount),
+      amount,
       purpose: loanForm.purpose.trim(),
       months: Number(loanForm.months),
       status: 'En attente',
       score: dossier.score,
       grade: dossier.grade,
       verificationCode: dossier.verificationCode,
+      tranches: buildDefaultLoanTranches('En attente'),
+      disbursedPct: 0,
+      repaymentPct,
+      repaidAmount: 0,
+      remainingBalance: amount,
+      contractCode,
     };
-    actions.setLoans((items) => [loan, ...items]);
+    loan.contract = buildLoanContractSnapshot({ contractCode, dossier, farmer: currentUser, loan, repaymentPct });
     const partners = store.users.filter((user) => user.role === 'partenaire');
     const notifs = partners.map((partner) => createAppNotification({
       actor: currentUser,
@@ -4946,35 +6946,210 @@ function BancabilitePage({ actions, currentUser, notify, store }) {
       title: 'Nouvelle demande de prêt',
       type: 'loan-request',
     }));
-    actions.setNotifications((items) => [...notifs, ...items]);
-    actions.setAuditLogs((items) => [createAuditLog(currentUser, 'loan_request_submitted', `Demande ${formatMoney(loan.amount)} / ${loan.months} mois`, loan.id), ...items]);
-    notify('Demande envoyée aux partenaires finance');
-    setLoanForm({ amount: '', purpose: '', months: '6' });
+    commitLoanWorkflow((draft) => ({
+      ...draft,
+      loans: [loan, ...(draft.loans || [])],
+      notifications: [...notifs, ...(draft.notifications || [])],
+      auditLogs: [createAuditLog(currentUser, 'loan_request_submitted', `Demande ${formatMoney(loan.amount)} / ${loan.months} mois`, loan.id), ...(draft.auditLogs || [])],
+    }));
+    notify('Demande envoyée avec contrat de remboursement');
+    setLoanForm({ amount: '', purpose: '', months: '6', repaymentPct: '30' });
     setShowLoanForm(false);
   }
 
-  function decideLoan(loan, decision) {
-    // Early return si la demande est déjà traitée (anti-double-approbation)
-    const currentLoan = (store.loans || []).find((item) => item.id === loan.id);
-    if (!currentLoan || currentLoan.status !== 'En attente') {
+  async function decideLoan(loan, decision) {
+    const currentLoan = normalizeLoanForStore((store.loans || []).find((item) => item.id === loan.id));
+    if (!currentLoan) { notify('Prêt introuvable.', 'error'); return; }
+    if (currentLoan.status !== 'En attente' && currentLoan.status !== 'Refusé') {
       notify('Cette demande a déjà été traitée.', 'info');
       return;
     }
-    actions.setLoans((items) => items.map((item) => item.id === loan.id ? { ...item, status: decision, partnerId: currentUser.id, decidedAt: new Date().toISOString() } : item));
-    const farmer = store.users.find((user) => user.id === loan.farmerId);
-    if (farmer) {
-      const notif = createAppNotification({
-        actor: currentUser,
-        body: `Votre demande de ${formatMoney(loan.amount)} a été ${decision.toLowerCase()}.`,
-        path: '/bancabilite',
-        recipientId: farmer.id,
-        title: `Demande ${decision}`,
-        type: 'loan-decision',
-      });
-      actions.setNotifications((items) => [notif, ...items]);
-    }
-    actions.setAuditLogs((items) => [createAuditLog(currentUser, 'loan_decision', `${decision} prêt ${formatMoney(loan.amount)} pour ${loan.farmerName}`, loan.id), ...items]);
+    const actionLabel = decision === 'Approuvé' ? 'approuver' : 'refuser';
+    const confirmed = await askConfirm({
+      title: decision === 'Approuvé' ? 'Approuver le prêt' : 'Refuser le prêt',
+      message: `Voulez-vous ${actionLabel} le prêt de ${formatMoney(loan.amount)} pour ${loan.farmerName} ?`,
+      confirmLabel: decision === 'Approuvé' ? 'Approuver' : 'Refuser',
+      cancelLabel: 'Annuler',
+      variant: decision === 'Approuvé' ? 'primary' : 'danger',
+    });
+    if (!confirmed) return;
+    const now = new Date().toISOString();
+    const contractCode = decision === 'Approuvé'
+      ? (currentLoan.contractCode || `PRET-${Date.now().toString(36).slice(-4).toUpperCase()}-${currentUser.name.split(' ')[0]?.slice(0, 4).toUpperCase() || 'FIN'}`)
+      : '';
+    const updatedTranches = decision === 'Approuvé'
+      ? ensureLoanTranches(currentLoan, now).map((t, i) => i === 0 ? { ...t, status: 'disbursed', disbursedAt: now } : { ...t, status: t.status || 'locked' })
+      : ensureLoanTranches(currentLoan);
+    const farmer = store.users.find((user) => user.id === getLoanFarmerId(currentLoan));
+    const farmerDossier = farmer ? buildBancabiliteDossier(farmer, store) : null;
+    const nextContract = buildLoanContractSnapshot({
+      contractCode,
+      dossier: farmerDossier,
+      farmer,
+      loan: { ...currentLoan, tranches: updatedTranches },
+      partner: currentUser,
+      repaymentPct: currentLoan.repaymentPct,
+      signedAt: decision === 'Approuvé' ? now : '',
+      status: decision === 'Approuvé' ? 'actif' : 'refuse',
+    });
+    const updatedLoan = normalizeLoanForStore({
+      ...currentLoan,
+      status: decision,
+      partnerId: currentUser.id,
+      decidedAt: now,
+      statusUpdatedAt: now,
+      tranches: updatedTranches,
+      disbursedPct: decision === 'Approuvé' ? getLoanDisbursedPctFromTranches(updatedTranches) : 0,
+      contractCode,
+      contract: nextContract,
+      remainingBalance: Number.isFinite(Number(currentLoan.remainingBalance)) ? Number(currentLoan.remainingBalance) : Number(currentLoan.amount || 0),
+      repaidAmount: Number(currentLoan.repaidAmount || 0),
+    });
+    const notifBody = decision === 'Approuvé'
+      ? `Votre prêt de ${formatMoney(currentLoan.amount)} a été approuvé. Tranche 1 (${formatMoney(Math.round(currentLoan.amount * 0.4))}) débloquée. Remboursement: ${nextContract.repaymentPct}% de chaque vente FresCoop. Contrat: ${contractCode}`
+      : `Votre demande de prêt de ${formatMoney(currentLoan.amount)} a été refusée par ${currentUser.name}.`;
+    const recipientId = farmer ? farmer.id : getLoanFarmerId(currentLoan);
+    const notification = recipientId ? createAppNotification({
+      actor: currentUser,
+      body: notifBody,
+      path: '/bancabilite',
+      recipientId,
+      relatedId: currentLoan.id,
+      title: decision === 'Approuvé' ? 'Prêt approuvé' : 'Prêt refusé',
+      type: 'loan-decision',
+    }) : null;
+    commitLoanWorkflow((draft) => ({
+      ...draft,
+      loans: (draft.loans || []).map((item) => item.id === currentLoan.id ? updatedLoan : item),
+      notifications: notification ? [notification, ...(draft.notifications || [])] : (draft.notifications || []),
+      auditLogs: [
+        createAuditLog(currentUser, 'loan_decision', `${decision} prêt ${formatMoney(currentLoan.amount)} pour ${currentLoan.farmerName}${decision === 'Approuvé' ? ` [${contractCode}]` : ''}`, currentLoan.id),
+        ...(draft.auditLogs || []),
+      ],
+    }));
     notify(`Demande ${decision.toLowerCase()}`);
+  }
+
+  function updateLoanStatus(loan, newStatus) {
+    const now = new Date().toISOString();
+    const currentLoan = normalizeLoanForStore((store.loans || []).find((item) => item.id === loan.id) || loan);
+    const updatedLoan = normalizeLoanForStore({
+      ...currentLoan,
+      status: newStatus,
+      statusUpdatedAt: now,
+      ...(newStatus === 'En attente' ? {
+        decidedAt: '',
+        statusResetAt: now,
+        contract: { ...(currentLoan.contract || getLoanContract(currentLoan, store)), status: 'propose', signedAt: '' },
+      } : {}),
+    });
+    const nextRepayment = (newStatus === 'Remboursé' || newStatus === 'Défaut') ? {
+      id: uid('repay'),
+      createdAt: now,
+      loanId: currentLoan.id,
+      farmerId: getLoanFarmerId(currentLoan),
+      farmerName: currentLoan.farmerName,
+      partnerId: currentUser.id,
+      amount: currentLoan.amount,
+      status: newStatus,
+    } : null;
+    const farmer = store.users.find((u) => u.id === getLoanFarmerId(currentLoan));
+    const notif = farmer ? createAppNotification({
+      actor: currentUser,
+      body: `Votre prêt de ${formatMoney(currentLoan.amount)} est maintenant "${newStatus}".`,
+      path: '/bancabilite',
+      recipientId: farmer.id,
+      relatedId: currentLoan.id,
+      title: `Prêt ${newStatus}`,
+      type: 'loan-status-update',
+    }) : null;
+    commitLoanWorkflow((draft) => ({
+      ...draft,
+      loans: (draft.loans || []).map((item) => item.id === currentLoan.id ? updatedLoan : item),
+      loanRepayments: nextRepayment ? [nextRepayment, ...(draft.loanRepayments || [])] : (draft.loanRepayments || []),
+      notifications: notif ? [notif, ...(draft.notifications || [])] : (draft.notifications || []),
+      auditLogs: [createAuditLog(currentUser, 'loan_status_update', `Prêt ${currentLoan.farmerName} -> ${newStatus}`, currentLoan.id), ...(draft.auditLogs || [])],
+    }));
+    notify(`Statut mis à jour : ${newStatus}`);
+  }
+
+  function submitTrancheProof(loan, file) {
+    const now = new Date().toISOString();
+    const currentLoan = normalizeLoanForStore((store.loans || []).find((item) => item.id === loan.id) || loan);
+    const tranches = ensureLoanTranches(currentLoan);
+    const currentTranche = tranches.find((t) => t.status === 'disbursed' && t.proofStatus !== 'valide');
+    if (!currentTranche) { notify('Aucune tranche en attente de preuve.'); return; }
+    const updatedTranches = tranches.map((t) => t.id === currentTranche.id ? { ...t, proofStatus: 'en_attente', proofSubmittedAt: now, proofFile: file?.name || '' } : t);
+    const updatedLoan = normalizeLoanForStore({ ...currentLoan, tranches: updatedTranches, statusUpdatedAt: now });
+    const partnerIds = new Set([
+      ...(currentLoan.partnerId ? [currentLoan.partnerId] : []),
+      ...store.users.filter((u) => u.role === 'partenaire').map((u) => u.id),
+    ]);
+    const partners = store.users.filter((u) => partnerIds.has(u.id));
+    const notifs = partners.map((p) => createAppNotification({
+      actor: currentUser,
+      body: `${currentUser.name} a soumis une preuve pour la tranche ${currentTranche.id} (${currentTranche.label}).`,
+      path: '/bancabilite',
+      recipientId: p.id,
+      relatedId: currentLoan.id,
+      title: 'Preuve tranche soumise',
+      type: 'loan-tranche-proof',
+    }));
+    commitLoanWorkflow((draft) => ({
+      ...draft,
+      loans: (draft.loans || []).map((item) => item.id === currentLoan.id ? updatedLoan : item),
+      notifications: [...notifs, ...(draft.notifications || [])],
+    }));
+    notify(`Preuve soumise pour tranche ${currentTranche.id} (${currentTranche.label})`);
+  }
+
+  function validateTrancheProof(loan, trancheId, decision) {
+    const now = new Date().toISOString();
+    const currentLoan = normalizeLoanForStore((store.loans || []).find((item) => item.id === loan.id) || loan);
+    const tranches = ensureLoanTranches(currentLoan);
+    const trancheIdx = tranches.findIndex((t) => String(t.id) === String(trancheId));
+    if (trancheIdx === -1) return;
+    const updatedTranches = [...tranches];
+    updatedTranches[trancheIdx] = { ...updatedTranches[trancheIdx], proofStatus: decision === 'valide' ? 'valide' : 'rejete', proofValidatedAt: now, validatedBy: currentUser.id };
+    if (decision === 'valide') {
+      updatedTranches[trancheIdx] = { ...updatedTranches[trancheIdx], status: 'completed' };
+      const nextIdx = trancheIdx + 1;
+      if (nextIdx < updatedTranches.length) {
+        updatedTranches[nextIdx] = { ...updatedTranches[nextIdx], status: 'disbursed', disbursedAt: now };
+      }
+    }
+    const updatedLoan = normalizeLoanForStore({
+      ...currentLoan,
+      tranches: updatedTranches,
+      disbursedPct: getLoanDisbursedPctFromTranches(updatedTranches),
+      statusUpdatedAt: now,
+    });
+    const farmer = store.users.find((u) => u.id === getLoanFarmerId(currentLoan));
+    const nextTranche = updatedTranches[trancheIdx + 1];
+    const body = decision === 'valide'
+      ? (nextTranche
+        ? `Preuve validée. Tranche ${nextTranche.id} (${formatMoney(Math.round(currentLoan.amount * nextTranche.pct / 100))}) débloquée.`
+        : 'Toutes les tranches ont été débloquées. Montant total décaissé.')
+      : 'Votre preuve pour la tranche a été rejetée. Veuillez soumettre une nouvelle preuve.';
+    const notif = farmer ? createAppNotification({
+      actor: currentUser,
+      body,
+      path: '/bancabilite',
+      recipientId: farmer.id,
+      relatedId: currentLoan.id,
+      title: decision === 'valide' ? 'Tranche débloquée' : 'Preuve rejetée',
+      type: decision === 'valide' ? 'loan-tranche-unlocked' : 'loan-tranche-rejected',
+    }) : null;
+    commitLoanWorkflow((draft) => ({
+      ...draft,
+      loans: (draft.loans || []).map((item) => item.id === currentLoan.id ? updatedLoan : item),
+      notifications: notif ? [notif, ...(draft.notifications || [])] : (draft.notifications || []),
+      auditLogs: [
+        createAuditLog(currentUser, 'loan_tranche_review', `Tranche ${trancheId} ${decision} pour ${currentLoan.farmerName}`, currentLoan.id),
+        ...(draft.auditLogs || []),
+      ],
+    }));
+    notify(decision === 'valide' ? 'Preuve validée, tranche suivante débloquée' : 'Preuve rejetée');
   }
 
   const summary = {
@@ -4986,74 +7161,280 @@ function BancabilitePage({ actions, currentUser, notify, store }) {
 
   return (
     <PageFrame>
-      <section className="panel poesam-hero">
+      <section className="panel uemoa-hero">
         <div>
-          <span className="poesam-badge">INCLUSION FINANCIERE</span>
+          <span className="uemoa-badge">INCLUSION FINANCIERE</span>
           <h2>{isFinancePartner ? 'Portefeuille agriculteurs - éligibilité crédit' : 'Score de bancabilité & dossier financement'}</h2>
           <p>{isFinancePartner
             ? 'Consultez les profils d\'agriculteurs FresCoop, leur score de bancabilité en temps réel, et instruisez les demandes de prêt directement depuis cette page.'
-            : 'Transformez votre activité réelle (transactions PayDunya, lots tracés, attestations) en dossier exploitable par banques, SFD et microfinance. Demande de prêt en un clic.'}
+            : 'Transformez votre activité réelle (transactions GIM-Pay, lots tracés, attestations) en dossier exploitable par banques, SFD et microfinance. Demande de prêt en un clic.'}
           </p>
         </div>
       </section>
 
-      {isAgriculteur && (
-        <section className="panel">
-          <PanelToolbar icon={Landmark} title="Demander un prêt" action={
-            <Button onClick={() => setShowLoanForm((open) => !open)} variant={showLoanForm ? 'secondary' : 'primary'}>
-              {showLoanForm ? 'Annuler' : 'Nouvelle demande'}
-            </Button>
-          } />
-          {showLoanForm && (
-            <form className="stack-form" onSubmit={submitLoanRequest}>
-              <div className="field-row">
-                <Field label="Montant souhaité (FCFA)" required><input type="number" min="0" value={loanForm.amount} onChange={(event) => updateForm(setLoanForm, 'amount', event.target.value)} /></Field>
-                <Field label="Durée (mois)" required>
-                  <select value={loanForm.months} onChange={(event) => updateForm(setLoanForm, 'months', event.target.value)}>
-                    <option value="3">3 mois</option>
-                    <option value="6">6 mois</option>
-                    <option value="12">12 mois</option>
-                    <option value="18">18 mois</option>
-                    <option value="24">24 mois</option>
+      {isAgriculteur && (() => {
+        const myDossier = buildBancabiliteDossier(currentUser, store);
+        const scoreFactor = myDossier.score >= 80 ? 0.7 : myDossier.score >= 60 ? 0.5 : myDossier.score >= 40 ? 0.3 : 0;
+        const monthsFactor = Number(loanForm.months) / 6;
+        const regularityBonus = myDossier.transactionsCount >= 10 ? 1.2 : myDossier.transactionsCount >= 5 ? 1.1 : 1.0;
+        const gimpayBonus = myDossier.gimpayCount >= 3 ? 1.15 : 1.0;
+        const maxEligible = Math.round(myDossier.monthlyAverage * 6 * scoreFactor * regularityBonus * gimpayBonus);
+        const suggestedForDuration = Math.round(maxEligible * monthsFactor);
+        const blockingLoan = findBlockingLoanForFarmer(currentUser.id, store);
+        return (
+          <section className="panel bancabilite-my-score">
+            <div className="bancabilite-score">
+              <div className={`score-ring score-${myDossier.grade.toLowerCase()}`}>
+                <strong>{myDossier.score}</strong>
+                <span>/100</span>
+              </div>
+              <div>
+                <b>Grade {myDossier.grade} - {myDossier.verdict}</b>
+                <small>Code : {myDossier.verificationCode}</small>
+              </div>
+            </div>
+            <div className="bancabilite-kpi">
+              <div><em>Revenu mensuel moyen</em><b>{formatMoney(myDossier.monthlyAverage)}</b></div>
+              <div><em>Transactions vérifiées</em><b>{myDossier.transactionsCount}</b></div>
+              <div><em>Paiements GIM-Pay</em><b>{myDossier.gimpayCount}</b></div>
+              {(() => { const rats = (store.ratings || []).filter((rt) => rt.sellerId === currentUser.id); if (!rats.length) return null; const avg = (rats.reduce((s, rt) => s + rt.rating, 0) / rats.length).toFixed(1); return <div><em>Note clients</em><b style={{ color: '#d97706' }}>{'★'.repeat(Math.round(Number(avg)))} {avg}/5 <small>({rats.length} avis)</small></b></div>; })()}
+              <div><em>Montant max éligible (IA)</em><b>{maxEligible > 0 ? formatMoney(maxEligible) : 'Score insuffisant'}</b></div>
+            </div>
+            {maxEligible > 0 && (
+              <NoticeCard icon={Activity} title="Calcul IA du montant éligible" body={`Basé sur : revenu moyen (${formatMoney(myDossier.monthlyAverage)}/mois) × facteur score (${(scoreFactor * 100).toFixed(0)}%) × régularité (×${regularityBonus.toFixed(2)}) × bonus GIM-Pay (×${gimpayBonus.toFixed(2)}). Montant max : ${formatMoney(maxEligible)} sur 6 mois.`} />
+            )}
+            <div className="button-row">
+              <Button variant="secondary" onClick={() => exportDossier(currentUser)}><Download size={16} /> Exporter mon dossier (PDF)</Button>
+              {maxEligible > 0 && <Button disabled={Boolean(blockingLoan)} title={blockingLoan ? 'Remboursez le prêt en cours avant une nouvelle demande' : ''} onClick={() => { setShowLoanForm(true); updateForm(setLoanForm, 'amount', String(suggestedForDuration)); updateForm(setLoanForm, 'repaymentPct', String(suggestLoanRepaymentPct(myDossier, loanForm.months))); }}><Landmark size={16} /> Demander un crédit ({formatMoney(suggestedForDuration)})</Button>}
+            </div>
+            {blockingLoan && <p className="muted" style={{ marginTop: '0.75rem' }}>Nouvelle demande bloquée: remboursez le prêt en cours ou attendez la décision sur la demande en attente.</p>}
+          </section>
+        );
+      })()}
+
+      {isAgriculteur && (() => {
+        const dossier = buildBancabiliteDossier(currentUser, store);
+        if (dossier.score < 60) {
+          return (
+            <section className="panel">
+              <PanelToolbar icon={Landmark} title="Demander un prêt" />
+              <div style={{ padding: '1rem', background: '#fef3c7', borderRadius: '8px', fontSize: '0.88rem', color: '#92400e' }}>
+                <strong>Grade B minimum requis</strong>
+                <p style={{ margin: '0.4rem 0 0' }}>Votre score actuel est de {dossier.score}/100 (Grade {dossier.grade}). Vous devez atteindre un score de 60 ou plus (Grade B) pour pouvoir demander un prêt. Continuez à vendre, soumettre des preuves et compléter votre profil.</p>
+              </div>
+            </section>
+          );
+        }
+        const sFactor = dossier.score >= 80 ? 0.7 : dossier.score >= 60 ? 0.5 : 0;
+        const regBonus = dossier.transactionsCount >= 10 ? 1.2 : dossier.transactionsCount >= 5 ? 1.1 : 1.0;
+        const pdBonus = dossier.gimpayCount >= 3 ? 1.15 : 1.0;
+        const maxEligible6m = Math.round(dossier.monthlyAverage * 6 * sFactor * regBonus * pdBonus);
+        const mFactor = Number(loanForm.months) / 6;
+        const maxForDuration = Math.round(maxEligible6m * mFactor);
+        const requestedAmount = Number(loanForm.amount) || 0;
+        const pctUsed = maxForDuration > 0 ? Math.min(100, Math.round((requestedAmount / maxForDuration) * 100)) : 0;
+        const suggestedRepaymentPct = suggestLoanRepaymentPct(dossier, loanForm.months);
+        const selectedRepaymentPct = sanitizeRepaymentPct(loanForm.repaymentPct || suggestedRepaymentPct);
+        const estimatedMonthlyRepayment = Math.round(dossier.monthlyAverage * selectedRepaymentPct / 100);
+        const estimatedRepaymentMonths = estimatedMonthlyRepayment > 0 && requestedAmount > 0
+          ? Math.ceil(requestedAmount / estimatedMonthlyRepayment)
+          : null;
+        const blockingLoan = findBlockingLoanForFarmer(currentUser.id, store);
+
+        return (
+          <section className="panel">
+            <PanelToolbar icon={Landmark} title="Demander un prêt" action={
+              <Button disabled={Boolean(blockingLoan)} title={blockingLoan ? 'Remboursez le prêt en cours avant une nouvelle demande' : ''} onClick={() => { setShowLoanForm((open) => !open); if (!loanForm.amount && maxForDuration > 0) updateForm(setLoanForm, 'amount', String(maxForDuration)); if (!loanForm.repaymentPct) updateForm(setLoanForm, 'repaymentPct', String(suggestLoanRepaymentPct(dossier, loanForm.months))); }} variant={showLoanForm ? 'secondary' : 'primary'}>
+                {showLoanForm ? 'Annuler' : 'Nouvelle demande'}
+              </Button>
+            } />
+            {blockingLoan && (
+              <div style={{ padding: '0.75rem 1rem', background: '#f8fafc', borderRadius: '8px', fontSize: '0.88rem', color: '#475569', marginBottom: '0.8rem' }}>
+                Une nouvelle demande sera disponible seulement après remboursement complet du prêt en cours ou traitement de la demande en attente.
+              </div>
+            )}
+            {showLoanForm && !blockingLoan && (
+              <form className="stack-form" onSubmit={submitLoanRequest}>
+                {maxForDuration > 0 ? (
+                  <div className="loan-ia-box">
+                    <div className="loan-ia-header">
+                      <Activity size={18} />
+                      <strong>Estimation IA de votre capacité d'emprunt</strong>
+                    </div>
+                    <div className="loan-ia-amount">
+                      <span className="loan-ia-max">{formatMoney(maxForDuration)}</span>
+                      <small>montant maximum sur {loanForm.months} mois</small>
+                    </div>
+                    <div className="loan-ia-bar">
+                      <div className="loan-ia-fill" style={{ width: `${pctUsed}%`, background: pctUsed > 90 ? '#ef4444' : pctUsed > 70 ? '#f59e0b' : '#16a34a' }} />
+                    </div>
+                    <div className="loan-ia-details">
+                      <small>Revenu moyen : {formatMoney(dossier.monthlyAverage)}/mois</small>
+                      <small>Score : {dossier.score}/100 (facteur {(sFactor * 100).toFixed(0)}%)</small>
+                      <small>Régularité : ×{regBonus.toFixed(2)} · GIM-Pay : ×{pdBonus.toFixed(2)}</small>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="loan-ia-box" style={{ borderColor: '#fbbf24', background: '#fffbeb' }}>
+                    <div className="loan-ia-header"><CircleAlert size={18} /><strong>Score insuffisant pour le calcul IA</strong></div>
+                    <p style={{ fontSize: '0.85rem', margin: '0.5rem 0 0' }}>Continuez à vendre et soumettre des preuves pour augmenter votre score au-dessus de 40.</p>
+                  </div>
+                )}
+                <div className="field-row">
+                  <Field label={`Montant souhaité (FCFA)${maxForDuration > 0 ? ` — max ${formatMoney(maxForDuration)}` : ''}`} required>
+                    <input type="number" min="0" max={maxForDuration || undefined} value={loanForm.amount} onChange={(event) => updateForm(setLoanForm, 'amount', event.target.value)} placeholder={maxForDuration > 0 ? String(maxForDuration) : ''} />
+                  </Field>
+                  <Field label="Durée (mois)" required>
+                    <select value={loanForm.months} onChange={(event) => { updateForm(setLoanForm, 'months', event.target.value); updateForm(setLoanForm, 'repaymentPct', String(suggestLoanRepaymentPct(dossier, event.target.value))); const newMax = Math.round(maxEligible6m * (Number(event.target.value) / 6)); if (!loanForm.amount || Number(loanForm.amount) === maxForDuration) updateForm(setLoanForm, 'amount', String(newMax)); }}>
+                      <option value="3">3 mois</option>
+                      <option value="6">6 mois</option>
+                      <option value="12">12 mois</option>
+                      <option value="18">18 mois</option>
+                      <option value="24">24 mois</option>
+                    </select>
+                  </Field>
+                </div>
+                <Field label="Pourcentage prélevé sur chaque vente FresCoop" required>
+                  <select value={loanForm.repaymentPct || String(suggestedRepaymentPct)} onChange={(event) => updateForm(setLoanForm, 'repaymentPct', event.target.value)}>
+                    {[10, 15, 20, 25, 30, 35, 40].map((pct) => <option key={pct} value={pct}>{pct}% des ventes payées</option>)}
                   </select>
                 </Field>
-              </div>
-              <Field label="Objet (intrants, matériel, transport...)" required>
-                <textarea rows="3" value={loanForm.purpose} onChange={(event) => updateForm(setLoanForm, 'purpose', event.target.value)} />
-              </Field>
-              <Button type="submit"><Send size={16} /> Envoyer la demande</Button>
-            </form>
-          )}
-        </section>
-      )}
+                {requestedAmount > maxForDuration && maxForDuration > 0 && (
+                  <p style={{ color: '#dc2626', fontSize: '0.82rem', margin: 0 }}>⚠ Le montant dépasse votre capacité estimée ({formatMoney(maxForDuration)}). La demande risque d'être refusée.</p>
+                )}
+                <Field label="Objet (intrants, matériel, transport...)" required>
+                  <textarea rows="3" value={loanForm.purpose} onChange={(event) => updateForm(setLoanForm, 'purpose', event.target.value)} />
+                </Field>
+                <div className="loan-ia-box" style={{ background: '#f8fafc' }}>
+                  <div className="loan-ia-header"><ReceiptText size={18} /><strong>Contrat de remboursement proposé</strong></div>
+                  <div className="loan-ia-details">
+                    <small>{selectedRepaymentPct}% sera prélevé automatiquement sur chaque vente payée via FresCoop jusqu'au remboursement complet.</small>
+                    <small>Sur la base du revenu moyen actuel, cela représente environ {formatMoney(estimatedMonthlyRepayment)} par mois{estimatedRepaymentMonths ? `, soit ${estimatedRepaymentMonths} mois estimés` : ''}.</small>
+                    <small>Le prélèvement est plafonné au solde restant et chaque ligne sera visible dans le contrat.</small>
+                  </div>
+                </div>
+                <Button type="submit"><Send size={16} /> Envoyer la demande</Button>
+              </form>
+            )}
+          </section>
+        );
+      })()}
 
       {(isAgriculteur || isFinancePartner) && myLoans.length > 0 && (
         <section className="panel">
-          <PanelTitle icon={ReceiptText} title={isFinancePartner ? 'Demandes à instruire' : 'Mes demandes de prêt'} />
+          <PanelTitle icon={ReceiptText} title={isFinancePartner ? 'Demandes de crédit à instruire' : 'Mes demandes de prêt'} />
           <div className="loan-list">
-            {myLoans.map((loan) => (
-              <article key={loan.id} className={`loan-card loan-${loan.status.toLowerCase().replace(/\s/g, '-')}`}>
-                <header>
-                  <div>
-                    <strong>{loan.farmerName}</strong>
-                    <small>Score {loan.score}/100 · Grade {loan.grade} · {formatDate(loan.createdAt)}</small>
+            {myLoans.map((loan) => {
+              const farmer = store.users.find((u) => u.id === getLoanFarmerId(loan));
+              const farmerDossier = farmer ? buildBancabiliteDossier(farmer, store) : null;
+              const contract = getLoanContract(loan, store);
+              const repaymentStats = getLoanRepaymentStats(loan, store);
+              return (
+                <article key={loan.id} className={`loan-card loan-${loan.status.toLowerCase().replace(/\s/g, '-')}`}>
+                  <header>
+                    <div>
+                      <strong>{loan.farmerName}</strong>
+                      <small>Score {loan.score}/100 · Grade {loan.grade} · {formatDate(loan.createdAt)}{loan.contractCode && ` · ${loan.contractCode}`}</small>
+                    </div>
+                    <span className={`loan-status loan-${loan.status.toLowerCase().replace(/\s/g, '-')}`}>{loan.status}</span>
+                  </header>
+                  <div className="loan-body">
+                    <div><em>Montant total</em><b>{formatMoney(loan.amount)}</b></div>
+                    <div><em>Durée</em><b>{loan.months} mois</b></div>
+                    <div><em>Objet</em><b>{loan.purpose}</b></div>
+                    <div><em>Décaissé</em><b>{loan.disbursedPct || 0}%</b></div>
+                    {loan.partnerId && (() => { const partner = store.users.find((u) => u.id === loan.partnerId); return partner ? <div><em>Partenaire</em><b>{partner.name}</b></div> : null; })()}
+                    {loan.decidedAt && <div><em>Décision le</em><b>{formatDate(loan.decidedAt)}</b></div>}
+                    {isFinancePartner && farmerDossier && (
+                      <>
+                        <div><em>Revenu mensuel</em><b>{formatMoney(farmerDossier.monthlyAverage)}</b></div>
+                        <div><em>Transactions</em><b>{farmerDossier.transactionsCount}</b></div>
+                      </>
+                    )}
                   </div>
-                  <span className={`loan-status loan-${loan.status.toLowerCase().replace(/\s/g, '-')}`}>{loan.status}</span>
-                </header>
-                <div className="loan-body">
-                  <div><em>Montant</em><b>{formatMoney(loan.amount)}</b></div>
-                  <div><em>Durée</em><b>{loan.months} mois</b></div>
-                  <div><em>Objet</em><b>{loan.purpose}</b></div>
-                </div>
-                {isFinancePartner && loan.status === 'En attente' && (
-                  <div className="button-row">
-                    <Button onClick={() => decideLoan(loan, 'Approuvé')}><CheckCircle2 size={16} /> Approuver</Button>
-                    <Button variant="secondary" onClick={() => decideLoan(loan, 'Refusé')}><X size={16} /> Refuser</Button>
-                    <Button variant="secondary" onClick={() => exportDossier(store.users.find((user) => user.id === loan.farmerId))}><Download size={16} /> Dossier</Button>
-                  </div>
-                )}
-              </article>
-            ))}
+                  {loan.status !== 'Refusé' && (
+                    <div className="loan-ia-box" style={{ marginTop: '0.65rem', background: '#f8fafc' }}>
+                      <div className="loan-ia-header">
+                        <ReceiptText size={18} />
+                        <strong>{contract.status === 'actif' ? 'Contrat de remboursement actif' : 'Contrat de remboursement proposé'}</strong>
+                      </div>
+                      <div className="loan-body">
+                        <div><em>Code contrat</em><b>{contract.code}</b></div>
+                        <div><em>Prélèvement ventes</em><b>{contract.repaymentPct}%</b></div>
+                        <div><em>Remboursé</em><b>{formatMoney(repaymentStats.paid)} ({repaymentStats.pct}%)</b></div>
+                        <div><em>Solde restant</em><b>{formatMoney(repaymentStats.remaining)}</b></div>
+                      </div>
+                      <div className="loan-ia-bar" aria-label="Progression remboursement">
+                        <div className="loan-ia-fill" style={{ width: `${repaymentStats.pct}%`, background: repaymentStats.remaining <= 0 ? '#16a34a' : '#2563eb' }} />
+                      </div>
+                      <div className="loan-ia-details">
+                        <small>{contract.repaymentPct}% de chaque vente payée via FresCoop est prélevé automatiquement jusqu'au remboursement complet.</small>
+                        <small>{contract.partnerName ? `Partenaire: ${contract.partnerName}. ` : ''}{contract.signedAt ? `Signé le ${formatDate(contract.signedAt)}.` : 'En attente de validation partenaire.'}</small>
+                      </div>
+                      <div className="button-row" style={{ marginTop: '0.5rem' }}>
+                        <Button variant="secondary" onClick={() => exportLoanContract(loan)}><Download size={16} /> Contrat</Button>
+                      </div>
+                    </div>
+                  )}
+                  {isAgriculteur && loan.status === 'Refusé' && (
+                    <div style={{ marginTop: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.85rem', background: '#fee2e2', color: '#991b1b' }}>
+                      Votre demande a été refusée{loan.partnerId ? ` par ${store.users.find((u) => u.id === loan.partnerId)?.name || 'un partenaire'}` : ''}{loan.decidedAt ? ` le ${formatDate(loan.decidedAt)}` : ''}. Vous pouvez soumettre une nouvelle demande ou contacter le partenaire.
+                    </div>
+                  )}
+                  {(['Approuvé', 'En cours', 'approved', 'active'].includes(loan.status)) && Array.isArray(loan.tranches) && (
+                    <div className="loan-tranches">
+                      <small style={{ fontWeight: 600, display: 'block', marginBottom: '0.5rem' }}>Plan de décaissement</small>
+                      {loan.tranches.map((tranche) => (
+                        <div key={tranche.id} className={`loan-tranche loan-tranche-${tranche.status}`}>
+                          <div className="loan-tranche-header">
+                            <span>T{tranche.id} — {tranche.label}</span>
+                            <b>{formatMoney(Math.round(loan.amount * tranche.pct / 100))} ({tranche.pct}%)</b>
+                          </div>
+                          <div className="loan-tranche-status">
+                            {tranche.status === 'locked' && <small style={{ color: '#6b7280' }}>Verrouillée</small>}
+                            {tranche.status === 'disbursed' && !tranche.proofStatus && <small style={{ color: '#2563eb' }}>Débloquée — en attente de preuve</small>}
+                            {tranche.status === 'disbursed' && tranche.proofStatus === 'en_attente' && <small style={{ color: '#d97706' }}>Preuve soumise — en attente validation</small>}
+                            {tranche.status === 'disbursed' && tranche.proofStatus === 'rejete' && <small style={{ color: '#dc2626' }}>Preuve rejetée — resoumettez</small>}
+                            {tranche.status === 'completed' && <small style={{ color: '#16a34a' }}>Complétée</small>}
+                          </div>
+                          {isAgriculteur && tranche.status === 'disbursed' && (!tranche.proofStatus || tranche.proofStatus === 'rejete') && (
+                            <div className="button-row" style={{ marginTop: '0.3rem' }}>
+                              <label className="file-input compact">
+                                <input type="file" accept="image/*,.pdf" onChange={(e) => { if (e.target.files?.[0]) submitTrancheProof(loan, e.target.files[0]); }} />
+                                <span className="btn btn-secondary"><ImagePlus size={14} /> Soumettre preuve</span>
+                              </label>
+                            </div>
+                          )}
+                          {isFinancePartner && tranche.proofStatus === 'en_attente' && (
+                            <div className="button-row" style={{ marginTop: '0.3rem' }}>
+                              <Button onClick={() => validateTrancheProof(loan, tranche.id, 'valide')}><CheckCircle2 size={14} /> Valider</Button>
+                              <Button variant="secondary" onClick={() => validateTrancheProof(loan, tranche.id, 'rejete')}><X size={14} /> Rejeter</Button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {isFinancePartner && (loan.status === 'En attente' || loan.status === 'Refusé') && (
+                    <div className="button-row">
+                      <Button onClick={() => decideLoan(loan, 'Approuvé')}><CheckCircle2 size={16} /> Approuver</Button>
+                      {loan.status === 'En attente' && <Button variant="secondary" onClick={() => decideLoan(loan, 'Refusé')}><X size={16} /> Refuser</Button>}
+                      {loan.status === 'Refusé' && <Button variant="secondary" onClick={() => updateLoanStatus(loan, 'En attente')}><RefreshCcw size={16} /> Remettre en attente</Button>}
+                      <Button variant="secondary" onClick={() => farmer && exportDossier(farmer)}><Download size={16} /> Dossier</Button>
+                    </div>
+                  )}
+                  {(['Approuvé', 'En cours', 'Remboursé', 'Retard', 'Défaut', 'approved', 'active', 'repaid', 'overdue', 'defaulted'].includes(loan.status)) && (
+                    <div style={{ marginTop: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.85rem', background: loan.status === 'Approuvé' ? '#dcfce7' : loan.status === 'En cours' ? '#dbeafe' : loan.status === 'Remboursé' ? '#dcfce7' : loan.status === 'Retard' ? '#fef3c7' : '#fee2e2', fontWeight: 600 }}>
+                      Statut : <strong>{loan.status}</strong>{loan.decidedAt && <span> · Décidé le {formatDate(loan.decidedAt)}</span>}{loan.statusUpdatedAt && <span> · Mis à jour le {formatDate(loan.statusUpdatedAt)}</span>}
+                      {(loan.remainingBalance > 0 || (!loan.remainingBalance && loan.status !== 'Remboursé')) && <span> · Restant : <strong>{formatMoney(loan.remainingBalance || loan.amount)}</strong></span>}
+                    </div>
+                  )}
+                  {isAgriculteur && (['Approuvé', 'En cours', 'approved', 'active'].includes(loan.status)) && (loan.remainingBalance > 0 || !loan.remainingBalance) && loan.status !== 'Remboursé' && (
+                    <RepayLoanBlock loan={loan} actions={actions} currentUser={currentUser} store={store} notify={notify} />
+                  )}
+                </article>
+              );
+            })}
           </div>
         </section>
       )}
@@ -5069,6 +7450,7 @@ function BancabilitePage({ actions, currentUser, notify, store }) {
 
           <section className="panel">
             <div className="loan-filter-bar">
+              <input type="text" placeholder="Rechercher par nom, ID ou région..." value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} style={{ flex: 1, minWidth: '200px', padding: '0.5rem 0.75rem', borderRadius: '0.375rem', border: '1px solid var(--border, #e5e7eb)', fontSize: '0.85rem' }} />
               {[
                 ['all', 'Tous'],
                 ['eligible', 'Éligibles'],
@@ -5117,46 +7499,326 @@ function BancabilitePage({ actions, currentUser, notify, store }) {
               <div><em>Revenu vérifié</em><b>{formatMoney(dossier.totalRevenue)}</b></div>
               <div><em>Moyenne / mois</em><b>{formatMoney(dossier.monthlyAverage)}</b></div>
               <div><em>Transactions</em><b>{dossier.transactionsCount}</b></div>
-              <div><em>PayDunya</em><b>{dossier.paydunyaCount}</b></div>
+              <div><em>GIM-Pay</em><b>{dossier.gimpayCount}</b></div>
+              {(() => { const rats = (store.ratings || []).filter((rt) => rt.sellerId === user.id); if (!rats.length) return null; const avg = (rats.reduce((s, rt) => s + rt.rating, 0) / rats.length).toFixed(1); return <div><em>Note clients</em><b style={{ color: '#d97706' }}>{'★'.repeat(Math.round(Number(avg)))} {avg}/5 <small>({rats.length})</small></b></div>; })()}
             </div>
             <div className="button-row">
               <Button variant="secondary" onClick={() => exportDossier(user)}><Download size={16} /> Dossier PDF</Button>
-              {isFinancePartner && dossier.score >= 40 && (
+              {isFinancePartner && dossier.score >= 40 && !findBlockingLoanForFarmer(user.id, store) && (
                 <Button onClick={() => {
+                  const existing = findBlockingLoanForFarmer(user.id, store);
+                  if (existing) { notify('Cet agriculteur a déjà un prêt non remboursé ou une demande en attente.', 'info'); return; }
+                  const now = new Date().toISOString();
+                  const maxAmount = Math.round(dossier.monthlyAverage * 6 * (dossier.score >= 80 ? 0.7 : dossier.score >= 60 ? 0.5 : 0.3));
+                  const repaymentPct = suggestLoanRepaymentPct(dossier, 6);
+                  const contractCode = buildVerificationCode('CTR');
                   const loan = {
                     id: uid('loan'),
-                    createdAt: new Date().toISOString(),
+                    createdAt: now,
                     farmerId: user.id,
                     farmerName: user.name,
                     partnerId: currentUser.id,
-                    amount: Math.round(dossier.monthlyAverage * 3),
-                    purpose: 'Pre-approbation crédit FresCoop (proposition partenaire)',
+                    amount: maxAmount,
+                    purpose: 'Proposition crédit FresCoop (initiative partenaire)',
                     months: 6,
-                    status: 'Pré-approuvé',
+                    status: 'Approuvé',
                     score: dossier.score,
                     grade: dossier.grade,
                     verificationCode: dossier.verificationCode,
-                    decidedAt: new Date().toISOString(),
+                    tranches: buildDefaultLoanTranches('Approuvé', now),
+                    disbursedPct: 40,
+                    repaymentPct,
+                    repaidAmount: 0,
+                    remainingBalance: maxAmount,
+                    contractCode,
+                    decidedAt: now,
+                    statusUpdatedAt: now,
                   };
-                  actions.setLoans((items) => [loan, ...items]);
+                  loan.contract = buildLoanContractSnapshot({ contractCode, dossier, farmer: user, loan, partner: currentUser, repaymentPct, signedAt: now, status: 'actif' });
                   const notif = createAppNotification({
                     actor: currentUser,
-                    body: `${currentUser.name} vous pré-approuve ${formatMoney(loan.amount)} sur 6 mois.`,
+                    body: `${currentUser.name} vous approuve un crédit de ${formatMoney(maxAmount)} sur 6 mois. Tranche 1 débloquée, T2 après preuve validée.`,
                     path: '/bancabilite',
                     recipientId: user.id,
-                    title: 'Crédit pré-approuvé',
-                    type: 'loan-preapproval',
+                    relatedId: loan.id,
+                    title: 'Crédit approuvé',
+                    type: 'loan-decision',
                   });
-                  actions.setNotifications((items) => [notif, ...items]);
-                  notify(`Pré-approbation envoyée à ${user.name}`);
-                }}><CheckCircle2 size={16} /> Pré-approuver</Button>
+                  commitLoanWorkflow((draft) => ({
+                    ...draft,
+                    loans: [loan, ...(draft.loans || [])],
+                    notifications: [notif, ...(draft.notifications || [])],
+                    auditLogs: [createAuditLog(currentUser, 'loan_partner_offer', `Prêt direct ${formatMoney(maxAmount)} pour ${user.name}`, loan.id), ...(draft.auditLogs || [])],
+                  }));
+                  notify(`Crédit approuvé pour ${user.name}`);
+                }}><CheckCircle2 size={16} /> Approuver un crédit</Button>
               )}
             </div>
           </article>
         ))}
       </div>
 
-      <NoticeCard icon={ShieldCheck} title="Pour les partenaires finance" body="Chaque dossier contient un code de verification permettant aux banques et SFD d authentifier les donnees aupres de FresCoop. L agriculteur garde le controle via son consentement." />
+      <NoticeCard icon={ShieldCheck} title="Pour les partenaires finance" body="Chaque dossier contient un code de vérification permettant aux banques et SFD d'authentifier les données auprès de FresCoop. L'agriculteur garde le contrôle via son consentement." />
+    </PageFrame>
+  );
+}
+
+function computeAgentReliability(agent, store) {
+  const collections = (store.agriScoreCollections || []).filter((c) => c.agentId === agent.id);
+  const totalCollections = collections.length;
+  const withWitness = collections.filter((c) => c.witnessName).length;
+  const witnessRate = totalCollections > 0 ? Math.round((withWitness / totalCollections) * 100) : 0;
+  const monthsActive = Math.max(1, Math.round((Date.now() - new Date(agent.createdAt || Date.now()).getTime()) / (86400000 * 30)));
+  const anciennetePoints = Math.min(25, monthsActive * 3);
+  const volumePoints = Math.min(30, totalCollections * 5);
+  const coherencePoints = Math.min(25, witnessRate / 4);
+  const loansFromCollections = collections.reduce((acc, c) => {
+    const loans = (store.loans || []).filter((l) => l.farmerId === c.farmerId && l.status === 'Approuvé');
+    return acc + loans.length;
+  }, 0);
+  const successPoints = Math.min(20, loansFromCollections * 5);
+  const score = Math.min(100, anciennetePoints + volumePoints + coherencePoints + successPoints);
+  const grade = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
+  return { score, grade, totalCollections, witnessRate, monthsActive, anciennetePoints, volumePoints, coherencePoints, successPoints };
+}
+
+function AgriScoreCollectePage({ actions, currentUser, notify, store }) {
+  const LANGUES = ['Français', 'Wolof', 'Pulaar', 'Serer', 'Mandingue', 'Diola', 'Soninké'];
+  const FONCIER_OPTIONS = ['Titre foncier formel', 'Droit coutumier reconnu', 'Bail communautaire', 'Prêt familial', 'Aucun'];
+  const GROUPEMENTS = ['Coopérative agricole', 'GIE', 'Groupement villageois', 'Tontine', 'Association de femmes', 'Aucun'];
+
+  const isAgent = currentUser.role === 'agentTerrain' || currentUser.role === 'admin';
+  const agriculteurs = store.users.filter((u) => u.role === 'agriculteur');
+  const collections = (store.agriScoreCollections || []).filter((c) => isAgent ? c.agentId === currentUser.id : c.farmerId === currentUser.id);
+
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({
+    farmerId: '',
+    langue: 'Français',
+    surfaces: '',
+    cultures: '',
+    recoltesAnnuelles: '',
+    foncier: '',
+    groupement: '',
+    experienceAnnees: '',
+    tontineMontant: '',
+    mobileMoneyCompte: false,
+    mobileMoneyFrequence: '',
+    witnessName: '',
+    witnessPhone: '',
+    consentOral: false,
+    consentLangue: 'Français',
+    notes: '',
+  });
+
+  function submitCollection(event) {
+    event.preventDefault();
+    if (!form.farmerId) { notify('Sélectionnez un agriculteur', 'error'); return; }
+    if (!form.consentOral) { notify('Le consentement oral est obligatoire', 'error'); return; }
+    if (!form.cultures) { notify('Indiquez au moins une culture', 'error'); return; }
+    const collection = {
+      id: uid('agcol'),
+      createdAt: new Date().toISOString(),
+      agentId: currentUser.id,
+      agentName: currentUser.name,
+      farmerId: form.farmerId,
+      farmerName: (agriculteurs.find((u) => u.id === form.farmerId) || {}).name || '',
+      langue: form.langue,
+      surfaces: Number(form.surfaces) || 0,
+      cultures: form.cultures,
+      recoltesAnnuelles: Number(form.recoltesAnnuelles) || 0,
+      foncier: form.foncier,
+      groupement: form.groupement,
+      experienceAnnees: Number(form.experienceAnnees) || 0,
+      tontineMontant: Number(form.tontineMontant) || 0,
+      mobileMoneyCompte: form.mobileMoneyCompte,
+      mobileMoneyFrequence: form.mobileMoneyFrequence,
+      witnessName: form.witnessName,
+      witnessPhone: form.witnessPhone,
+      consentOral: true,
+      consentLangue: form.consentLangue,
+      notes: form.notes,
+    };
+    actions.setAgriScoreCollections((items) => [collection, ...items]);
+    actions.setAuditLogs((items) => [
+      createAuditLog(currentUser, 'agriscore_collection', `Collecte AgriScore pour ${collection.farmerName} en ${form.consentLangue}${form.witnessName ? ` — témoin: ${form.witnessName}` : ''}`, collection.id),
+      ...items,
+    ]);
+    const farmer = agriculteurs.find((u) => u.id === form.farmerId);
+    if (farmer) {
+      const notif = createAppNotification({
+        actor: currentUser,
+        body: `L'agent ${currentUser.name} a collecté vos données AgriScore en ${form.consentLangue}. Votre score sera mis à jour.`,
+        path: '/bancabilite',
+        recipientId: farmer.id,
+        title: 'Collecte AgriScore effectuée',
+        type: 'agriscore-collection',
+      });
+      actions.setNotifications((items) => [notif, ...items]);
+    }
+    notify(`Collecte AgriScore enregistrée pour ${collection.farmerName}`);
+    setForm({ farmerId: '', langue: 'Français', surfaces: '', cultures: '', recoltesAnnuelles: '', foncier: '', groupement: '', experienceAnnees: '', tontineMontant: '', mobileMoneyCompte: false, mobileMoneyFrequence: '', witnessName: '', witnessPhone: '', consentOral: false, consentLangue: 'Français', notes: '' });
+    setShowForm(false);
+  }
+
+  const reliability = isAgent ? computeAgentReliability(currentUser, store) : null;
+
+  return (
+    <PageFrame>
+      <section className="panel uemoa-hero">
+        <div>
+          <span className="uemoa-badge">AGRISCORE</span>
+          <h2>Collecte terrain assistée — Scoring agricole</h2>
+          <p>Collectez les données de l'agriculteur en langue locale, avec consentement oral et témoin. Ces données alimentent directement le score AgriScore pour le dossier bancaire.</p>
+        </div>
+      </section>
+
+      {isAgent && reliability && (
+        <section className="panel">
+          <PanelTitle icon={ShieldCheck} title="Votre fiabilité agent" />
+          <div className="status-grid">
+            <StatCard icon={ShieldCheck} label="Score fiabilité" value={`${reliability.score}/100 (${reliability.grade})`} tone={reliability.score >= 60 ? 'green' : reliability.score >= 40 ? 'gold' : 'coral'} />
+            <StatCard icon={ClipboardCheck} label="Collectes effectuées" value={reliability.totalCollections} tone="blue" />
+            <StatCard icon={UserCheck} label="Taux avec témoin" value={`${reliability.witnessRate}%`} tone={reliability.witnessRate >= 70 ? 'green' : 'gold'} />
+            <StatCard icon={Activity} label="Ancienneté" value={`${reliability.monthsActive} mois`} tone="blue" />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.5rem', marginTop: '0.75rem', fontSize: '0.82rem' }}>
+            <div><em>Ancienneté</em> <b>{reliability.anciennetePoints}/25 pts</b></div>
+            <div><em>Volume collectes</em> <b>{reliability.volumePoints}/30 pts</b></div>
+            <div><em>Cohérence (témoins)</em> <b>{reliability.coherencePoints}/25 pts</b></div>
+            <div><em>Succès crédits</em> <b>{reliability.successPoints}/20 pts</b></div>
+          </div>
+        </section>
+      )}
+
+      <section className="panel">
+        <PanelToolbar icon={ClipboardCheck} title={`Collectes AgriScore (${collections.length})`} action={
+          isAgent && <Button onClick={() => setShowForm((v) => !v)}>{showForm ? 'Annuler' : <><Plus size={16} /> Nouvelle collecte</>}</Button>
+        } />
+
+        {showForm && (
+          <form className="stack-form" onSubmit={submitCollection}>
+            <div className="field-row">
+              <Field label="Agriculteur" required>
+                <select value={form.farmerId} onChange={(e) => updateForm(setForm, 'farmerId', e.target.value)}>
+                  <option value="">— Sélectionner —</option>
+                  {agriculteurs.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.region || 'sans région'})</option>)}
+                </select>
+              </Field>
+              <Field label="Langue de collecte" required>
+                <select value={form.langue} onChange={(e) => { updateForm(setForm, 'langue', e.target.value); updateForm(setForm, 'consentLangue', e.target.value); }}>
+                  {LANGUES.map((l) => <option key={l} value={l}>{l}</option>)}
+                </select>
+              </Field>
+            </div>
+
+            <div className="field-row">
+              <Field label="Surfaces cultivées (hectares)">
+                <input type="number" min="0" step="0.1" value={form.surfaces} onChange={(e) => updateForm(setForm, 'surfaces', e.target.value)} />
+              </Field>
+              <Field label="Cultures principales" required>
+                <input type="text" placeholder="Riz, mil, arachide..." value={form.cultures} onChange={(e) => updateForm(setForm, 'cultures', e.target.value)} />
+              </Field>
+              <Field label="Récoltes / an (tonnes)">
+                <input type="number" min="0" step="0.1" value={form.recoltesAnnuelles} onChange={(e) => updateForm(setForm, 'recoltesAnnuelles', e.target.value)} />
+              </Field>
+            </div>
+
+            <div className="field-row">
+              <Field label="Type de foncier">
+                <select value={form.foncier} onChange={(e) => updateForm(setForm, 'foncier', e.target.value)}>
+                  <option value="">— Sélectionner —</option>
+                  {FONCIER_OPTIONS.map((f) => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </Field>
+              <Field label="Groupement / Organisation">
+                <select value={form.groupement} onChange={(e) => updateForm(setForm, 'groupement', e.target.value)}>
+                  <option value="">— Sélectionner —</option>
+                  {GROUPEMENTS.map((g) => <option key={g} value={g}>{g}</option>)}
+                </select>
+              </Field>
+              <Field label="Expérience agricole (années)">
+                <input type="number" min="0" value={form.experienceAnnees} onChange={(e) => updateForm(setForm, 'experienceAnnees', e.target.value)} />
+              </Field>
+            </div>
+
+            <div className="field-row">
+              <Field label="Tontine — montant mensuel (FCFA)">
+                <input type="number" min="0" value={form.tontineMontant} onChange={(e) => updateForm(setForm, 'tontineMontant', e.target.value)} />
+              </Field>
+              <Field label="Compte Mobile Money">
+                <select value={form.mobileMoneyCompte ? 'oui' : 'non'} onChange={(e) => updateForm(setForm, 'mobileMoneyCompte', e.target.value === 'oui')}>
+                  <option value="non">Non</option>
+                  <option value="oui">Oui</option>
+                </select>
+              </Field>
+              {form.mobileMoneyCompte && (
+                <Field label="Fréquence Mobile Money">
+                  <select value={form.mobileMoneyFrequence} onChange={(e) => updateForm(setForm, 'mobileMoneyFrequence', e.target.value)}>
+                    <option value="">— Sélectionner —</option>
+                    <option value="quotidien">Quotidien</option>
+                    <option value="hebdomadaire">Hebdomadaire</option>
+                    <option value="mensuel">Mensuel</option>
+                    <option value="occasionnel">Occasionnel</option>
+                  </select>
+                </Field>
+              )}
+            </div>
+
+            <fieldset style={{ border: '1px solid var(--border, #e5e7eb)', borderRadius: '0.5rem', padding: '1rem', margin: '0.5rem 0' }}>
+              <legend style={{ fontWeight: 600, fontSize: '0.9rem', padding: '0 0.5rem' }}>Consentement & Validation</legend>
+              <div className="field-row">
+                <Field label="Témoin — Nom">
+                  <input type="text" placeholder="Nom du témoin présent" value={form.witnessName} onChange={(e) => updateForm(setForm, 'witnessName', e.target.value)} />
+                </Field>
+                <Field label="Témoin — Téléphone">
+                  <input type="tel" placeholder="77 000 00 00" value={form.witnessPhone} onChange={(e) => updateForm(setForm, 'witnessPhone', e.target.value)} />
+                </Field>
+              </div>
+              <Field label="Langue du consentement">
+                <select value={form.consentLangue} onChange={(e) => updateForm(setForm, 'consentLangue', e.target.value)}>
+                  {LANGUES.map((l) => <option key={l} value={l}>{l}</option>)}
+                </select>
+              </Field>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', fontWeight: 500 }}>
+                <input type="checkbox" checked={form.consentOral} onChange={(e) => updateForm(setForm, 'consentOral', e.target.checked)} />
+                L'agriculteur a donné son consentement oral en {form.consentLangue} (lecture expliquée par l'agent)
+              </label>
+            </fieldset>
+
+            <Field label="Notes complémentaires">
+              <textarea rows="2" value={form.notes} onChange={(e) => updateForm(setForm, 'notes', e.target.value)} placeholder="Observations terrain, contexte particulier..." />
+            </Field>
+
+            <Button type="submit"><Save size={16} /> Enregistrer la collecte</Button>
+          </form>
+        )}
+
+        {collections.length > 0 && (
+          <div className="compact-list" style={{ marginTop: '1rem' }}>
+            {collections.map((c) => (
+              <article key={c.id} className="panel" style={{ padding: '0.75rem', marginBottom: '0.5rem' }}>
+                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <strong>{c.farmerName}</strong>
+                  <small>{formatDate(c.createdAt)}</small>
+                </header>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.4rem', marginTop: '0.4rem', fontSize: '0.82rem' }}>
+                  <span><em>Cultures:</em> {c.cultures}</span>
+                  <span><em>Surfaces:</em> {c.surfaces} ha</span>
+                  <span><em>Foncier:</em> {c.foncier || '—'}</span>
+                  <span><em>Groupement:</em> {c.groupement || '—'}</span>
+                  <span><em>Expérience:</em> {c.experienceAnnees} ans</span>
+                  <span><em>Langue:</em> {c.consentLangue}</span>
+                  <span><em>Témoin:</em> {c.witnessName || 'Aucun'}</span>
+                  <span><em>Mobile Money:</em> {c.mobileMoneyCompte ? c.mobileMoneyFrequence : 'Non'}</span>
+                </div>
+                {c.agentName && <small style={{ opacity: 0.7 }}>Agent : {c.agentName}</small>}
+              </article>
+            ))}
+          </div>
+        )}
+        {!collections.length && !showForm && <EmptyState icon={ClipboardCheck} title="Aucune collecte" body="Démarrez une collecte AgriScore pour un agriculteur." />}
+      </section>
     </PageFrame>
   );
 }
@@ -5166,23 +7828,43 @@ function buildBancabiliteDossier(user, store) {
   const orders = (store.orders || []).filter((item) => item.sellerId === user.id);
   const paidOrders = orders.filter((order) => order.paymentStatus === 'Paye' || order.status === 'Confirmee' || order.status === 'Livree');
   const paymentRecords = (store.paymentRecords || []).filter((record) => record.sellerId === user.id);
-  const paydunyaTx = paymentRecords.filter((r) => r.paydunyaToken || /paydunya/i.test(r.partner || ''));
-  const lots = (store.lots || []).filter((lot) => lot.ownerId === user.id);
-  const attestations = (store.attestations || []).filter((item) => item.ownerId === user.id);
+  const gimpayTx = paymentRecords.filter((r) => r.gimpayToken || /gimpay/i.test(r.partner || ''));
   const proofs = (store.proofs || []).filter((item) => item.ownerId === user.id);
+  const activityProofs = (store.activityProofs || []).filter((item) => item.userId === user.id && (item.status === 'valide' || item.status === 'auto_valide'));
   const totalRevenue = paidOrders.reduce((sum, order) => sum + getOrderTotal(order, store), 0)
     + transactions.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const monthsActive = Math.max(1, Math.round((Date.now() - new Date(user.createdAt || Date.now()).getTime()) / (86400000 * 30)));
   const monthlyAverage = Math.round(totalRevenue / monthsActive);
 
+  const agriCollections = (store.agriScoreCollections || []).filter((c) => c.farmerId === user.id);
+  const latestCollection = agriCollections[0] || null;
+  const groupementValue = (latestCollection && latestCollection.groupement) || (user.gie === 'Oui' ? (user.gieName || 'Oui') : user.gie) || '';
+  const foncierValue = (latestCollection && latestCollection.foncier) || user.foncier || '';
+  const hasGroupement = groupementValue && groupementValue !== 'Aucun' && groupementValue !== 'Non';
+  const hasFoncier = foncierValue && foncierValue !== 'Aucun';
+  const hasMobileMoney = latestCollection && latestCollection.mobileMoneyCompte;
+  const experienceYears = (latestCollection ? latestCollection.experienceAnnees : null) ?? (user.experienceYears || 0);
+  const hasTontine = latestCollection && latestCollection.tontineMontant > 0;
+
+  const repayments = (store.loanRepayments || []).filter((r) => r.farmerId === user.id);
+  const repaid = repayments.filter((r) => r.status === 'Remboursé').length;
+  const defaults = repayments.filter((r) => r.status === 'Défaut').length;
+  const repaymentBonus = Math.min(10, repaid * 5) - (defaults * 8);
+
   const criteria = [
-    { label: 'Anciennete compte', value: `${monthsActive} mois`, points: Math.min(20, monthsActive * 2) },
-    { label: 'Transactions verifiees', value: transactions.length + paidOrders.length, points: Math.min(20, (transactions.length + paidOrders.length) * 2) },
-    { label: 'Paiements PayDunya', value: paydunyaTx.length, points: Math.min(15, paydunyaTx.length * 3) },
-    { label: 'Lots traces avec capteurs', value: lots.length, points: Math.min(10, lots.length * 2) },
-    { label: 'Attestations qualifiees', value: attestations.length, points: Math.min(10, attestations.length * 3) },
-    { label: 'Preuves economiques', value: proofs.length, points: Math.min(10, proofs.length * 2) },
-    { label: 'Revenu mensuel moyen', value: `${formatCompact(monthlyAverage)} FCFA`, points: Math.min(15, Math.floor(monthlyAverage / 50000) * 2) },
+    { label: 'Anciennete compte', value: `${monthsActive} mois`, points: Math.min(15, monthsActive * 2) },
+    { label: 'Transactions vérifiées', value: transactions.length + paidOrders.length, points: Math.min(15, (transactions.length + paidOrders.length) * 2) },
+    { label: 'Paiements GIM-Pay', value: gimpayTx.length, points: Math.min(10, gimpayTx.length * 3) },
+    { label: 'Vérifications terrain par agent', value: activityProofs.length, points: Math.min(15, activityProofs.length * 4) },
+    { label: 'Justificatifs de revenus vérifiés', value: proofs.length + paidOrders.length, points: Math.min(10, (proofs.length + paidOrders.length) * 2) },
+    { label: 'Revenu mensuel moyen', value: `${formatCompact(monthlyAverage)} FCFA`, points: Math.min(10, Math.floor(monthlyAverage / 50000) * 2) },
+    { label: 'Groupement / GIE / Coop', value: hasGroupement ? groupementValue : 'Non renseigné', points: hasGroupement ? 5 : 0 },
+    { label: 'Foncier (formel ou coutumier)', value: hasFoncier ? foncierValue : 'Non renseigné', points: hasFoncier ? 5 : 0 },
+    { label: 'Expérience agricole', value: experienceYears > 0 ? `${experienceYears} ans` : '⚠ Non renseigné (0 an)', points: Math.min(5, Math.floor(experienceYears / 2)) },
+    { label: 'Mobile Money actif', value: (hasMobileMoney || gimpayTx.length > 0) ? 'Oui' : 'Non', points: (hasMobileMoney || gimpayTx.length > 0) ? 4 : 0 },
+    { label: 'Tontine / épargne informelle', value: hasTontine ? 'Oui' : 'Non', points: hasTontine ? 4 : 0 },
+    { label: 'Historique remboursement', value: repaid > 0 ? `${repaid} remboursé(s)${defaults > 0 ? `, ${defaults} défaut(s)` : ''}` : '—', points: Math.max(0, repaymentBonus) },
+    { label: 'Avis clients (étoiles)', value: (() => { const r = (store.ratings || []).filter((rt) => rt.sellerId === user.id); if (r.length === 0) return '—'; const avg = r.reduce((s, rt) => s + rt.rating, 0) / r.length; return `${avg.toFixed(1)}/5 (${r.length} avis)`; })(), points: (() => { const r = (store.ratings || []).filter((rt) => rt.sellerId === user.id); if (r.length === 0) return 0; const avg = r.reduce((s, rt) => s + rt.rating, 0) / r.length; if (avg >= 4.5) return 8; if (avg >= 4) return 6; if (avg >= 3) return 3; return -2; })() },
   ];
   const score = Math.min(100, criteria.reduce((sum, c) => sum + c.points, 0));
   const grade = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
@@ -5199,17 +7881,18 @@ function buildBancabiliteDossier(user, store) {
     totalRevenue,
     monthlyAverage,
     transactionsCount: transactions.length + paidOrders.length,
-    paydunyaCount: paydunyaTx.length,
-    lotsCount: lots.length,
-    attestationsCount: attestations.length,
+    gimpayCount: gimpayTx.length,
+    activityProofsCount: activityProofs.length,
+    agriCollectionCount: agriCollections.length,
+    repaymentHistory: { repaid, defaults },
     verificationCode: `BANC-${user.id.slice(-6).toUpperCase()}-${grade}${score}`,
   };
 }
 
 function renderBancabiliteHtml(dossier) {
   const rows = dossier.criteria.map((crit) => `<tr><td>${escapeHtml(crit.label)}</td><td>${escapeHtml(String(crit.value))}</td><td>${crit.points} pts</td></tr>`).join('');
-  return renderDocumentShell(`Dossier bancabilite ${dossier.user.name}`, `
-    <h1>Dossier de bancabilite FresCoop</h1>
+  return renderDocumentShell(`Dossier bancabilité ${dossier.user.name}`, `
+    <h1>Dossier de bancabilité FresCoop</h1>
     <p class="code">Code verification: ${escapeHtml(dossier.verificationCode)}</p>
     <section>
       <h2>Bénéficiaire</h2>
@@ -5217,21 +7900,82 @@ function renderBancabiliteHtml(dossier) {
       <p>Role: ${escapeHtml(dossier.user.role)} - Organisation: ${escapeHtml(dossier.user.organization || '—')} - Region: ${escapeHtml(dossier.user.region || '—')}</p>
     </section>
     <section>
-      <h2>Score de bancabilite</h2>
+      <h2>Score de bancabilité</h2>
       <p>Score global: <strong>${dossier.score}/100 (Grade ${escapeHtml(dossier.grade)})</strong></p>
       <p>${escapeHtml(dossier.verdict)}</p>
-      <table><thead><tr><th>Critere</th><th>Valeur</th><th>Points</th></tr></thead><tbody>${rows}</tbody></table>
+      <table><thead><tr><th>Critère</th><th>Valeur</th><th>Points</th></tr></thead><tbody>${rows}</tbody></table>
     </section>
     <section>
       <h2>Indicateurs cles</h2>
-      <p>Revenu total verifie: <strong>${escapeHtml(formatMoney(dossier.totalRevenue))}</strong></p>
+      <p>Revenu total vérifié: <strong>${escapeHtml(formatMoney(dossier.totalRevenue))}</strong></p>
       <p>Revenu mensuel moyen: <strong>${escapeHtml(formatMoney(dossier.monthlyAverage))}</strong></p>
-      <p>Transactions verifiees: ${dossier.transactionsCount} | Paiements PayDunya: ${dossier.paydunyaCount}</p>
-      <p>Lots traces: ${dossier.lotsCount} | Attestations: ${dossier.attestationsCount}</p>
+      <p>Transactions vérifiées: ${dossier.transactionsCount} | Paiements GIM-Pay: ${dossier.gimpayCount}</p>
+      <p>Vérifications terrain par agent: ${dossier.activityProofsCount}</p>
     </section>
     <section>
       <h2>Note aux partenaires finance</h2>
-      <p>Ce dossier a ete genere automatiquement par FresCoop a partir de donnees transactionnelles et logistiques verifiees. Le code de verification ci-dessus permet d authentifier les informations aupres de la plateforme.</p>
+      <p>Ce dossier a été généré automatiquement par FresCoop à partir de données transactionnelles et logistiques vérifiées. Le code de vérification ci-dessus permet d'authentifier les informations auprès de la plateforme.</p>
+    </section>
+  `);
+}
+
+function renderLoanContractHtml(loan, store) {
+  const contract = getLoanContract(loan, store);
+  const stats = getLoanRepaymentStats(loan, store);
+  const trancheRows = (contract.tranches || []).map((tranche) => `
+    <tr>
+      <td>T${escapeHtml(String(tranche.id))}</td>
+      <td>${escapeHtml(tranche.label)}</td>
+      <td>${escapeHtml(String(tranche.pct))}%</td>
+      <td>${escapeHtml(formatMoney(tranche.amount))}</td>
+    </tr>
+  `).join('');
+  const repaymentRows = stats.repayments.length
+    ? stats.repayments.map((item) => `
+      <tr>
+        <td>${escapeHtml(formatDate(item.createdAt))}</td>
+        <td>${escapeHtml(item.orderId || item.paymentId || '')}</td>
+        <td>${escapeHtml(formatMoney(item.saleAmount || 0))}</td>
+        <td>${escapeHtml(String(item.repaymentPct || contract.repaymentPct))}%</td>
+        <td>${escapeHtml(formatMoney(item.amount || 0))}</td>
+        <td>${escapeHtml(formatMoney(item.remainingAfter || 0))}</td>
+      </tr>
+    `).join('')
+    : '<tr><td colspan="6">Aucun remboursement automatique encore enregistre.</td></tr>';
+
+  return renderDocumentShell(`Contrat de prêt ${contract.code}`, `
+    <h1>Contrat de prêt FresCoop</h1>
+    <p class="code">Code contrat: ${escapeHtml(contract.code)}</p>
+    <section>
+      <h2>Parties</h2>
+      <p><strong>Agriculteur:</strong> ${escapeHtml(contract.farmerName || loan.farmerName)}</p>
+      <p><strong>Partenaire finance:</strong> ${escapeHtml(contract.partnerName || 'En attente de validation')}</p>
+      <p><strong>Statut:</strong> ${escapeHtml(contract.status)}${contract.signedAt ? ` - signe le ${escapeHtml(formatDate(contract.signedAt))}` : ''}</p>
+    </section>
+    <section>
+      <h2>Conditions principales</h2>
+      <table>
+        <tr><td>Montant du prêt</td><td><strong>${escapeHtml(formatMoney(contract.amount))}</strong></td></tr>
+        <tr><td>Durée cible</td><td><strong>${escapeHtml(String(contract.months))} mois</strong></td></tr>
+        <tr><td>Objet</td><td>${escapeHtml(contract.purpose)}</td></tr>
+        <tr><td>Score au moment de la demande</td><td>${escapeHtml(String(contract.score))}/100 - Grade ${escapeHtml(contract.grade)}</td></tr>
+        <tr><td>Intérêt additionnel</td><td>${escapeHtml(String(contract.interestRatePct || 0))}%</td></tr>
+        <tr><td>Pourcentage prélevé sur ventes</td><td><strong>${escapeHtml(String(contract.repaymentPct))}%</strong> de chaque vente payée via FresCoop</td></tr>
+        <tr><td>Solde restant</td><td><strong>${escapeHtml(formatMoney(stats.remaining))}</strong></td></tr>
+      </table>
+    </section>
+    <section>
+      <h2>Modalités de remboursement</h2>
+      <ul>${(contract.terms || []).map((term) => `<li>${escapeHtml(term)}</li>`).join('')}</ul>
+      <p>Exemple: pour une vente payée ${escapeHtml(formatMoney(100000))}, FresCoop enregistre automatiquement ${escapeHtml(formatMoney(Math.round(100000 * contract.repaymentPct / 100)))} comme remboursement du prêt, dans la limite du solde restant.</p>
+    </section>
+    <section>
+      <h2>Plan de décaissement</h2>
+      <table><thead><tr><th>Tranche</th><th>Objet</th><th>%</th><th>Montant</th></tr></thead><tbody>${trancheRows}</tbody></table>
+    </section>
+    <section>
+      <h2>Historique de remboursement</h2>
+      <table><thead><tr><th>Date</th><th>Commande/Paiement</th><th>Vente</th><th>%</th><th>Prélevé</th><th>Solde restant</th></tr></thead><tbody>${repaymentRows}</tbody></table>
     </section>
   `);
 }
@@ -5262,7 +8006,7 @@ function UssdSimulatorPage({ currentUser, store }) {
         setScreen('menu');
       }
     } else if (screen === 'sale' && /^\d+$/.test(value)) {
-      setHistory((items) => [...items, `Vente enregistree: ${value} kg. Notification envoyee a l agent terrain.`]);
+      setHistory((items) => [...items, `Vente enregistrée: ${value} kg. Notification envoyée a l agent terrain.`]);
       setScreen('menu');
     }
   }
@@ -5297,11 +8041,11 @@ function UssdSimulatorPage({ currentUser, store }) {
 
   return (
     <PageFrame>
-      <section className="panel poesam-hero">
+      <section className="panel uemoa-hero">
         <div>
-          <span className="poesam-badge">INCLUSION DIGITALE · USSD</span>
+          <span className="uemoa-badge">INCLUSION DIGITALE · USSD</span>
           <h2>Parcours USSD *384*FRES# pour agriculteurs sans smartphone</h2>
-          <p>70% des petits producteurs au Senegal n ont pas d Internet fiable. FresCoop etend ses services via USSD + SMS: consulter les cours du jour, declarer son stock, enregistrer une vente — depuis un simple tel a touches.</p>
+          <p>Une grande partie des petits producteurs UEMOA n'a pas d'Internet fiable. FresCoop étend ses services via USSD + SMS: consulter les cours du jour, déclarer son stock, enregistrer une vente — depuis un simple téléphone à touches.</p>
         </div>
       </section>
 
@@ -5330,14 +8074,14 @@ function UssdSimulatorPage({ currentUser, store }) {
         </section>
         <section className="panel">
           <PanelTitle icon={PhoneCall} title="Pourquoi ça change tout" />
-          <ul className="poesam-bullets">
-            <li><strong>Inclusion reelle</strong>: fonctionne sur Nokia 105 a 8000 FCFA, pas besoin de 4G.</li>
-            <li><strong>Couverture totale</strong>: le USSD passe meme en zones rurales avec 2G.</li>
+          <ul className="uemoa-bullets">
+            <li><strong>Inclusion réelle</strong>: fonctionne sur Nokia 105 à 8000 FCFA, pas besoin de 4G.</li>
+            <li><strong>Couverture totale</strong>: le USSD passe même en zones rurales avec 2G.</li>
             <li><strong>Langues locales</strong>: menu disponible en wolof, pular, serere (SMS).</li>
-            <li><strong>Traçabilite</strong>: chaque code USSD tape est converti en donnee dans FresCoop — meme les ventes hors smartphone alimentent le score de bancabilite.</li>
-            <li><strong>Partenariat operateur</strong>: Sonatel/Orange, Free, Expresso. Deploiement prevu via API USSD standard.</li>
+            <li><strong>Traçabilité</strong>: chaque code USSD tapé est converti en donnée dans FresCoop — même les ventes hors smartphone alimentent le score de bancabilité.</li>
+            <li><strong>Partenariat operateur</strong>: operateurs mobiles, fintechs et institutions membres de l ecosystème paiement regional. Deploiement prevu via API USSD standard.</li>
           </ul>
-          <NoticeCard icon={ShieldCheck} title="Mode demo" body="Ceci est un simulateur fidele du flux USSD. En production, le passerelle Sonatel transmet les codes au backend FresCoop." />
+          <NoticeCard icon={ShieldCheck} title="Mode demo" body="Ceci est un simulateur fidele du flux USSD. En production, la passerelle operateur transmet les codes au backend FresCoop." />
         </section>
       </div>
     </PageFrame>
@@ -5346,7 +8090,7 @@ function UssdSimulatorPage({ currentUser, store }) {
 
 function DataPage({ actions, currentUser, notify, store }) {
   const [file, setFile] = useState(null);
-  if (currentUser.role !== 'admin') return <AccessDenied />;
+  if (currentUser.role !== 'admin') return null;
 
   async function importData() {
     if (!file) {
@@ -5364,7 +8108,7 @@ function DataPage({ actions, currentUser, notify, store }) {
 
   return (
     <PageFrame>
-      <NoticeCard icon={Database} title="API et base applicative" body="L application est prete pour synchronisation API locale. Les exports JSON/CSV permettent migration vers une base serveur et stockage fichiers." />
+      <NoticeCard icon={Database} title="API et base applicative" body="L'application est prête pour synchronisation API locale. Les exports JSON/CSV permettent migration vers une base serveur et stockage fichiers." />
       <div className="data-grid">
         <section className="panel">
           <PanelTitle icon={Download} title="Export complet" />
@@ -5380,18 +8124,6 @@ function DataPage({ actions, currentUser, notify, store }) {
           <PanelTitle icon={Trash2} title="Maintenance" />
           <p className="muted">Reinitialisation complete apres confirmation.</p>
           <div className="button-row">
-            <Button variant="secondary" onClick={() => { actions.replaceStore(createFrescoopDemoStore(store)); notify('Dataset POESAM chargé (50 productrices, 200 produits, 150 commandes)'); }}><RefreshCcw size={18} /> Charger démo POESAM</Button>
-            {hasRichDemo(store) && (
-              <Button variant="secondary" onClick={async () => {
-                const ok = await askConfirm({
-                  title: 'Retirer les données démo',
-                  message: 'Toutes les entités ajoutées par le seed seront supprimées. Les comptes réels sont conservés.',
-                  confirmLabel: 'Retirer',
-                  variant: 'danger',
-                });
-                if (ok) { actions.replaceStore(removeRichPoesamDemo(store)); notify('Données démo retirées'); }
-              }}><Trash2 size={18} /> Retirer démo</Button>
-            )}
           </div>
           <Button variant="danger" onClick={async () => {
             const ok = await askConfirm({
@@ -5400,7 +8132,7 @@ function DataPage({ actions, currentUser, notify, store }) {
               confirmLabel: 'Tout supprimer',
               variant: 'danger',
             });
-            if (ok) actions.replaceStore(createEmptyStore());
+            if (ok) actions.forceReplaceStore(createEmptyStore());
           }}><Trash2 size={18} /> Vider</Button>
         </section>
       </div>
@@ -5414,22 +8146,22 @@ function SectorPage({ currentUser, kind, navigate, store }) {
       icon: Tractor,
       image: publicImages.agriculture,
       title: 'Agriculture',
-      lead: 'Producteurs, coopératives, recoltes, dossiers terrain et attestations de qualification.',
-      actions: ['Publier les recoltes', 'Soumettre pieces agricoles', 'Obtenir attestation sur preuves'],
+      lead: 'Producteurs, coopératives, récoltes, dossiers terrain et attestations de qualification.',
+      actions: ['Publier les récoltes', 'Soumettre pièces agricoles', 'Obtenir attestation sur preuves'],
     },
     commerce: {
       icon: Store,
       image: publicImages.commerce,
       title: 'Commerce',
       lead: 'Commerçants, boutiques, acheteurs B2B, commandes et preuves de ventes.',
-      actions: ['Gerer catalogue', 'Recevoir commandes', 'Generer preuve économique'],
+      actions: ['Gerer catalogue', 'Recevoir commandes', 'Générer preuve économique'],
     },
     logistique: {
       icon: Truck,
       image: publicImages.logistics,
       title: 'Logistique',
-      lead: 'Transporteurs, hubs, stockage, froid, capacite et suivi operationnel.',
-      actions: ['Ajouter hub', 'Suivre capacites', 'Documenter operations'],
+      lead: 'Hubs, stockage, froid, capacité et suivi opérationnel.',
+      actions: ['Ajouter hub', 'Suivre capacités', 'Documenter operations'],
     },
   }[kind];
   const Icon = config.icon;
@@ -5470,6 +8202,11 @@ function AccountPage({ actions, currentUser, notify, store }) {
     organization: currentUser.organization || '',
     region: currentUser.region || '',
     bio: currentUser.bio || '',
+    gender: currentUser.gender || '',
+    experienceYears: currentUser.experienceYears || '',
+    gie: currentUser.gie || '',
+    gieName: currentUser.gieName || '',
+    foncier: currentUser.foncier || '',
   });
   const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
   const [emailForm, setEmailForm] = useState({
@@ -5594,6 +8331,39 @@ function AccountPage({ actions, currentUser, notify, store }) {
         <Field label="Téléphone"><input value={form.phone} onChange={(event) => updateForm(setForm, 'phone', event.target.value)} /></Field>
         <Field label="Organisation"><input value={form.organization} onChange={(event) => updateForm(setForm, 'organization', event.target.value)} /></Field>
         <Field label="Région"><input value={form.region} onChange={(event) => updateForm(setForm, 'region', event.target.value)} /></Field>
+        <Field label="Genre">
+          <select value={form.gender} onChange={(event) => updateForm(setForm, 'gender', event.target.value)}>
+            <option value="">— Sélectionner —</option>
+            <option value="Homme">Homme</option>
+            <option value="Femme">Femme</option>
+            <option value="Autre">Autre</option>
+          </select>
+        </Field>
+        {currentUser.role === 'agriculteur' && (
+          <>
+            <Field label="Années d'expérience agricole">
+              <input type="number" min="0" max="60" value={form.experienceYears} onChange={(event) => updateForm(setForm, 'experienceYears', event.target.value)} />
+            </Field>
+            <Field label="GIE / Coopérative">
+              <select value={form.gie} onChange={(event) => updateForm(setForm, 'gie', event.target.value)}>
+                <option value="">— Sélectionner —</option>
+                <option value="Oui">Oui</option>
+                <option value="Non">Non</option>
+              </select>
+            </Field>
+            {form.gie === 'Oui' && (
+              <Field label="Nom du GIE / Coopérative"><input value={form.gieName} onChange={(event) => updateForm(setForm, 'gieName', event.target.value)} /></Field>
+            )}
+            <Field label="Foncier">
+              <select value={form.foncier} onChange={(event) => updateForm(setForm, 'foncier', event.target.value)}>
+                <option value="">— Sélectionner —</option>
+                <option value="Aucun">Aucun</option>
+                <option value="Coutumier">Coutumier</option>
+                <option value="Titre formel">Titre formel</option>
+              </select>
+            </Field>
+          </>
+        )}
         <Field label="Présentation"><textarea rows="4" value={form.bio} onChange={(event) => updateForm(setForm, 'bio', event.target.value)} /></Field>
         <Button type="submit"><Save size={18} /> Enregistrer</Button>
       </form>
@@ -5798,7 +8568,7 @@ function MarketPriceNotice({ form }) {
   const control = getPriceControl({ name: form.name, category: form.category, price: form.price });
   if (!form.name && !form.category) return null;
   if (!control.reference) {
-    return <NoticeCard icon={CircleAlert} title="Prix marche non reference" body="Aucune reference locale trouvee pour ce produit. L admin pourra enrichir la grille marche." />;
+    return <NoticeCard icon={CircleAlert} title="Prix marche non reference" body="Aucune reference localé trouvee pour ce produit. L admin pourra enrichir la grille marche." />;
   }
   const tone = control.allowed ? 'Prix conforme' : 'Prix au-dessus du plafond';
   const body = `Reference: ${formatMoney(control.reference.price)}/${control.reference.unit}. Marge maximale autorisee: +${formatMoney(MARKET_PRICE_MAX_MARGIN)}. Plafond: ${formatMoney(control.maxAllowed)}/${control.reference.unit}.`;
@@ -5826,7 +8596,7 @@ function CatalogPager({ onPageChange, page, totalPages }) {
   );
 }
 
-function LotDigitalTwinCard({ lot, onReserve, onShareConsent }) {
+function LotDigitalTwinCard({ lot, canReserve, canConsent, onReserve, onShareConsent }) {
   const gain = Number(lot.recommendedPrice || 0) - Number(lot.baselinePrice || 0);
   return (
     <article className="lot-twin-card">
@@ -5846,7 +8616,7 @@ function LotDigitalTwinCard({ lot, onReserve, onShareConsent }) {
       </div>
       <div className="sensor-strip">
         <span>Temp. {lot.temperatureC}°C</span>
-        <span>Humidite {lot.humidityPercent}%</span>
+        <span>Humidité {lot.humidityPercent}%</span>
         <span>Chambre {lot.chamber}</span>
       </div>
       <div className="recommendation-card">
@@ -5854,20 +8624,20 @@ function LotDigitalTwinCard({ lot, onReserve, onShareConsent }) {
         <p>{lot.routeReason}</p>
         <div>
           <span>Prix terrain: {formatMoney(lot.baselinePrice)}/kg</span>
-          <span>Prix recommande: {formatMoney(lot.recommendedPrice)}/kg</span>
+          <span>Prix recommandé: {formatMoney(lot.recommendedPrice)}/kg</span>
           <b>{gain >= 0 ? '+' : ''}{formatMoney(gain)}/kg potentiel</b>
         </div>
       </div>
       <div className="payment-proof-card">
         <ShieldCheck size={18} />
         <div>
-          <strong>Paiement sécurisé via PayDunya</strong>
+          <strong>Paiement sécurisé via GIM-Pay</strong>
           <span>Orange Money, Wave, Free Money, carte bancaire. Reçu numérique rattaché au lot.</span>
         </div>
       </div>
       <div className="button-row">
-        <Button onClick={onReserve}><ShoppingCart size={17} /> Reserver B2B</Button>
-        <Button variant="secondary" onClick={onShareConsent}><Landmark size={17} /> Partager avec consentement</Button>
+        {canReserve && <Button onClick={onReserve}><ShoppingCart size={17} /> Réserver B2B</Button>}
+        {canConsent && <Button variant="secondary" onClick={onShareConsent}><Landmark size={17} /> Partager avec consentement</Button>}
       </div>
     </article>
   );
@@ -5889,7 +8659,7 @@ function LotTimeline({ lot }) {
     ['IA marche', `${lot.shelfLifeDays} jours de vie commerciale estimee`],
     ['Debouche', lot.routeRecommendation],
     ['Paiement', lot.paymentPartner],
-    ['Preuve', 'Indice economique explicable et exportable avec consentement'],
+    ['Preuve', 'Indice économique explicable et exportable avec consentement'],
   ];
   return (
     <div className="lot-timeline">
@@ -6084,7 +8854,7 @@ function OrderVisibilityToolbar({
       </select>
       <Button variant="secondary" onClick={onToggleList}>{showList ? <ChevronUp size={16} /> : <ChevronDown size={16} />}{showList ? 'Réduire' : 'Développer'}</Button>
       <Button variant="secondary" onClick={onToggleHidden}>{showHidden ? <Eye size={16} /> : <EyeOff size={16} />}{showHidden ? 'Voir actives' : 'Voir masquees'}</Button>
-      <Button variant="secondary" disabled={!totalFiltered} onClick={onTogglePageSelection}><CheckCircle2 size={16} /> {allPageSelected ? 'Deselectionner' : 'Selectionner page'}</Button>
+      <Button variant="secondary" disabled={!totalFiltered} onClick={onTogglePageSelection}><CheckCircle2 size={16} /> {allPageSelected ? 'Désélectionner' : 'Sélectionner page'}</Button>
       {showHidden ? (
         <Button variant="secondary" disabled={!selectedCount} onClick={onRestoreSelected}><RefreshCcw size={16} /> Restaurer ({selectedCount})</Button>
       ) : (
@@ -6094,16 +8864,18 @@ function OrderVisibilityToolbar({
   );
 }
 
-function ClientOrderList({ onCancel, onPay, onSelect, orders, selectedIds, store }) {
+function ClientOrderList({ currentUser, onCancel, onPay, onRate, onSelect, orders, selectedIds, store }) {
   return (
     <div className="compact-order-list client-order-list">
       {orders.map((order) => {
         const product = getOrderProduct(order, store);
         const seller = store.users.find((item) => item.id === order.sellerId);
         const cancellable = order.status !== 'Annulee' && order.status !== 'Livree';
+        const alreadyRated = (store.ratings || []).some((r) => r.orderId === order.id && r.userId === currentUser.id);
+        const existingRating = (store.ratings || []).find((r) => r.orderId === order.id);
         return (
           <article id={`order-${order.id}`} key={order.id} className="compact-order-row">
-            <label className="order-row-check" title="Selectionner cette commande">
+            <label className="order-row-check" title="Sélectionner cette commande">
               <input type="checkbox" checked={selectedIds.has(order.id)} onChange={() => onSelect(order.id)} />
             </label>
             <div className="order-row-main">
@@ -6121,6 +8893,12 @@ function ClientOrderList({ onCancel, onPay, onSelect, orders, selectedIds, store
             <div className="order-row-actions">
               {order.status === 'Paiement en attente' && <Button onClick={() => onPay(order.id)}><ReceiptText size={16} /> Payer</Button>}
               {cancellable && <Button variant="danger" onClick={() => onCancel(order.id)}><X size={16} /> Annuler</Button>}
+              {order.status === 'Livree' && !alreadyRated && (
+                <Button title="Noter cette commande" onClick={() => onRate && onRate(order.id)} style={{ fontSize: '0.75rem', padding: '4px 10px', gap: '4px', background: '#fef3c7', color: '#92400e', border: '1px solid #f59e0b', borderRadius: '6px', fontWeight: 700 }}><Star size={14} /> Noter</Button>
+              )}
+              {order.status === 'Livree' && existingRating && (
+                <span className="order-rating-badge">{'★'.repeat(existingRating.rating || 0)}{'☆'.repeat(5 - (existingRating.rating || 0))}</span>
+              )}
             </div>
           </article>
         );
@@ -6138,7 +8916,7 @@ function DeliveryMissionList({ onSelect, onStatusChange, orders, selectedIds, st
         const client = store.users.find((item) => item.id === order.clientId);
         return (
           <article id={`order-${order.id}`} key={order.id} className="delivery-row">
-            <label className="order-row-check" title="Selectionner cette livraison">
+            <label className="order-row-check" title="Sélectionner cette livraison">
               <input type="checkbox" checked={selectedIds.has(order.id)} onChange={() => onSelect(order.id)} />
             </label>
             <div className="delivery-main">
@@ -6162,7 +8940,7 @@ function DeliveryMissionList({ onSelect, onStatusChange, orders, selectedIds, st
   );
 }
 
-function OrderCardGrid({ currentUser, onAgentStep = () => {}, onCancel, onSelect, onStatusChange, orders, selectedIds, store }) {
+function OrderCardGrid({ currentUser, onAgentStep = () => {}, onCancel, onRate, onSelect, onStatusChange, orders, selectedIds, store }) {
   const agentMode = currentUser.role === 'agentTerrain';
   return (
     <div className={`order-card-grid order-activity-list ${agentMode ? 'agent-order-grid' : ''}`}>
@@ -6175,7 +8953,7 @@ function OrderCardGrid({ currentUser, onAgentStep = () => {}, onCancel, onSelect
         const unit = order.unit || product?.unit || 'unite';
         return (
           <article id={`order-${order.id}`} className={`order-activity-row ${agentMode ? 'agent-order-card' : ''}`} key={order.id}>
-            <label className="order-card-check order-activity-check" title="Selectionner cette commande">
+            <label className="order-card-check order-activity-check" title="Sélectionner cette commande">
               <input type="checkbox" checked={selectedIds.has(order.id)} onChange={() => onSelect(order.id)} />
             </label>
             <OrderProgress status={order.status} compact />
@@ -6188,12 +8966,20 @@ function OrderCardGrid({ currentUser, onAgentStep = () => {}, onCancel, onSelect
               <span>{formatNumber(quantity)} {unit}</span>
             </div>
             <time className="order-activity-date" dateTime={order.createdAt}>{formatDate(order.createdAt)}</time>
+            {order.status === 'Livree' && !(store.ratings || []).some((r) => r.orderId === order.id && r.userId === currentUser.id) && (currentUser.id === order.clientId || currentUser.id === order.buyerId || currentUser.role === 'admin' || isBuyerRole(currentUser.role)) && (
+              <div className="order-actions">
+                <Button title="Noter cette commande" onClick={() => onRate && onRate(order.id)} style={{ fontSize: '0.75rem', padding: '4px 10px', gap: '4px', background: '#fef3c7', color: '#92400e', border: '1px solid #f59e0b', borderRadius: '6px', fontWeight: 700 }}><Star size={14} /> Noter</Button>
+              </div>
+            )}
+            {order.status === 'Livree' && (store.ratings || []).some((r) => r.orderId === order.id) && (
+              <span className="order-rating-badge" title="Note client">{'★'.repeat((store.ratings || []).find((r) => r.orderId === order.id)?.rating || 0)}{'☆'.repeat(5 - ((store.ratings || []).find((r) => r.orderId === order.id)?.rating || 0))}</span>
+            )}
             {(isBuyerRole(currentUser.role) || currentUser.role === 'admin') && order.status !== 'Annulee' && order.status !== 'Livree' && (
               <div className="order-actions">
                 <Button aria-label="Annuler la commande" className="order-icon-action" title="Annuler" variant="danger" onClick={() => onCancel(order.id)}><X size={16} /></Button>
               </div>
             )}
-            {(currentUser.role === 'admin' || currentUser.role === 'agentTerrain' || currentUser.role === 'transporteur' || currentUser.id === order.sellerId) && (
+            {(currentUser.role === 'admin' || currentUser.role === 'agentTerrain' || currentUser.id === order.sellerId) && (
               <select className="order-activity-status" aria-label="Statut de la commande" title={orderStatusLabel(order.status)} value={order.status} onChange={(event) => onStatusChange(order.id, event.target.value)}>{orderStatuses.map((item) => <option key={item} value={item}>{orderStatusLabel(item)}</option>)}</select>
             )}
             {agentMode && <AgentWorkflowPanel onStep={(step) => onAgentStep(order.id, step)} order={order} />}
@@ -6207,9 +8993,9 @@ function OrderCardGrid({ currentUser, onAgentStep = () => {}, onCancel, onSelect
 function AgentWorkflowPanel({ onStep, order }) {
   const workflow = order.agentWorkflow || {};
   const steps = [
-    { key: 'farmerCalledAt', label: 'Agriculteur confirme', body: 'Valider disponibilite et demander preparation du stock.' },
-    { key: 'transporterContactedAt', label: 'Transporteur confirme', body: 'Confirmer capacite, heure de passage et conditions de livraison.' },
-    { key: 'deliveryOrganizedAt', label: 'Livraison planifiee', body: 'Le transport est cale et la commande peut etre executee.' },
+    { key: 'farmerCalledAt', label: 'Agriculteur confirme', body: 'Valider disponibilité et demander preparation du stock.' },
+    { key: 'transporterContactedAt', label: 'Logistique confirmée', body: 'Confirmer capacité, heure de passage et conditions de livraison.' },
+    { key: 'deliveryOrganizedAt', label: 'Livraison planifiée', body: 'Le transport est calé et la commande peut être exécutée.' },
   ];
 
   return (
@@ -6227,27 +9013,43 @@ function AgentWorkflowPanel({ onStep, order }) {
   );
 }
 
-function UserCompactRow({ onStatusChange, onDelete, user, canDelete }) {
+function UserCompactRow({ onStatusChange, onDelete, onViewProofs, user, canDelete }) {
   const isPending = user.status === 'En attente';
+  const isFarmer = user.role === 'agriculteur';
+  const vScore = user.verificationScore || 0;
+  const vLevel = user.verificationLevel || 0;
   return (
     <article className={`user-row ${isPending ? 'user-row-pending' : ''}`} data-user-id={user.id}>
       <div className="user-cell-main">
         <Badge>{roleLabel(user.role)}</Badge>
         <strong>{user.name}</strong>
         <small>{user.email}</small>
+        {isFarmer && (
+          <small style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.25rem' }}>
+            <ShieldCheck size={12} />
+            <span style={{ color: vScore >= 60 ? 'var(--green-700, #15803d)' : vScore >= 30 ? '#ca8a04' : '#dc2626' }}>
+              Score: {vScore}/100 (Niv. {vLevel})
+            </span>
+          </small>
+        )}
       </div>
       <div>
-        <span>{user.phone || 'Telephone non renseigne'}</span>
+        <span>{user.phone || 'Téléphone non renseigne'}</span>
         <small>{formatDate(user.createdAt)}</small>
       </div>
       <div>
         <span>{user.organization || 'Organisation non renseignee'}</span>
         <small>{user.region || 'Region non renseignee'}</small>
+        {isFarmer && user.assignedHubId && <small style={{ display: 'block', color: 'var(--green-700, #15803d)' }}>Hub assigne</small>}
       </div>
       <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
         {isPending ? (
           <>
-            <button className="btn btn-sm" type="button" onClick={() => onStatusChange('Actif')} style={{ background: 'var(--green-700)', color: '#fff', padding: '5px 12px', borderRadius: 'var(--radius)', border: 0, fontWeight: 900, fontSize: '0.8rem' }}>Approuver</button>
+            {isFarmer && onViewProofs ? (
+              <button className="btn btn-sm" type="button" onClick={onViewProofs} style={{ background: 'var(--blue-600, #2563eb)', color: '#fff', padding: '5px 12px', borderRadius: 'var(--radius)', border: 0, fontWeight: 900, fontSize: '0.8rem' }}>Voir preuves</button>
+            ) : (
+              <button className="btn btn-sm" type="button" onClick={() => onStatusChange('Actif')} style={{ background: 'var(--green-700)', color: '#fff', padding: '5px 12px', borderRadius: 'var(--radius)', border: 0, fontWeight: 900, fontSize: '0.8rem' }}>Approuver</button>
+            )}
             <button className="btn btn-sm" type="button" onClick={() => onStatusChange('Rejete')} style={{ background: '#c53030', color: '#fff', padding: '5px 12px', borderRadius: 'var(--radius)', border: 0, fontWeight: 900, fontSize: '0.8rem' }}>Rejeter</button>
           </>
         ) : (
@@ -6270,6 +9072,31 @@ function UserCompactRow({ onStatusChange, onDelete, user, canDelete }) {
         )}
       </div>
     </article>
+  );
+}
+
+function AuditLogCollapsible({ logs }) {
+  const [open, setOpen] = useState(false);
+  if (!logs.length) return null;
+  const visible = open ? logs.slice(0, 20) : logs.slice(0, 3);
+  return (
+    <details className="audit-collapsible" open={open || undefined} onToggle={(e) => setOpen(e.target.open)}>
+      <summary className="audit-collapsible-summary">
+        <Activity size={14} />
+        <span>Journal d'audit ({logs.length})</span>
+        <ChevronDown size={14} className={open ? 'rotated' : ''} />
+      </summary>
+      <ul className="audit-collapsible-list">
+        {visible.map((log) => (
+          <li key={log.id}>
+            <span className="audit-dot" data-action={log.action} />
+            <span className="audit-detail">{log.detail}</span>
+            <span className="audit-meta">{log.actorName || 'Admin'} · {formatDate(log.createdAt)}</span>
+          </li>
+        ))}
+      </ul>
+      {logs.length > 20 && open && <small className="muted" style={{ padding: '0 0.75rem 0.5rem', display: 'block' }}>Affichage limité aux 20 plus récentes.</small>}
+    </details>
   );
 }
 
@@ -6305,23 +9132,14 @@ function IconCircle({ icon: Icon }) {
 }
 
 function FinanceScoreCard({ navigate, store, user }) {
-  const products = store.products.filter((item) => item.ownerId === user.id);
-  const orders = store.orders.filter((item) => item.sellerId === user.id);
-  const transactions = store.transactions.filter((item) => item.ownerId === user.id);
-  const dossiers = store.dossiers.filter((item) => item.ownerId === user.id);
-  const score = Math.min(100,
-    Math.min(30, products.filter((item) => item.status === 'Publie').length * 10) +
-    Math.min(30, orders.length * 10) +
-    Math.min(25, transactions.length * 8) +
-    Math.min(15, dossiers.filter((item) => item.status === 'Valide').length * 15)
-  );
+  const score = buildBancabiliteDossier(user, store).score;
   const nextStep = score >= 75
     ? 'Votre profil est credible pour une preuve économique ou une attestation.'
-    : 'Ajoutez ventes, justificatifs et dossiers pour augmenter la credibilite.';
+    : 'Ajoutez ventes, justificatifs et dossiers pour augmenter la crédibilité.';
 
   return (
     <div className="finance-score-card">
-      <div className="score-ring"><strong>{score}</strong><span>/100</span></div>
+      <div className="score-ring" style={{ background: `conic-gradient(${score >= 75 ? '#1f835d' : score >= 40 ? '#4fb07e' : score >= 20 ? '#d99912' : '#e54d35'} 0deg ${Math.round(score * 3.6)}deg, var(--line, #e5e7eb) ${Math.round(score * 3.6)}deg)` }}><strong>{score}</strong><span>/100</span></div>
       <div>
         <strong>Score de revenus prouvables</strong>
         <p>{nextStep}</p>
@@ -6363,47 +9181,51 @@ function LanguageAssistant({ currentUser, store }) {
   const [lang, setLang] = useState('fr');
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
   const scrollRef = useRef(null);
 
   const greetings = {
     fr: `Bonjour ${currentUser?.name?.split(' ')[0] || ''}, je suis FresCoop AI — votre assistant intelligent. Posez-moi une question sur les prix, la vente, la traçabilité ou le paiement.`,
     wo: `Salamaleekum ${currentUser?.name?.split(' ')[0] || ''}, maa ngi tudd FresCoop AI. Laaj ma ci njëg, jaay, suivi walla pay.`,
-    pul: `Mbaa kaa ${currentUser?.name?.split(' ')[0] || ''}, ko miin woni FresCoop AI. Naamno mi e coggu, njeeygu, tracabilite walla njoɓdi.`,
+    pul: `Mbaa kaa ${currentUser?.name?.split(' ')[0] || ''}, ko miin woni FresCoop AI. Naamno mi e coggu, njeeygu, traçabilité walla njoɓdi.`,
     sr: `Nafio ${currentUser?.name?.split(' ')[0] || ''}, mi tedd FresCoop AI. Penden mi ke kirim, felax, suivi ole pay.`,
   };
 
   const quickPrompts = {
     fr: [
-      { q: 'Comment vendre mes produits ?', a: 'Trois étapes: 1) Publiez votre produit dans "Produits" avec photo et prix, 2) Les acheteurs vous commandent depuis le Marché, 3) Vous recevez le paiement PayDunya directement sur votre compte (Orange Money, Wave, banque).' },
+      { q: 'Comment vendre mes produits ?', a: 'Trois étapes: 1) Publiez votre produit dans "Produits" avec photo et prix, 2) Les acheteurs vous commandent depuis le Marché, 3) Vous recevez le paiement GIM-Pay directement sur votre compte (Orange Money, Wave, banque).' },
       { q: 'Quel est le prix du jour ?', a: `Consultez la page "Marché" pour voir tous les produits disponibles et leurs prix en temps réel. Actuellement ${store.products.length} produits sont listés sur la plateforme.` },
-      { q: 'Comment obtenir un crédit bancaire ?', a: 'Allez dans "Bancabilité": FresCoop calcule votre score (0-100) à partir de vos ventes et paiements PayDunya. Exportez le dossier PDF et présentez-le à une banque ou SFD partenaire. Plus vous vendez via FresCoop, meilleur est votre score.' },
+      { q: 'Comment obtenir un crédit bancaire ?', a: 'Allez dans "Bancabilité": FresCoop calcule votre score (0-100) à partir de vos ventes et paiements GIM-Pay. Exportez le dossier PDF et présentez-le à une banque ou SFD partenaire. Plus vous vendez via FresCoop, meilleur est votre score.' },
       { q: 'Comment éviter de perdre ma récolte ?', a: 'Inscrivez vos produits dès la récolte. La page "Anti-gaspi" détecte les lots à DLC courte et propose une réduction automatique (-15% à -40%) pour vendre vite aux acheteurs B2B avant perte. Utilisez aussi les hubs froid pour prolonger la durée de vie.' },
       { q: 'Comment suivre un lot ?', a: 'Chaque lot reçoit un QR code. Dans "Lots froids", scannez le QR pour voir: température en temps réel, photos qualité, durée de vie restante, acheteur recommandé et preuve de paiement.' },
       { q: 'Je n ai pas de smartphone', a: 'Pas de problème! Appelez *384*FRES# depuis un téléphone à touches (même 2G). Menu en wolof/pular: cours du jour, déclaration de stock, vente, consultation paiement. Testez le simulateur dans "USSD".' },
     ],
     wo: [
-      { q: 'Naka laa man jaay sama njaay ?', a: '1) Bind sa njaay ci "Produits" ak nataal ak njëg, 2) Jaaykatyi dinañu la jënd ci Marché, 3) Dinga jot sa pay ci PayDunya (Orange Money, Wave, banq).' },
+      { q: 'Naka laa man jaay sama njaay ?', a: '1) Bind sa njaay ci "Produits" ak nataal ak njëg, 2) Jaaykatyi dinañu la jënd ci Marché, 3) Dinga jot sa pay ci GIM-Pay (Orange Money, Wave, banq).' },
       { q: 'Lan mooy njëg bis bi ?', a: `Demal ci "Marché" ngir gis njëg yépp ci waxtu wi. Tey am na ${store.products.length} njaay ci plateforme bi.` },
-      { q: 'Naka laa man jot crédit ?', a: 'Demal ci "Bancabilité": FresCoop dina wax sa score (0-100) ci sa njaay ak pay PayDunya. Yeggali dossier PDF, yobbu ko banq walla SFD. Bu nga jaay lu bari ci FresCoop, sa score mooy baax.' },
+      { q: 'Naka laa man jot crédit ?', a: 'Demal ci "Bancabilité": FresCoop dina wax sa score (0-100) ci sa njaay ak pay GIM-Pay. Yeggali dossier PDF, yobbu ko banq walla SFD. Bu nga jaay lu bari ci FresCoop, sa score mooy baax.' },
       { q: 'Naka laa fi man moytu yàq sama ngëneel ?', a: 'Bindal sa ngëneel jekk. "Anti-gaspi" dina gis yi doon yàq, jaay leen ak -15% ba -40% ci jaaykat B2B yi. Jëfandikoo hub yu sedd ngir sedd sa ngëneel.' },
       { q: 'Naka laa man topp sama lot ?', a: 'Lot bu ci nekk am na QR code. Ci "Lots froids", scaan QR bi: température, nataal, bërëb-bi mu des, jaaykat wi reccommende, pay yi.' },
       { q: 'Amuma téléphone bu baax', a: 'Dara du jaxasu! Woo *384*FRES# ci téléphone bi am touche (2G doy na). Menu ci wolof: njëg bis bi, bind stock, jaay, saytu pay.' },
     ],
     pul: [
-      { q: 'No mbaawnoo njeeygol am ?', a: '1) Winndu njeeygol ma e "Produits" e nataal e coggu, 2) Yiɗɓe soodugol ina sooda e Marché, 3) A heɓa njoɓdi ma e PayDunya.' },
+      { q: 'No mbaawnoo njeeygol am ?', a: '1) Winndu njeeygol ma e "Produits" e nataal e coggu, 2) Yiɗɓe soodugol ina sooda e Marché, 3) A heɓa njoɓdi ma e GIM-Pay.' },
       { q: 'No foti coggu hannde ?', a: `Yahu e "Marché" ngam yi\'ugol kala njeeygol e coggu maggi. Hannde ${store.products.length} njeeygol woni e plateforme.` },
-      { q: 'No mbaawnoo heɓugol tokkoral ?', a: 'Yahu e "Bancabilité": FresCoop hiitoo score maa (0-100) e njeeygol e njoɓdi PayDunya. Yaltin dossier PDF, addan banka walla SFD.' },
+      { q: 'No mbaawnoo heɓugol tokkoral ?', a: 'Yahu e "Bancabilité": FresCoop hiitoo score maa (0-100) e njeeygol e njoɓdi GIM-Pay. Yaltin dossier PDF, addan banka walla SFD.' },
       { q: 'No reenoo bonnde ndema am ?', a: '"Anti-gaspi" ko hollitta ko boni: jeey ɗum -15% haa -40% e soodooɓe B2B ado ɗum bonnugol.' },
       { q: 'No ndaroo-mi lot ?', a: 'Lot kala ina jogii QR code. E "Lots froids", scaan QR ndi: wulaango, nataa, ñalɗi keddiiɗi, soodoowo, njoɓdi.' },
       { q: 'Mi alaa simartifol', a: 'Noddu *384*FRES# e njokkondiral foti touches. Menu e pulaar: coggu hannde, winndugol stock, njeeygol.' },
     ],
     sr: [
-      { q: 'Le mbaane mbelax lomi tedd ?', a: '1) Bisim kirim ma ole "Produits", 2) Nga nu jim moox le "Marché", 3) Mi fa pay ole PayDunya.' },
+      { q: 'Le mbaane mbelax lomi tedd ?', a: '1) Bisim kirim ma ole "Produits", 2) Nga nu jim moox le "Marché", 3) Mi fa pay ole GIM-Pay.' },
       { q: 'Le ma ŋ kirim penaar ?', a: `Da "Marché" ole ya kirim ma tedd. Penaar ${store.products.length} kirim ne.` },
       { q: 'Le mbaane haat ana ?', a: 'Da "Bancabilité": score ma (0-100). Yol ma e yo le bank ole SFD.' },
       { q: 'Le mbaane rot ale ñoox ?', a: '"Anti-gaspi" yol ŋ ŋoox le -15% haa -40%.' },
       { q: 'Le mbaane suivi ma lot ?', a: 'QR code. Da "Lots froids", scan QR.' },
-      { q: 'Ana ŋ telephone', a: 'Dial *384*FRES# ole telephone 2G.' },
+      { q: 'Ana ŋ téléphone', a: 'Dial *384*FRES# ole téléphone 2G.' },
     ],
   };
 
@@ -6453,6 +9275,56 @@ function LanguageAssistant({ currentUser, store }) {
       pul: 'Mi faamaali lamndal maa. Suɓo goɗɗo e ɗiin topik.',
       sr: 'Mi fa manel. Suɓo ole topik.',
     }[language];
+  }
+
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) audioChunksRef.current.push(event.data);
+      };
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(blob);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch {
+      setMessages((prev) => [...prev, { from: 'bot', text: lang === 'fr' ? 'Impossible d\'accéder au microphone. Vérifiez les permissions.' : 'Microphone bi dëkku du. Saytul permissions yi.' }]);
+    }
+  }
+
+  function stopRecording() {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  }
+
+  async function sendVoiceMessage() {
+    if (!audioBlob) return;
+    const audioUrl = URL.createObjectURL(audioBlob);
+    setMessages((prev) => [...prev, { from: 'user', text: '🎤 Message vocal', audio: audioUrl }]);
+    setAudioBlob(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'voice.webm');
+      formData.append('lang', lang);
+      const res = await fetch(API_BASE + '/api/yaay/voice', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data?.ok && data.transcript) {
+        setMessages((prev) => [...prev, { from: 'bot', text: data.answer || findResponse(data.transcript, lang) }]);
+        return;
+      }
+      throw new Error('no transcript');
+    } catch {
+      setMessages((prev) => [...prev, { from: 'bot', text: lang === 'fr' ? 'Message vocal reçu. La transcription automatique n\'est pas encore disponible — veuillez reformuler par écrit.' : 'Wax wi jot na. Bind ko ci biir ngir ma man ko dégg.' }]);
+    }
   }
 
   async function send(text) {
@@ -6535,7 +9407,10 @@ function LanguageAssistant({ currentUser, store }) {
           </div>
           <div className="assistant-messages" ref={scrollRef}>
             {messages.map((msg, index) => (
-              <div key={index} className={`assistant-msg ${msg.from}`}>{msg.text}</div>
+              <div key={index} className={`assistant-msg ${msg.from}`}>
+                {msg.text}
+                {msg.audio && <audio src={msg.audio} controls style={{ width: '100%', height: '28px', marginTop: '4px' }} />}
+              </div>
             ))}
           </div>
           <div className="assistant-suggestions">
@@ -6543,6 +9418,13 @@ function LanguageAssistant({ currentUser, store }) {
               <button key={prompt.q} type="button" onClick={() => send(prompt.q)}>{prompt.q}</button>
             ))}
           </div>
+          {audioBlob && (
+            <div className="assistant-voice-preview">
+              <audio src={URL.createObjectURL(audioBlob)} controls style={{ height: '28px', flex: 1 }} />
+              <button type="button" onClick={sendVoiceMessage} className="btn-voice-send" aria-label="Envoyer vocal"><Send size={14} /></button>
+              <button type="button" onClick={() => setAudioBlob(null)} className="btn-voice-cancel" aria-label="Annuler"><X size={14} /></button>
+            </div>
+          )}
           <form className="assistant-form" onSubmit={(event) => { event.preventDefault(); send(); }}>
             <input
               value={input}
@@ -6550,6 +9432,9 @@ function LanguageAssistant({ currentUser, store }) {
               placeholder={lang === 'fr' ? 'Posez votre question...' : lang === 'wo' ? 'Laaj ma...' : lang === 'pul' ? 'Naamno mi...' : 'Penden mi...'}
               aria-label="Votre message"
             />
+            <button type="button" onClick={isRecording ? stopRecording : startRecording} aria-label={isRecording ? 'Arrêter' : 'Enregistrer vocal'} className={isRecording ? 'voice-btn recording' : 'voice-btn'}>
+              {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
+            </button>
             <button type="submit" aria-label="Envoyer"><ArrowRight size={16} /></button>
           </form>
         </aside>
@@ -6562,7 +9447,7 @@ function AccessDenied({ navigate = () => {}, user = { role: 'client' } }) {
   return (
     <PageFrame>
       <section className="panel access-panel">
-        <EmptyState icon={LockKeyhole} title="Acces reserve" body="Votre role ne permet pas d ouvrir cette page. Utilisez le menu de votre espace pour acceder aux pages autorisees." />
+        <EmptyState icon={LockKeyhole} title="Acces reserve" body="Votre rôle ne permet pas d ouvrir cette page. Utilisez le menu de votre espace pour accéder aux pages autorisees." />
         <div className="button-row centered">
           <Button onClick={() => navigate(getRoleHomePath(user.role))}><Home size={18} /> Retour espace</Button>
           <Button variant="secondary" onClick={() => navigate('/compte')}><UserCheck size={18} /> Mon compte</Button>
@@ -6572,21 +9457,30 @@ function AccessDenied({ navigate = () => {}, user = { role: 'client' } }) {
   );
 }
 
-function PendingApprovalPage({ user, logout }) {
-  const steps = [
-    { label: 'Compte cree', done: true },
-    { label: 'Validation admin', done: false, active: true },
-    { label: 'Acces complet', done: false },
-  ];
+function PendingApprovalPage({ user, logout, navigate, actions, notify, store }) {
+  const vScore = user.verificationScore || 0;
+  const vLevel = user.verificationLevel || 0;
+  const isFarmer = user.role === 'agriculteur';
+  const steps = isFarmer
+    ? [
+        { label: 'Compte créé', done: true },
+        { label: "Preuves d'activité", done: vScore >= 30, active: vScore < 30 },
+        { label: 'Accès complet', done: vLevel >= 2 },
+      ]
+    : [
+        { label: 'Compte créé', done: true },
+        { label: 'Validation admin', done: false, active: true },
+        { label: 'Accès activé', done: false },
+      ];
   return (
     <div className="pending-approval">
       <div className="pending-hero">
         <div className="pending-icon-ring">
           <ShieldCheck size={36} />
         </div>
-        <span className="eyebrow">Verification en cours</span>
+        <span className="eyebrow">Vérification en cours</span>
         <h2>Bienvenue {user.name}</h2>
-        <p>Votre inscription en tant que <strong>{roleLabel(user.role)}</strong> a bien ete enregistree. Un administrateur FresCoop doit valider votre compte avant de vous donner acces a la plateforme.</p>
+        <p>Votre inscription en tant que <strong>{roleLabel(user.role)}</strong> a bien été enregistrée. {isFarmer ? "Pour activer votre compte rapidement, soumettez vos preuves d'activité agricole ci-dessous." : "Votre compte est en attente de validation par un administrateur. Vous serez notifié dès que votre accès sera activé."}</p>
       </div>
       <div className="pending-steps">
         {steps.map((step, i) => (
@@ -6596,27 +9490,160 @@ function PendingApprovalPage({ user, logout }) {
           </div>
         ))}
       </div>
+
+      {isFarmer ? (
+        <div style={{ margin: '1.5rem 0', padding: '1.25rem', background: 'var(--green-bg, #dcfce7)', borderRadius: '0.75rem', textAlign: 'center' }}>
+          <h3 style={{ margin: '0 0 0.5rem' }}>Activez votre compte maintenant</h3>
+          <p style={{ margin: '0 0 1rem', fontSize: '0.9rem' }}>
+            {"Soumettez des preuves d'activité (attestation, carte coopérative, photo GPS...) pour atteindre un score de 30/100 et activer automatiquement votre compte sans attendre la validation admin."}
+          </p>
+          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', alignItems: 'center', fontSize: '0.85rem', marginBottom: '1rem' }}>
+            <strong>Score actuel : {vScore}/100</strong>
+            <span style={{ color: vScore >= 30 ? 'var(--green-700, #15803d)' : 'var(--coral, #ef4444)' }}>
+              {vScore >= 60 ? '(Niveau 2 — complet)' : vScore >= 30 ? '(Niveau 1 — basique)' : '(insuffisant)'}
+            </span>
+          </div>
+          <Button onClick={() => navigate('/verification')}><ShieldCheck size={18} /> {"Soumettre mes preuves d'activité"}</Button>
+        </div>
+      ) : (
+        <div style={{ margin: '1.5rem 0', padding: '1.25rem', background: '#eff6ff', borderRadius: '0.75rem', textAlign: 'center' }}>
+          <h3 style={{ margin: '0 0 0.5rem' }}>En attente de validation</h3>
+          <p style={{ margin: 0, fontSize: '0.9rem' }}>
+            {"Un administrateur vérifiera vos informations et activera votre compte dans un délai de 24 à 48h. Vous recevrez une notification dès que votre accès sera opérationnel."}
+          </p>
+        </div>
+      )}
+
       <div className="pending-info-cards">
+        {isFarmer && (
+          <div className="pending-info-card">
+            <Upload size={20} />
+            <strong>Option rapide</strong>
+            <span>{"Score 30+ = activation automatique. Attestation chef (20 pts) + carte coopérative (25 pts) = suffisant !"}</span>
+          </div>
+        )}
         <div className="pending-info-card">
           <Activity size={20} />
-          <strong>Delai de validation</strong>
-          <span>Les demandes sont generalement traitees sous 24 a 48 heures par l'equipe FresCoop.</span>
-        </div>
-        <div className="pending-info-card">
-          <BellRing size={20} />
-          <strong>Notification</strong>
-          <span>Vous serez notifie des que votre compte sera approuve. Reconnectez-vous a ce moment.</span>
+          <strong>Validation admin</strong>
+          <span>{isFarmer ? "Vous pouvez aussi attendre la validation manuelle par un administrateur (24 à 48h)." : "Un administrateur validera votre inscription sous 24 à 48h."}</span>
         </div>
         <div className="pending-info-card">
           <MessageSquare size={20} />
-          <strong>Besoin d'aide ?</strong>
-          <span>Contactez l'equipe a support@frescoop.sn ou via WhatsApp +221 77 000 00 00.</span>
+          <strong>{"Besoin d'aide ?"}</strong>
+          <span>{"Contactez l'équipe à support@frescoop.sn ou via WhatsApp +221 77 000 00 00."}</span>
         </div>
       </div>
       <div className="button-row centered" style={{ marginTop: '1.5rem' }}>
-        <Button variant="secondary" onClick={logout}><LogOut size={18} /> Se deconnecter</Button>
+        <Button variant="secondary" onClick={logout}><LogOut size={18} /> Se déconnecter</Button>
       </div>
     </div>
+  );
+}
+
+function PitchPage({ navigate, store }) {
+  const [slide, setSlide] = useState(0);
+  const impact = computeUemoaImpact(store);
+  const slides = [
+    {
+      title: 'Le problème',
+      body: 'Dans les filières agricoles UEMOA, 30 a 40% des récoltes perissables sont perdues faute de froid, de traçabilité et de preuve économique. Les producteurs restent invisibles pour les banques.',
+      metrics: [
+        { label: 'Pertes post-recolte', value: '30-40%' },
+        { label: 'Productrices sans compte bancaire', value: '78%' },
+        { label: 'Acces au credit formel', value: '<5%' },
+      ],
+    },
+    {
+      title: 'La solution FresCoop',
+      body: 'Une plateforme intégrée qui connecte lot froid, paiement partenaire (GIM-Pay) et preuve économique portable. Pas de wallet: le paiement reste chez Wave, OM, Free Money. FresCoop fabrique la preuve.',
+      metrics: [
+        { label: 'Lots traces', value: String(store.lots?.length || 0) },
+        { label: 'Hubs solaires', value: String(store.hubs?.length || 0) },
+        { label: 'Paiements partenaires', value: String(impact.gimpayTxCount) },
+      ],
+    },
+    {
+      title: 'Modele économique',
+      body: 'Commission de 2% sur paiements partenaires. Abonnement premium pour acheteurs B2B (accès lots certifiés). Licence SaaS pour SFD et banques qui veulent intégrer le scoring FresCoop.',
+      metrics: [
+        { label: 'Commission paiement', value: '2%' },
+        { label: 'Abo B2B', value: '15 000 FCFA/mois' },
+        { label: 'Licence SFD', value: 'Sur devis' },
+      ],
+    },
+    {
+      title: 'Impact mesurable',
+      body: 'Des indicateurs calcules en temps reel, pas des projections. Chaque KPI est derive des transactions reelles sur la plateforme: lots, paiements, capteurs, genre.',
+      metrics: [
+        { label: 'Pertes evitees', value: impact.lossesAvertedPercent + '%' },
+        { label: 'Revenu additionnel', value: formatCompact(impact.additionalFarmerRevenue) + ' FCFA' },
+        { label: 'CO2 evite', value: formatCompact(impact.co2SavedKg) + ' kg' },
+        { label: 'Femmes productrices', value: String(impact.womenProducers) },
+      ],
+    },
+    {
+      title: 'Équipe et next steps',
+      body: 'Équipe pluridisciplinaire (dev, agro, finance, terrain) basee a Dakar. Pilote prevu sur 3 coopératives maraîchères (Niayes, Thies, Casamance) des juin 2026.',
+      metrics: [
+        { label: 'Membres equipe', value: '7' },
+        { label: 'Cooperatives pilotes', value: '3' },
+        { label: 'Lancement pilote', value: 'Juin 2026' },
+      ],
+    },
+  ];
+
+  const current = slides[slide];
+  const prev = () => setSlide((s) => Math.max(0, s - 1));
+  const next = () => setSlide((s) => Math.min(slides.length - 1, s + 1));
+
+  return (
+    <PageFrame>
+      <section className="pitch-hero">
+        <img src="/gim-uemoa-logo.png" alt="GIM-UEMOA" className="gim-uemoa-logo-pitch" />
+        <span className="uemoa-badge">HACKATHON GIM-UEMOA 2026</span>
+        <h1>FresCoop — Pitch Deck</h1>
+        <p>Digitalisation de la chaine de valeur agricole UEMOA</p>
+      </section>
+
+      <nav className="pitch-nav">
+        {slides.map((s, i) => (
+          <button key={i} type="button" className={'pitch-dot' + (i === slide ? ' active' : '')} onClick={() => setSlide(i)}>
+            {i + 1}
+          </button>
+        ))}
+      </nav>
+
+      <section className="pitch-slide panel">
+        <h2>{current.title}</h2>
+        <p>{current.body}</p>
+        {current.metrics && (
+          <div className="pitch-metrics">
+            {current.metrics.map((m) => (
+              <div key={m.label} className="pitch-metric-card">
+                <strong>{m.value}</strong>
+                <span>{m.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <div className="pitch-controls">
+        <Button variant="secondary" onClick={prev} disabled={slide === 0}><ChevronLeft size={18} /> Precedent</Button>
+        <span>{slide + 1} / {slides.length}</span>
+        <Button onClick={next} disabled={slide === slides.length - 1}>Suivant <ChevronRight size={18} /></Button>
+      </div>
+
+      <section className="pitch-footer panel">
+        <h3>Liens rapides</h3>
+        <div className="pitch-quick-links">
+          <Button variant="secondary" onClick={() => navigate('/login')}>Lancer la demo</Button>
+          <Button variant="secondary" onClick={() => navigate('/impact')}>Voir impact</Button>
+          <Button variant="secondary" onClick={() => navigate('/lots')}>Explorer les lots</Button>
+          <Button variant="secondary" onClick={() => navigate('/bancabilite')}>Bancabilité</Button>
+        </div>
+      </section>
+    </PageFrame>
   );
 }
 
@@ -6625,7 +9652,7 @@ function AppFooter({ currentUser, navigate }) {
     { label: 'Accueil', path: getRoleHomePath(currentUser.role) },
     { label: 'Marche', path: '/marche' },
     { label: 'Commandes', path: '/commandes' },
-    { label: 'Anti-gaspi', path: '/anti-gaspi' },
+    { label: 'Bancabilité', path: '/bancabilite' },
     { label: 'Mon compte', path: '/compte' },
   ].filter((item) => canAccessPath(currentUser.role, item.path));
 
@@ -6634,7 +9661,7 @@ function AppFooter({ currentUser, navigate }) {
       <div className="footer-grid">
         <div className="footer-brand">
           <div className="brand"><span>F</span><strong>FresCoop</strong></div>
-          <p>Plateforme de commerce agricole integree. Stockage froid, intelligence marche et preuve economique portable pour les producteurs senegalais.</p>
+          <p>Plateforme de commerce agricole intégrée. Stockage froid, intelligence marché et preuve économique portable pour les producteurs UEMOA.</p>
         </div>
         <div className="footer-links">
           <strong>Navigation</strong>
@@ -6648,19 +9675,37 @@ function AppFooter({ currentUser, navigate }) {
           <strong>Contact</strong>
           <a href="mailto:contact@frescoop.sn">contact@frescoop.sn</a>
           <span>+221 33 800 00 00</span>
-          <span>Dakar, Senegal</span>
+          <span>Dakar, Sénégal</span>
         </div>
       </div>
       <div className="footer-bottom">
-        <small>&copy; 2026 FresCoop — Candidat POESAM. Tous droits reserves.</small>
-        <small>ODD 1 · 5 · 8 · 12</small>
+        <div className="footer-gim"><img src="/gim-uemoa-logo.png" alt="GIM-UEMOA" className="gim-uemoa-logo-footer" /><small>&copy; 2026 FresCoop — Finaliste Hackathon GIM-UEMOA, Dakar 18-21 mai 2026.</small></div>
+        <small>ODD 1 · 2 · 5 · 8 · 12 · 13</small>
       </div>
     </footer>
   );
 }
 
 function PageFrame({ children }) {
-  return <section className="page-frame">{children}</section>;
+  const [showScroll, setShowScroll] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShowScroll(window.scrollY > 300);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  return (
+    <section className="page-frame">
+      {children}
+      <button
+        type="button"
+        className={`scroll-top-btn ${showScroll ? 'visible' : ''}`}
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        aria-label="Retour en haut"
+      >
+        <ChevronUp size={20} />
+      </button>
+    </section>
+  );
 }
 
 function PanelTitle({ icon: Icon, title }) {
@@ -6868,7 +9913,7 @@ function getImageId(image, index = 0) {
 }
 
 function FileInput({ accept, file, label, multiple, onChange }) {
-  const text = Array.isArray(file) ? `${file.length} fichier(s)` : file?.name || 'Selectionner';
+  const text = Array.isArray(file) ? `${file.length} fichier(s)` : file?.name || 'Sélectionner';
   return (
     <label className="file-input">
       <input accept={accept} multiple={multiple} type="file" onChange={(event) => onChange(multiple ? Array.from(event.target.files || []) : event.target.files?.[0] || null)} />
@@ -6939,6 +9984,14 @@ function askConfirm(options) {
   });
 }
 
+let ratingHandler = null;
+function askRating() {
+  return new Promise((resolve) => {
+    if (!ratingHandler) return resolve(0);
+    ratingHandler({ resolve });
+  });
+}
+
 function ConfirmModalHost() {
   const [request, setRequest] = useState(null);
   useEffect(() => {
@@ -6981,127 +10034,167 @@ function useProductionStore() {
   });
   const loadedRemote = useRef(false);
   const lastSyncedSerialized = useRef('');
-  // Flag set à true dès qu'une mutation locale est en cours (entre le setState
+  const remoteVersion = useRef(0);
+  // Flag set à true dès qu'une mutation localé est en cours (entre le setState
   // et la fin du PUT réseau). Pendant ce temps, le polling NE remplace PAS le
   // store local, pour éviter d'écraser la mutation (race condition).
   const pendingMutation = useRef(false);
 
+  const forceNextPut = useRef(false);
+
   const setStore = useCallback((updater) => {
     setStoreRaw(updater);
+  }, []);
+
+  const forceReplaceStore = useCallback((next) => {
+    forceNextPut.current = true;
+    setStoreRaw(normalizeStore(next));
   }, []);
 
   useEffect(() => {
     let cancelled = false;
 
     async function syncFromRemote() {
-      // Mutation locale en cours → on attend qu'elle se termine
       if (pendingMutation.current) return;
       try {
-        const response = await fetch(API_BASE + '/api/store');
-        if (!response.ok) return;
-        const remote = await response.json();
-        if (cancelled || !remote) return;
-        // Double-check après le await (une mutation a pu démarrer entre-temps)
-        if (pendingMutation.current) return;
-        const normalized = normalizeStore(remote);
-        const serialized = JSON.stringify(normalized);
-        if (serialized === lastSyncedSerialized.current) {
+        const vParam = remoteVersion.current ? `?v=${remoteVersion.current}` : '';
+        const response = await fetch(API_BASE + '/api/store' + vParam);
+        if (response.status === 304) {
           if (!loadedRemote.current) loadedRemote.current = true;
           return;
         }
-        lastSyncedSerialized.current = serialized;
-        setStoreRaw(normalized);
+        if (!response.ok) return;
+        const serverVersion = response.headers.get('X-Store-Version');
+        if (serverVersion) remoteVersion.current = Number(serverVersion);
+        const remote = await response.json();
+        if (cancelled || !remote) return;
+        if (pendingMutation.current) return;
+        const normalized = normalizeStore(remote);
+        setStoreRaw((localStore) => {
+          const merged = preserveLocalNotificationReadState(normalized, localStore);
+          lastSyncedSerialized.current = JSON.stringify(merged);
+          return merged;
+        });
       } catch {
-        /* offline ou erreur */
+        /* offline */
       } finally {
         if (!loadedRemote.current) loadedRemote.current = true;
       }
     }
 
     syncFromRemote();
-    const id = setInterval(syncFromRemote, 4000);
+    const id = setInterval(syncFromRemote, 6000);
     const onVisibility = () => {
       if (document.visibilityState === 'visible') syncFromRemote();
     };
+    const onStorageChange = (event) => {
+      if (event.key === STORAGE_KEY && event.newValue && !pendingMutation.current) {
+        try {
+          const updated = JSON.parse(event.newValue);
+          const normalized = normalizeStore(updated);
+          lastSyncedSerialized.current = JSON.stringify(normalized);
+          setStoreRaw(normalized);
+        } catch {}
+      }
+    };
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('focus', syncFromRemote);
+    window.addEventListener('storage', onStorageChange);
     return () => {
       cancelled = true;
       clearInterval(id);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('focus', syncFromRemote);
+      window.removeEventListener('storage', onStorageChange);
     };
   }, []);
 
   const quotaWarnedRef = useRef(false);
-  useEffect(() => {
-    const payload = JSON.stringify(store);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, payload);
-    } catch (error) {
-      if (!quotaWarnedRef.current && (error.name === 'QuotaExceededError' || error.code === 22)) {
-        quotaWarnedRef.current = true;
-        console.error('[FresCoop] localStorage saturé — les images sont trop volumineuses. Veuillez en supprimer.');
-        try {
-          const lightStore = {
-            ...store,
-            products: (store.products || []).map((p) => ({ ...p, image: p.image ? { id: p.image.id, name: p.image.name } : null, images: [] })),
-          };
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(lightStore));
-        } catch {}
-      }
-    }
-    if (!loadedRemote.current) return;
-    // Si le store local est identique à la dernière version synchronisée remote,
-    // ce changement vient du polling — on NE fait PAS de PUT.
-    if (payload === lastSyncedSerialized.current) return;
+  const putTimerRef = useRef(null);
+  const localStorageTimerRef = useRef(null);
+  const storeRef = useRef(store);
+  storeRef.current = store;
 
-    // Mutation locale détectée → verrouiller le polling et PUT immédiat
+  useEffect(() => {
+    // Debounce localStorage write (non-blocking)
+    clearTimeout(localStorageTimerRef.current);
+    localStorageTimerRef.current = setTimeout(() => {
+      try {
+        const payload = JSON.stringify(storeRef.current);
+        window.localStorage.setItem(STORAGE_KEY, payload);
+      } catch (error) {
+        if (!quotaWarnedRef.current && (error.name === 'QuotaExceededError' || error.code === 22)) {
+          quotaWarnedRef.current = true;
+          try {
+            const lightStore = {
+              ...storeRef.current,
+              products: (storeRef.current.products || []).map((p) => ({
+                ...p,
+                image: lightAttachmentForStorage(p.image),
+                images: (p.images || []).map(lightAttachmentForStorage).filter(Boolean),
+              })),
+            };
+            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(lightStore));
+          } catch {}
+        }
+      }
+    }, 500);
+
+    if (!loadedRemote.current) return;
+
+    // Debounce PUT to server (coalesce rapid mutations)
+    clearTimeout(putTimerRef.current);
     pendingMutation.current = true;
-    const handle = setTimeout(async () => {
+    const useForce = forceNextPut.current;
+    forceNextPut.current = false;
+    putTimerRef.current = setTimeout(async () => {
+      const payload = JSON.stringify(storeRef.current);
+      if (payload === lastSyncedSerialized.current) {
+        pendingMutation.current = false;
+        return;
+      }
       try {
         const authHeaders = { 'Content-Type': 'application/json' };
         const savedToken = sessionStorage.getItem('frescoop.auth.token');
         if (savedToken) authHeaders['Authorization'] = `Bearer ${savedToken}`;
-        const res = await fetch(API_BASE + '/api/store', {
+        const res = await fetch(API_BASE + '/api/store' + (useForce ? '?force=true' : ''), {
           method: 'PUT',
           headers: authHeaders,
           body: payload,
         });
         if (res.ok) {
           lastSyncedSerialized.current = payload;
+          try { const d = await res.json(); if (d.v) remoteVersion.current = d.v; } catch {}
         } else if (res.status === 409) {
-          // Le serveur a refusé (anti-régression) : on re-sync pour récupérer l'état réel
           try {
             const freshRes = await fetch(API_BASE + '/api/store');
             if (freshRes.ok) {
               const remote = await freshRes.json();
               const normalized = normalizeStore(remote);
-              lastSyncedSerialized.current = JSON.stringify(normalized);
-              setStoreRaw(normalized);
+              setStoreRaw((localStore) => {
+                const merged = preserveLocalNotificationReadState(normalized, localStore);
+                lastSyncedSerialized.current = JSON.stringify(merged);
+                return merged;
+              });
             }
-          } catch {}
-          try {
-            const body = await res.json();
-            console.warn('[Store] Mutation refusée par le serveur:', body?.error);
           } catch {}
         }
       } catch {
-        /* ignore */
+        /* offline */
       } finally {
         pendingMutation.current = false;
       }
-    }, 250);
+    }, 800);
     return () => {
-      clearTimeout(handle);
+      clearTimeout(putTimerRef.current);
       pendingMutation.current = false;
     };
   }, [store]);
 
-  return [store, setStore];
+  return [store, setStore, forceReplaceStore];
 }
 
-function makeActions(setStore) {
+function makeActions(setStore, forceReplaceStore) {
   return {
     setUsers: (updater) => setStore((store) => ({ ...store, users: resolveUpdate(store.users, updater) })),
     setProducts: (updater) => setStore((store) => ({ ...store, products: resolveUpdate(store.products, updater) })),
@@ -7110,6 +10203,7 @@ function makeActions(setStore) {
     setTransactions: (updater) => setStore((store) => ({ ...store, transactions: resolveUpdate(store.transactions, updater) })),
     setProofs: (updater) => setStore((store) => ({ ...store, proofs: resolveUpdate(store.proofs, updater) })),
     setHubs: (updater) => setStore((store) => ({ ...store, hubs: resolveUpdate(store.hubs, updater) })),
+    setActivityProofs: (updater) => setStore((store) => ({ ...store, activityProofs: resolveUpdate(store.activityProofs || [], updater) })),
     setOrders: (updater) => setStore((store) => ({ ...store, orders: dedupeOrders(resolveUpdate(store.orders, updater)) })),
     setMessages: (updater) => setStore((store) => ({ ...store, messages: resolveUpdate(store.messages, updater) })),
     setNotifications: (updater) => setStore((store) => ({ ...store, notifications: normalizeNotifications(resolveUpdate(store.notifications || [], updater)) })),
@@ -7120,8 +10214,11 @@ function makeActions(setStore) {
     setConsentRecords: (updater) => setStore((store) => ({ ...store, consentRecords: resolveUpdate(store.consentRecords || [], updater) })),
     setAuditLogs: (updater) => setStore((store) => ({ ...store, auditLogs: resolveUpdate(store.auditLogs || [], updater) })),
     setLoans: (updater) => setStore((store) => ({ ...store, loans: resolveUpdate(store.loans || [], updater) })),
+    setLoanRepayments: (updater) => setStore((store) => ({ ...store, loanRepayments: resolveUpdate(store.loanRepayments || [], updater) })),
+    setAgriScoreCollections: (updater) => setStore((store) => ({ ...store, agriScoreCollections: resolveUpdate(store.agriScoreCollections || [], updater) })),
     setSurveyLeads: (updater) => setStore((store) => ({ ...store, surveyLeads: resolveUpdate(store.surveyLeads || [], updater) })),
     replaceStore: (next) => setStore(normalizeStore(next)),
+    forceReplaceStore: (next) => forceReplaceStore(next),
   };
 }
 
@@ -7134,6 +10231,7 @@ function createEmptyStore() {
     transactions: [],
     proofs: [],
     hubs: [],
+    activityProofs: [],
     orders: [],
     messages: [],
     notifications: [],
@@ -7157,7 +10255,11 @@ function createEmptyStore() {
     auditLogs: [],
     kpiAggregates: [],
     loans: [],
+    loanRepayments: [],
+    agriScoreCollections: [],
     surveyLeads: [],
+    ratings: [],
+    cashbackRecords: [],
   };
 }
 
@@ -7165,10 +10267,105 @@ function normalizeStore(value) {
   const base = createEmptyStore();
   if (!value || typeof value !== 'object') return base;
   const next = Object.fromEntries(Object.keys(base).map((key) => [key, Array.isArray(value[key]) ? value[key] : []]));
-  next.users = ensureSeedAdmin(next.users);
+  next.users = dedupeById(ensureSeedAdmin(next.users));
   next.orders = dedupeOrders(next.orders);
   next.notifications = normalizeNotifications(next.notifications);
+  next.loans = (next.loans || []).map(normalizeLoanForStore);
   return next;
+}
+
+function preserveLocalNotificationReadState(remoteStore, localStore) {
+  const localNotifMap = new Map((localStore?.notifications || []).map((item) => [item.id, item]));
+  const remoteNotifIds = new Set((remoteStore.notifications || []).map((item) => item.id));
+  const mergedNotifications = (remoteStore.notifications || []).map((item) => {
+    const local = localNotifMap.get(item.id);
+    if (local && (local.read || local.readAt)) {
+      return { ...item, read: true, readAt: local.readAt || item.readAt || '' };
+    }
+    return item;
+  });
+  const localOnlyNotifs = (localStore?.notifications || []).filter(
+    (item) => item.id && !remoteNotifIds.has(item.id),
+  );
+  const STATUS_WEIGHT = { pending: 0, 'En attente': 0, rejected: 1, 'Refusé': 1, approved: 2, active: 3, 'Approuvé': 2, 'En cours': 3, overdue: 4, 'Retard': 4, repaid: 5, defaulted: 5, 'Remboursé': 5, 'Défaut': 5 };
+  const localLoanMap = new Map((localStore?.loans || []).filter((l) => l && l.id).map((l) => [l.id, l]));
+  const remoteLoanIds = new Set((remoteStore.loans || []).map((l) => l?.id).filter(Boolean));
+  const mergedLoans = (remoteStore.loans || []).map((remoteLoan) => {
+    if (!remoteLoan?.id) return remoteLoan;
+    const localLoan = localLoanMap.get(remoteLoan.id);
+    if (!localLoan) return remoteLoan;
+    const localWeight = STATUS_WEIGHT[localLoan.status] ?? -1;
+    const remoteWeight = STATUS_WEIGHT[remoteLoan.status] ?? -1;
+    const remoteDecisionStamp = toTimeValue(remoteLoan.decidedAt);
+    const localResetStamp = toTimeValue(localLoan.statusResetAt || localLoan.resetAt);
+    if (remoteDecisionStamp && !localLoan.decidedAt && remoteWeight > 0 && (!localResetStamp || localResetStamp <= remoteDecisionStamp)) return remoteLoan;
+    if (localLoan.decidedAt && !remoteLoan.decidedAt && localWeight > 0) return localLoan;
+    const localStamp = Math.max(toTimeValue(localLoan.decidedAt), toTimeValue(localLoan.statusUpdatedAt), toTimeValue(localLoan.updatedAt));
+    const remoteStamp = Math.max(toTimeValue(remoteLoan.decidedAt), toTimeValue(remoteLoan.statusUpdatedAt), toTimeValue(remoteLoan.updatedAt));
+    if (localStamp > remoteStamp) return localLoan;
+    if (localStamp === remoteStamp) {
+      const localProgress = getLoanProgressRank(localLoan);
+      const remoteProgress = getLoanProgressRank(remoteLoan);
+      if (localProgress > remoteProgress) return localLoan;
+      if (remoteProgress > localProgress) return remoteLoan;
+      if (localWeight >= remoteWeight) return localLoan;
+    }
+    return remoteLoan;
+  });
+  const localOnlyLoans = (localStore?.loans || []).filter(
+    (l) => l && l.id && !remoteLoanIds.has(l.id),
+  );
+  return {
+    ...remoteStore,
+    notifications: [...mergedNotifications, ...localOnlyNotifs],
+    loans: [...mergedLoans, ...localOnlyLoans],
+  };
+}
+
+function toTimeValue(v) {
+  if (!v) return 0;
+  const t = new Date(v).getTime();
+  return Number.isFinite(t) ? t : 0;
+}
+
+function getLoanProgressRank(loan) {
+  const tranches = Array.isArray(loan?.tranches) ? loan.tranches : [];
+  const trancheRank = tranches.reduce((sum, tranche, index) => {
+    const base = Number(tranche?.pct || 0) || (index === 0 ? 40 : 30);
+    if (tranche?.status === 'completed' || tranche?.proofStatus === 'valide') return sum + base * 4;
+    if (tranche?.status === 'disbursed') return sum + base * 3;
+    if (tranche?.proofStatus === 'en_attente') return sum + base * 2;
+    if (tranche?.proofStatus === 'rejete') return sum + base;
+    return sum;
+  }, 0);
+  return trancheRank + Number(loan?.disbursedPct || 0) * 3 + (Number(loan?.repaidAmount || 0) > 0 ? 1000 : 0);
+}
+
+function lightAttachmentForStorage(file) {
+  if (!file) return null;
+  if (typeof file === 'string') {
+    return /^https?:\/\//i.test(file) ? file : null;
+  }
+  if (typeof file !== 'object') return null;
+  const url = file.url || file.secure_url;
+  if (!url) return null;
+  return {
+    id: file.id || file.public_id || '',
+    name: file.name || '',
+    type: file.type || '',
+    size: file.size || 0,
+    url,
+    uploadedAt: file.uploadedAt || '',
+  };
+}
+
+function dedupeById(arr) {
+  const seen = new Set();
+  return arr.filter((item) => {
+    if (!item || !item.id || seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
 }
 
 function dedupeOrders(orders) {
@@ -7220,7 +10417,7 @@ function sanitizeNotificationText(value) {
     .replace(/Confirm\uFFFD+e/g, 'Confirm\u00e9e')
     .replace(/annul\uFFFD+e/g, 'annul\u00e9e')
     .replace(/pay\uFFFD+\(s\)/g, 'paye(s)')
-    .replace(/pr\uFFFD+parer/g, 'preparer');
+    .replace(/pr\uFFFD+parer/g, 'préparer');
 }
 
 function ensureSeedAdmin(users) {
@@ -7234,7 +10431,7 @@ function ensureSeedAdmin(users) {
           id: current.id || seed.id,
           name: current.name || seed.name,
           email: seed.email,
-          role: 'admin',
+          role: seed.role || 'admin',
           status: 'Actif',
           organization: current.organization || seed.organization,
           passwordHash: seed.passwordHash,
@@ -7342,10 +10539,12 @@ function getNotificationIcon(type) {
 function getNotificationActionLabel(item) {
   if (item.type === 'message') return 'Ouvrir la conversation';
   if (item.type === 'order' || item.type === 'field-agent' || item.type === 'agent-step' || String(item.type || '').startsWith('order-')) return 'Voir la commande';
-  if (item.type === 'anti-waste') return 'Voir le marche';
+  if (item.type === 'anti-waste') return 'Voir le marché';
   if (item.type === 'approval_request') return 'Valider le compte';
   if (item.type === 'account-status') return 'Voir mon espace';
   if (item.type === 'survey-lead') return 'Voir les prospects';
+  if (item.type === 'loan-request') return 'Instruire la demande';
+  if (item.type === 'loan-decision') return 'Voir mon dossier';
   return item.path ? 'Ouvrir' : 'Marquer comme lu';
 }
 
@@ -7454,7 +10653,7 @@ function getPageMeta(path, user) {
 function getOrdersTitle(role) {
   if (isBuyerRole(role)) return 'Commandes envoyées';
   if (role === 'agentTerrain') return 'Commandes terrain à coordonner';
-  if (role === 'transporteur') return 'Livraisons à suivre';
+
   return 'Commandes reçues';
 }
 
@@ -7550,17 +10749,6 @@ function getHeroMetrics(user, stats, store) {
     ];
   }
 
-  if (user.role === 'transporteur') {
-    const orders = getVisibleOrders(store.orders, user).filter((item) => item.status !== 'Livree');
-    const alerts = buildTransportAlerts(store, user);
-    return [
-      { icon: Truck, label: 'Livraisons', value: orders.length, tone: 'green' },
-      { icon: Warehouse, label: 'Hubs', value: store.hubs.filter((hub) => hub.ownerId === user.id).length, tone: 'blue' },
-      { icon: BellRing, label: 'Alertes', value: alerts.length, tone: 'gold' },
-      { icon: ShieldCheck, label: 'Role actif', value: roleLabel(user.role), tone: 'coral' },
-    ];
-  }
-
   return [
     { icon: Store, label: 'Produits publies', value: stats.products, tone: 'green' },
     { icon: ShoppingCart, label: 'Commandes', value: stats.orders, tone: 'blue' },
@@ -7618,7 +10806,7 @@ function buildAdminOpportunities(store) {
     sellersWithoutProof.length > 0 && {
       id: 'proofs',
       icon: Landmark,
-      title: 'Construire les preuves economiques',
+      title: 'Construire les preuves économiques',
       body: 'Les preuves transforment les ventes en actif negociable.',
       value: `${sellersWithoutProof.length} vendeur(s)`,
       path: '/preuves',
@@ -7649,7 +10837,7 @@ function buildSellerOpportunities(store, user) {
       id: 'publish-drafts',
       icon: Store,
       title: 'Mettre les brouillons en vente',
-      body: 'Chaque produit publie augmente les chances de commande.',
+      body: 'Chaque produit publié augmente les chances de commande.',
       value: `${draftProducts.length} produit(s)`,
       path: '/produits',
     },
@@ -7680,18 +10868,10 @@ function buildSellerOpportunities(store, user) {
     !transactions.length && {
       id: 'transactions',
       icon: ReceiptText,
-      title: 'Enregistrer les ventes reelles',
-      body: 'Les ventes saisies creent une preuve économique exploitable.',
+      title: 'Enregistrer les ventes réelles',
+      body: 'Les ventes saisies créent une preuve économique exploitable.',
       value: 'Preuve',
       path: '/preuves',
-    },
-    !dossiers.length && {
-      id: 'dossier',
-      icon: FolderPlus,
-      title: 'Créer un dossier vendeur',
-      body: 'Un dossier complet rassure acheteurs, partenaires et financeurs.',
-      value: 'Confiance',
-      path: '/dossiers',
     },
   ].filter(Boolean);
 }
@@ -7714,12 +10894,7 @@ function buildSellerHealth(store) {
     const orders = store.orders.filter((item) => item.sellerId === user.id);
     const messages = store.messages.filter((item) => item.sellerId === user.id);
     const dossiers = store.dossiers.filter((item) => item.ownerId === user.id);
-    const profileScore = (user.phone ? 10 : 0) + (user.region ? 10 : 0) + (user.organization ? 10 : 0);
-    const productScore = Math.min(30, products.filter((item) => item.status === 'Publie').length * 10);
-    const orderScore = Math.min(25, orders.length * 8);
-    const trustScore = Math.min(15, dossiers.filter((item) => item.status === 'Valide').length * 15);
-    const messageScore = messages.some((item) => item.status === 'Nouveau') ? 0 : 10;
-    const score = Math.min(100, profileScore + productScore + orderScore + trustScore + messageScore);
+    const score = buildBancabiliteDossier(user, store).score;
     const recommendation = getSellerRecommendation({ user, products, orders, dossiers, messages });
     return { user, products, orders, score, recommendation };
   }).sort((a, b) => a.score - b.score);
@@ -7728,11 +10903,11 @@ function buildSellerHealth(store) {
 function getSellerRecommendation({ user, products, orders, dossiers, messages }) {
   if (!products.length) return 'Ajouter au moins un produit vendable.';
   if (!products.some((item) => item.status === 'Publie')) return 'Publier les produits en brouillon.';
-  if (!user.phone || !user.region) return 'Completer telephone et region.';
+  if (!user.phone || !user.region) return 'Completer téléphone et region.';
   if (messages.some((item) => item.status === 'Nouveau')) return 'Repondre aux messages clients.';
-  if (!orders.length) return 'Partager le catalogue et stimuler les premieres commandes.';
+  if (!orders.length) return 'Partager le catalogue et stimuler les premières commandes.';
   if (!dossiers.some((item) => item.status === 'Valide')) return 'Valider un dossier pour renforcer la confiance.';
-  return 'Profil solide: pousser preuves economiques et partenariats.';
+  return 'Profil solide: pousser preuves économiques et partenariats.';
 }
 
 function buildTrustPipeline(store) {
@@ -7791,7 +10966,7 @@ function getFrescoopOperatingData(store) {
 }
 
 function createFrescoopDemoStore(store) {
-  // Mélange l'ancien seed léger (buildFrescoopDemoData) + le seed POESAM riche.
+  // Mélange l'ancien seed léger (buildFrescoopDemoData) + le seed UEMOA riche.
   // Mot de passe de tous les comptes démo : "demo1234".
   const demo = buildFrescoopDemoData(store);
   const next = { ...store };
@@ -7799,7 +10974,7 @@ function createFrescoopDemoStore(store) {
     next[key] = mergeById(store[key] || [], values);
   });
 
-  const rich = buildRichPoesamDemo(next);
+  const rich = buildRichUemoaDemo(next);
   Object.entries(rich).forEach(([key, values]) => {
     next[key] = mergeById(next[key] || [], values);
   });
@@ -7807,32 +10982,35 @@ function createFrescoopDemoStore(store) {
   return normalizeStore(next);
 }
 
-function removeRichPoesamDemo(store) {
+function removeRichUemoaDemo(store) {
   const demoPatterns = ['-demo-', 'coop-', 'buyer-', 'lot-', 'hub-', 'crate-', 'sensor-', 'reading-', 'qa-', 'border-', 'dispatch-', 'payrec-', 'payout-', 'consent-', 'ecopro-', 'offer-', 'alert-demo', 'audit-demo', 'kpi-'];
+  const seedPatterns = /^(prd-\d|ord-\d|txn-\d|pay-\d|dos-\d|prf-\d|att-\d|lot-\d|hub-\d|usr-demo-\d)/;
   const isDemo = (item) => {
     const id = String(item?.id || '');
-    return demoPatterns.some((p) => id.includes(p));
+    return demoPatterns.some((p) => id.includes(p)) || seedPatterns.test(id);
   };
   const realUserEmails = new Set();
   (store.users || []).forEach((u) => {
     if (!isDemo(u)) realUserEmails.add(u.email);
   });
   const cleaned = { ...store };
-  const allKeys = ['users', 'products', 'orders', 'hubs', 'lots', 'transactions', 'proofs', 'attestations', 'cooperatives', 'crates', 'lotPhotos', 'sensorDevices', 'sensorReadings', 'qualityAssessments', 'buyers', 'buyerOrders', 'reservations', 'dispatches', 'paymentRecords', 'payoutRecords', 'consentRecords', 'economicProfiles', 'partnerOffers', 'alerts', 'auditLogs', 'kpiAggregates'];
-  allKeys.forEach((k) => {
-    cleaned[k] = (store[k] || []).filter((item) => !isDemo(item));
+  Object.keys(store).forEach((k) => {
+    if (Array.isArray(store[k])) {
+      cleaned[k] = store[k].filter((item) => !isDemo(item));
+    }
   });
   return normalizeStore(cleaned);
 }
 
 function hasRichDemo(store) {
   const demoPatterns = ['-demo-', 'coop-', 'buyer-', 'lot-', 'hub-'];
-  return ['users', 'products', 'orders', 'lots', 'hubs', 'cooperatives', 'buyers'].some((k) =>
-    (store[k] || []).some((item) => demoPatterns.some((p) => String(item?.id || '').includes(p))),
+  const seedPatterns = /^(prd-\d|ord-\d|txn-\d|pay-\d|dos-\d|prf-\d|att-\d|lot-\d|hub-\d|usr-demo-\d)/;
+  return ['users', 'products', 'orders', 'lots', 'hubs', 'coopératives', 'buyers'].some((k) =>
+    (store[k] || []).some((item) => { const id = String(item?.id || ''); return demoPatterns.some((p) => id.includes(p)) || seedPatterns.test(id); }),
   );
 }
 
-function buildRichPoesamDemo(current) {
+function buildRichUemoaDemo(current) {
   // Port fidèle du seed mobile (lib/demoSeed.ts) : 50 productrices,
   // 200 produits, 150 commandes, 80 lots, 8 hubs, 50 transactions.
   const REGIONS = ['Thiès', 'Dakar', 'Kaolack', 'Fatick', 'Saint-Louis', 'Diourbel', 'Louga', 'Ziguinchor', 'Tambacounda', 'Matam'];
@@ -7914,21 +11092,7 @@ function buildRichPoesamDemo(current) {
     });
   });
 
-  const transporters = ['Mamadou Transport', 'SN Cold Chain', 'Sunu Car'].map((name, i) => ({
-    id: `usr-demo-trans-${i}`,
-    createdAt: new Date(now - 45 * 86400000).toISOString(),
-    name,
-    email: `transport.${i}@frescoop.demo`,
-    phone: `+221 77 ${String(700 + i).padStart(3, '0')} 0000`,
-    role: 'transporteur',
-    status: 'Actif',
-    organization: name,
-    region: pick(REGIONS, i),
-    bio: '',
-    passwordHash: demoHash,
-  }));
-
-  const users = [...producers, ...b2b, ...transporters];
+  const users = [...producers, ...b2b];
 
   const products = [];
   for (let i = 0; i < 200; i++) {
@@ -8203,7 +11367,7 @@ function buildFrescoopDemoData(store) {
     grade: lot.qualityGrade,
     defectsPercent: lot.lossRiskPercent > 20 ? 8 : 2,
     shelfLifeDays: lot.shelfLifeDays,
-    assessor: 'Operateur qualite FresCoop',
+    assessor: 'Operateur qualité FresCoop',
     recommendation: lot.routeRecommendation,
   }));
   const reservations = [
@@ -8223,7 +11387,7 @@ function buildFrescoopDemoData(store) {
   const partnerOffers = [
     { id: 'offer-avance-baobab', partnerId: 'partner-baobab', title: 'Avance intrants post-vente', eligibility: 'Consentement actif + 2 reservations confirmees', status: 'Disponible' },
   ];
-  const alerts = lots.filter((lot) => lot.lossRiskPercent >= 25).map((lot) => ({ id: `alert-${lot.id}`, createdAt: now, lotId: lot.id, severity: 'Haute', title: 'Lot a vendre rapidement', body: lot.routeReason }));
+  const alerts = lots.filter((lot) => lot.lossRiskPercent >= 25).map((lot) => ({ id: `alert-${lot.id}`, createdAt: now, lotId: lot.id, severity: 'Haute', title: 'Lot à vendre rapidement', body: lot.routeReason }));
   const auditLogs = [
     { id: 'aud-demo-001', createdAt: now, actorId: SEEDED_ADMIN_USER.id, actorName: 'Admin FresCoop', action: 'demo_seed', detail: 'Dataset jury FresCoop charge', targetId: 'demo' },
   ];
@@ -8239,7 +11403,7 @@ function createAuditLog(actor, action, detail, targetId) {
     id: uid('aud'),
     createdAt: new Date().toISOString(),
     actorId: actor?.id || '',
-    actorName: actor?.name || 'Systeme',
+    actorName: actor?.name || 'Système',
     action,
     detail,
     targetId,
@@ -8306,15 +11470,15 @@ function buildTransportAlerts(store, user) {
     const temperatureValue = Number(String(hub.temperature || '').replace(',', '.').replace(/[^\d.-]/g, ''));
 
     if (capacity && occupancy >= 85) {
-      alerts.push({ id: `${hub.id}-capacity`, title: `${hub.name}: capacite presque pleine`, body: `${occupancy}% occupe dans le hub de ${hub.region}.` });
+      alerts.push({ id: `${hub.id}-capacity`, title: `${hub.name}: capacité presque pleine`, body: `${occupancy}% occupe dans le hub de ${hub.region}.` });
     }
 
     if (battery && battery <= 25) {
-      alerts.push({ id: `${hub.id}-battery`, title: `${hub.name}: batterie faible`, body: `Batterie signalee a ${battery}%. Prioriser recharge ou relais.` });
+      alerts.push({ id: `${hub.id}-battery`, title: `${hub.name}: batterie faible`, body: `Batterie signalée a ${battery}%. Prioriser recharge ou relais.` });
     }
 
     if (temperatureText && Number.isFinite(temperatureValue) && temperatureValue > 8) {
-      alerts.push({ id: `${hub.id}-temperature`, title: `${hub.name}: froid a verifier`, body: `Temperature indiquee: ${hub.temperature}. Controle recommande avant livraison.` });
+      alerts.push({ id: `${hub.id}-temperature`, title: `${hub.name}: froid a vérifier`, body: `Temperature indiquée: ${hub.temperature}. Contrôle recommande avant livraison.` });
     }
 
     return alerts;
@@ -8322,7 +11486,7 @@ function buildTransportAlerts(store, user) {
 }
 
 function getSellerUsers(store) {
-  return store.users.filter((user) => isSellerRole(user.role));
+  return store.users.filter((user) => isSellerRole(user.role) && user.status === 'Actif');
 }
 
 function isSellerRole(role) {
@@ -8339,7 +11503,6 @@ function isFieldAgentRole(role) {
 
 function getAvailableFieldAgent(store) {
   return store.users.find((user) => user.role === 'agentTerrain' && user.status === 'Actif')
-    || store.users.find((user) => user.role === 'transporteur' && user.status === 'Actif')
     || null;
 }
 
@@ -8396,10 +11559,10 @@ async function buildUser(input) {
 function getInactiveAccountMessage(status) {
   const normalized = normalize(status);
   if (normalized === 'en attente') {
-    return 'Votre inscription est en attente de validation par un administrateur. Vous recevrez un acces des que votre compte sera approuve.';
+    return 'Votre inscription est en attente de validation par un administrateur. Vous recevrez un accès dès que votre compte sera approuvé.';
   }
   if (normalized === 'rejete') {
-    return 'Votre demande d inscription a ete rejetee. Contactez un administrateur FresCoop pour plus d informations.';
+    return "Votre demande d'inscription a été rejetée. Contactez un administrateur FresCoop pour plus d'informations.";
   }
   if (normalized === 'suspendu' || normalized === 'inactif' || normalized === 'bloque') {
     return 'Votre compte a ete suspendu. Contactez un administrateur FresCoop.';
@@ -8434,17 +11597,20 @@ function emptyTransactionForm() {
 }
 
 function emptyHubForm() {
-  return { name: '', region: '', manager: '', phone: '', capacityKg: '', currentStockKg: '', temperature: '', batteryPercent: '', imageFile: null };
+  return { name: '', region: '', manager: '', phone: '', capacityKg: '', currentStockKg: '', temperature: '', batteryPercent: '', gpsLat: '', gpsLng: '', imageFile: null };
+}
+
+function emptyLotForm() {
+  return { ownerId: '', cooperativeId: '', cooperativeName: '', productName: '', crop: '', hubId: '', chamber: '', placement: '', crateCount: '', weightKg: '', harvestDate: '', qualityGrade: 'Standard', temperatureC: '', humidityPercent: '', shelfLifeDays: '7', baselinePrice: '', recommendedPrice: '' };
 }
 
 function getPrimaryNavLinks(role) {
   const links = {
-    admin: ['/', '/lots', '/utilisateurs', '/impact'],
-    agriculteur: ['/', '/produits', '/marche', '/commandes', '/anti-gaspi', '/bancabilite'],
-    agentTerrain: ['/', '/commandes', '/anti-gaspi', '/operations', '/impact'],
-    transporteur: ['/', '/lots', '/operations', '/commandes'],
-    client: ['/', '/marche', '/anti-gaspi', '/commandes'],
-    acheteurB2B: ['/', '/marche', '/anti-gaspi', '/commandes'],
+    admin: ['/', '/utilisateurs', '/bancabilite', '/impact'],
+    agriculteur: ['/', '/produits', '/commandes', '/bancabilite'],
+    agentTerrain: ['/', '/verification', '/commandes', '/operations'],
+    client: ['/', '/marche', '/commandes'],
+    acheteurB2B: ['/', '/marche', '/lots', '/commandes'],
     partenaire: ['/', '/bancabilite', '/impact'],
   }[role] || ['/'];
 
@@ -8456,65 +11622,42 @@ function getMenuLinks(role) {
     admin: [
       '/',
       '/utilisateurs',
+      '/collecte-agriscore',
+      '/verification',
       '/produits',
       '/lots',
-      '/dossiers',
-      '/attestations',
-      '/preuves',
       '/operations',
-      '/impact',
-      '/anti-gaspi',
       '/bancabilite',
+      '/impact',
       '/ussd',
       '/donnees',
-      '/secteurs/agriculture',
-      '/secteurs/commerce',
-      '/secteurs/logistique',
       '/compte',
     ],
     agriculteur: [
       '/',
+      '/verification',
       '/produits',
       '/marche',
-      '/lots',
       '/commandes',
-      '/anti-gaspi',
       '/bancabilite',
-      '/impact',
       '/ussd',
-      '/dossiers',
-      '/attestations',
-      '/preuves',
-      '/secteurs/agriculture',
       '/compte',
     ],
     agentTerrain: [
       '/',
+      '/collecte-agriscore',
+      '/verification',
       '/commandes',
       '/produits',
-      '/anti-gaspi',
       '/operations',
       '/lots',
       '/impact',
       '/ussd',
-      '/compte',
-    ],
-    transporteur: [
-      '/',
-      '/operations',
-      '/lots',
-      '/commandes',
-      '/anti-gaspi',
-      '/dossiers',
-      '/attestations',
-      '/preuves',
-      '/secteurs/logistique',
       '/compte',
     ],
     client: [
       '/',
       '/marche',
-      '/anti-gaspi',
       '/commandes',
       '/paiement',
       '/compte',
@@ -8523,10 +11666,8 @@ function getMenuLinks(role) {
       '/',
       '/marche',
       '/lots',
-      '/anti-gaspi',
       '/commandes',
       '/paiement',
-      '/impact',
       '/compte',
     ],
     partenaire: [
@@ -8534,9 +11675,6 @@ function getMenuLinks(role) {
       '/bancabilite',
       '/impact',
       '/lots',
-      '/preuves',
-      '/anti-gaspi',
-      '/ussd',
       '/compte',
     ],
   }[role] || ['/'];
@@ -8547,38 +11685,27 @@ function getMenuLinks(role) {
 function getMenuGroups(role, menuLinks) {
   const groupsByRole = {
     admin: [
-      { title: 'Espace admin', paths: ['/', '/compte'] },
-      { title: 'Gestion', paths: ['/lots', '/utilisateurs', '/produits', '/operations'] },
-      { title: 'Documents', paths: ['/dossiers', '/attestations', '/preuves', '/donnees'] },
-      { title: 'POESAM - impact & inclusion', paths: ['/impact', '/anti-gaspi', '/bancabilite', '/ussd'] },
-      { title: 'Secteurs', paths: ['/secteurs/agriculture', '/secteurs/commerce', '/secteurs/logistique'] },
+      { title: 'Pilotage', paths: ['/', '/utilisateurs', '/compte'] },
+      { title: 'Activité & scoring', paths: ['/verification', '/produits', '/lots', '/operations'] },
+      { title: 'Financement & inclusion', paths: ['/bancabilite', '/impact', '/ussd', '/donnees'] },
     ],
     agriculteur: [
-      { title: 'Mon activité', paths: ['/', '/produits', '/marche', '/lots', '/commandes', '/compte'] },
-      { title: 'POESAM - vendre mieux', paths: ['/anti-gaspi', '/bancabilite', '/impact', '/ussd'] },
-      { title: 'Dossiers et preuves', paths: ['/dossiers', '/attestations', '/preuves', '/secteurs/agriculture'] },
+      { title: 'Mon activité', paths: ['/', '/produits', '/marche', '/commandes', '/compte'] },
+      { title: 'Mon financement', paths: ['/verification', '/bancabilite', '/ussd'] },
     ],
     agentTerrain: [
-      { title: 'Terrain', paths: ['/', '/commandes', '/produits', '/operations', '/lots', '/compte'] },
-      { title: 'Alertes & inclusion', paths: ['/anti-gaspi', '/impact', '/ussd'] },
-    ],
-    transporteur: [
-      { title: 'Espace transporteur', paths: ['/', '/operations', '/lots', '/commandes', '/compte'] },
-      { title: 'Priorités livraison', paths: ['/anti-gaspi'] },
-      { title: 'Documents et secteur', paths: ['/dossiers', '/attestations', '/preuves', '/secteurs/logistique'] },
+      { title: 'Terrain', paths: ['/', '/collecte-agriscore', '/verification', '/commandes', '/produits', '/operations', '/lots', '/compte'] },
+      { title: 'Inclusion', paths: ['/impact', '/ussd'] },
     ],
     client: [
       { title: 'Mon espace', paths: ['/', '/marche', '/commandes', '/paiement', '/compte'] },
-      { title: 'Consommation responsable', paths: ['/anti-gaspi'] },
     ],
     acheteurB2B: [
       { title: 'Sourcing B2B', paths: ['/', '/marche', '/lots', '/commandes', '/paiement', '/compte'] },
-      { title: 'Opportunités & impact', paths: ['/anti-gaspi', '/impact'] },
     ],
     partenaire: [
-      { title: 'Finance & scoring', paths: ['/', '/bancabilite', '/impact', '/compte'] },
-      { title: 'Traçabilité et preuves', paths: ['/lots', '/preuves'] },
-      { title: 'Engagement terrain', paths: ['/anti-gaspi', '/ussd'] },
+      { title: 'Finance & scoring', paths: ['/', '/bancabilite', '/impact', '/lots', '/compte'] },
+      { title: 'Outils terrain', paths: ['/ussd'] },
     ],
   };
   const itemByPath = new Map(menuLinks.map((item) => [item.path, item]));
@@ -8605,7 +11732,8 @@ function getMenuGroups(role, menuLinks) {
 function navItemByPath(path) {
   const items = {
     '/': { path: '/', label: 'Accueil', icon: Home, description: 'Vue principale de votre espace' },
-    '/marche': { path: '/marche', label: 'Marché', icon: ShoppingCart, description: 'Articles disponibles et commandes client' },
+    '/verification': { path: '/verification', label: 'Vérification', icon: ShieldCheck, description: 'Preuves d activité agricole et score de confiance' },
+    '/marche': { path: '/marche', label: 'Marché', icon: ShoppingCart, description: 'Articlés disponibles et commandes client' },
     '/produits': { path: '/produits', label: 'Produits', icon: PackageCheck, description: 'Catalogue et articles publiés' },
     '/lots': { path: '/lots', label: 'Lots froids', icon: ClipboardCheck, description: 'Jumeaux numériques, QR, capteurs et routage' },
     '/dossiers': { path: '/dossiers', label: 'Dossiers', icon: FolderPlus, description: 'Pièces et demandes documentaires' },
@@ -8615,20 +11743,18 @@ function navItemByPath(path) {
     '/paiement': { path: '/paiement', label: 'Paiement', icon: ReceiptText, description: 'Paiement partenaire et reçus' },
     '/operations': { path: '/operations', label: 'Opérations', icon: Warehouse, description: 'Hubs, stockage et logistique' },
     '/utilisateurs': { path: '/utilisateurs', label: 'Utilisateurs', icon: Users, description: 'Comptes, rôles et statuts' },
-    '/impact': { path: '/impact', label: 'Impact', icon: BarChart3, description: 'KPI POESAM : pertes évitées, revenu +, genre, CO₂' },
-    '/anti-gaspi': { path: '/anti-gaspi', label: 'Anti-gaspi', icon: Leaf, description: 'Alertes DLC et ventes éclair anti-gaspillage' },
+    '/impact': { path: '/impact', label: 'Impact', icon: BarChart3, description: 'KPI filières UEMOA: pertes évitées, revenu +, genre, CO2' },
+    '/collecte-agriscore': { path: '/collecte-agriscore', label: 'Collecte AgriScore', icon: ClipboardCheck, description: 'Collecte terrain assistée pour scoring agricole' },
     '/bancabilite': { path: '/bancabilite', label: 'Bancabilité', icon: Landmark, description: 'Score crédit et dossier finance exportable' },
     '/ussd': { path: '/ussd', label: 'USSD', icon: PhoneCall, description: 'Accès *384*FRES# pour téléphones sans Internet' },
     '/donnees': { path: '/donnees', label: 'Données', icon: Database, description: 'Export, import et maintenance' },
-    '/secteurs/agriculture': { path: '/secteurs/agriculture', label: 'Agriculture', icon: Tractor, description: 'Page dédiée au secteur agricole' },
-    '/secteurs/commerce': { path: '/secteurs/commerce', label: 'Commerce', icon: Store, description: 'Page dédiée au secteur commercial' },
-    '/secteurs/logistique': { path: '/secteurs/logistique', label: 'Logistique', icon: Truck, description: 'Page dédiée au secteur logistique' },
-    '/compte': { path: '/compte', label: 'Compte', icon: UserCheck, description: 'Profil et coordonnees' },
+    '/compte': { path: '/compte', label: 'Compte', icon: UserCheck, description: 'Profil et coordonnées' },
   };
   return items[path];
 }
 
 function canAccessPath(role, path) {
+  if (path === '/pitch') return true;
   return getMenuLinks(role).some((item) => item.path === path);
 }
 
@@ -8669,7 +11795,6 @@ function getVisibleOrders(items, user) {
   if (user.role === 'admin') return [];
   if (isBuyerRole(user.role)) return items.filter((item) => item.clientId === user.id);
   if (isFieldAgentRole(user.role)) return items.filter((item) => item.status !== 'Annulee' && (!item.assignedAgentId || item.assignedAgentId === user.id));
-  if (user.role === 'transporteur') return items.filter((item) => item.status !== 'Annulee');
   return items.filter((item) => item.sellerId === user.id);
 }
 
@@ -8693,9 +11818,9 @@ function computeEvidenceScore(dossier, store) {
   let total = 0;
   if (dossier.personName && dossier.personId && dossier.phone) { total += 15; reasons.push('Identite et contact renseignes'); }
   if (dossier.existingAttestation) { total += 25; reasons.push('Ancienne attestation fournie'); }
-  if (dossier.attachments.length) { const points = Math.min(25, dossier.attachments.length * 8); total += points; reasons.push(`${dossier.attachments.length} piece(s) jointe(s)`); }
-  if (dossier.evidenceTags.length) { const points = Math.min(20, dossier.evidenceTags.length * 5); total += points; reasons.push(`${dossier.evidenceTags.length} type(s) de preuves`); }
-  if (ownerTransactions.length) { total += Math.min(20, ownerTransactions.length * 5); reasons.push('Transactions economiques rattachees'); }
+  if ((dossier.attachments || dossier.pieces || []).length) { const att = dossier.attachments || dossier.pieces || []; const points = Math.min(25, att.length * 8); total += points; reasons.push(`${att.length} piece(s) jointe(s)`); }
+  if ((dossier.evidenceTags || []).length) { const tags = dossier.evidenceTags || []; const points = Math.min(20, tags.length * 5); total += points; reasons.push(`${tags.length} type(s) de preuves`); }
+  if (ownerTransactions.length) { total += Math.min(20, ownerTransactions.length * 5); reasons.push('Transactions économiques rattachées'); }
   if (ownerProducts.length) { total += Math.min(10, ownerProducts.length * 3); reasons.push('Produits publies sur FresCoop'); }
   if (dossier.status === 'Valide') { total += 20; reasons.push('Validation admin'); }
   if (!reasons.length) reasons.push('Aucune preuve suffisante pour le moment');
@@ -8743,14 +11868,14 @@ function sectorMatch(product, kind, store) {
   const owner = store.users.find((user) => user.id === product.ownerId);
   if (kind === 'agriculture') return owner?.role === 'agriculteur';
   if (kind === 'commerce') return owner?.role === 'acheteurB2B' || owner?.role === 'client';
-  return owner?.role === 'transporteur';
+  return false;
 }
 
 function sectorDossierMatch(dossier, kind, store) {
   const owner = store.users.find((user) => user.id === dossier.ownerId);
   if (kind === 'agriculture') return owner?.role === 'agriculteur';
   if (kind === 'commerce') return owner?.role === 'acheteurB2B';
-  return owner?.role === 'transporteur';
+  return false;
 }
 
 function getFallbackProductImage(product, seller) {
@@ -8893,7 +12018,7 @@ function renderAttestationHtml(attestation) {
     <section>
       <h2>Bénéficiaire</h2>
       <p><strong>${escapeHtml(dossier.personName)}</strong> - ${escapeHtml(roleLabel(dossier.personRole))}</p>
-      <p>ID: ${escapeHtml(dossier.personId)} | Telephone: ${escapeHtml(dossier.phone || 'Non renseigne')}</p>
+      <p>ID: ${escapeHtml(dossier.personId)} | Téléphone: ${escapeHtml(dossier.phone || 'Non renseigne')}</p>
       <p>Organisation: ${escapeHtml(dossier.organization || dossier.ownerName || 'Non renseignee')}</p>
     </section>
     <section>
@@ -8999,7 +12124,7 @@ function renderPaymentReceiptHtml(receipt, store, user) {
   const dateStr = paidDate.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
   const timeStr = paidDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   const invoiceNum = `FC-${paidDate.getFullYear()}-${receipt.code.slice(-8)}`;
-  const method = receipt.token?.startsWith('DEMO') ? 'Simulation démo' : 'PayDunya';
+  const method = receipt.token?.startsWith('DEMO') ? 'Simulation démo' : 'GIM-Pay';
 
   const verifyUrl = getReceiptVerifyUrl(receipt.code);
   const qrUrl = getQrImageUrl(verifyUrl, 220);
@@ -9313,6 +12438,7 @@ function renderPaymentReceiptHtml(receipt, store, user) {
 function renderBusinessReportHtml(store) {
   const revenue = buildRevenueSnapshot(store);
   const pipeline = buildTrustPipeline(store);
+  const impact = computeUemoaImpact(store);
   const topProducts = buildTopProductsByMoney(store).slice(0, 8);
   const opportunities = buildAdminOpportunities(store).slice(0, 6);
   const rows = topProducts.map((item) => `
@@ -9325,37 +12451,127 @@ function renderBusinessReportHtml(store) {
   `).join('');
   const opportunityRows = opportunities.map((item) => `<li><strong>${escapeHtml(item.title)}</strong>: ${escapeHtml(item.body)} (${escapeHtml(item.value)})</li>`).join('');
 
-  return renderDocumentShell('Rapport POESAM FresCoop', `
-    <h1>Rapport POESAM - FresCoop</h1>
+  return renderDocumentShell('Rapport Filieres Agricoles UEMOA FresCoop', `
+    <header class="report-header">
+      <div class="header-brand">
+        <div class="logo-badge"><span>F</span></div>
+        <div>
+          <h1>FresCoop</h1>
+          <p class="subtitle">Rapport Filieres Agricoles UEMOA</p>
+        </div>
+      </div>
+      <div class="gim-badge">
+        <strong>GIM-UEMOA</strong>
+        <span>Hackathon Filieres Agricoles 2026</span>
+        <span class="badge-tag">Finaliste</span>
+      </div>
+    </header>
     <p class="code">Genere le ${escapeHtml(formatDate(new Date().toISOString()))}</p>
+
+    <section class="impact-grid">
+      <h2>Impact UEMOA - Indicateurs temps reel</h2>
+      <div class="kpi-row">
+        <div class="kpi-card green"><span class="kpi-value">${impact.lossesAvertedPercent}%</span><span class="kpi-label">Pertes evitees</span></div>
+        <div class="kpi-card gold"><span class="kpi-value">${escapeHtml(formatMoney(impact.additionalFarmerRevenue))}</span><span class="kpi-label">Revenu additionnel</span></div>
+        <div class="kpi-card coral"><span class="kpi-value">${impact.womenProducers}/${impact.totalProducers}</span><span class="kpi-label">Femmes productrices</span></div>
+        <div class="kpi-card blue"><span class="kpi-value">${formatCompact(impact.co2SavedKg)} kg</span><span class="kpi-label">CO2 evite</span></div>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi-card green"><span class="kpi-value">${formatCompact(impact.tracedKg)}</span><span class="kpi-label">Kg traces</span></div>
+        <div class="kpi-card gold"><span class="kpi-value">${impact.gimpayTxCount}</span><span class="kpi-label">Paiements GIM-Pay</span></div>
+        <div class="kpi-card blue"><span class="kpi-value">${(store.lots || []).length}</span><span class="kpi-label">Lots actifs</span></div>
+        <div class="kpi-card coral"><span class="kpi-value">${store.proofs.length}</span><span class="kpi-label">Preuves économiques</span></div>
+      </div>
+    </section>
+
     <section>
       <h2>Proposition de valeur</h2>
-      <p>FresCoop transforme le catalogue agricole et commercial en commandes, preuves economiques et donnees de confiance utilisables pour financement, contrats et logistique.</p>
+      <p>FresCoop digitalise la chaîne de valeur agricole UEMOA : marketplace multicanale, stockage froid solaire, paiement via rails GIM-UEMOA et preuve économique portable pour l'accès au crédit formel.</p>
     </section>
+
     <section>
-      <h2>Indicateurs argent</h2>
-      <p>Valeur catalogue: <strong>${escapeHtml(formatMoney(revenue.catalogValue))}</strong></p>
-      <p>Valeur commandes: <strong>${escapeHtml(formatMoney(revenue.orderValue))}</strong></p>
-      <p>Commandes ouvertes a convertir: <strong>${escapeHtml(formatMoney(revenue.openOrderValue))}</strong></p>
-      <p>Vendeurs actifs: <strong>${revenue.activeSellerCount}/${revenue.sellerCount}</strong></p>
+      <h2>Indicateurs financiers</h2>
+      <table class="finance-table">
+        <tr><td>Valeur catalogue</td><td><strong>${escapeHtml(formatMoney(revenue.catalogValue))}</strong></td></tr>
+        <tr><td>Valeur commandes</td><td><strong>${escapeHtml(formatMoney(revenue.orderValue))}</strong></td></tr>
+        <tr><td>Commandes ouvertes à convertir</td><td><strong>${escapeHtml(formatMoney(revenue.openOrderValue))}</strong></td></tr>
+        <tr><td>Vendeurs actifs</td><td><strong>${revenue.activeSellerCount}/${revenue.sellerCount}</strong></td></tr>
+        <tr><td>Transactions enregistrées</td><td><strong>${impact.transactionsCount}</strong></td></tr>
+      </table>
     </section>
+
     <section>
-      <h2>Confiance et bancabilite</h2>
-      <p>Dossiers: ${pipeline.total} | Validables: ${pipeline.validated} | En attente: ${pipeline.pending} | Preuves economiques: ${store.proofs.length}</p>
+      <h2>Confiance et bancabilité</h2>
+      <table class="finance-table">
+        <tr><td>Dossiers soumis</td><td><strong>${pipeline.total}</strong></td></tr>
+        <tr><td>Dossiers validables</td><td><strong>${pipeline.validated}</strong></td></tr>
+        <tr><td>En attente de validation</td><td><strong>${pipeline.pending}</strong></td></tr>
+        <tr><td>Preuves économiques emises</td><td><strong>${store.proofs.length}</strong></td></tr>
+        <tr><td>Attestations générées</td><td><strong>${store.attestations.length}</strong></td></tr>
+      </table>
     </section>
+
     <section>
       <h2>Produits moteurs</h2>
-      <table><thead><tr><th>Produit</th><th>Vendeur</th><th>Stock valorise</th><th>Commandes</th></tr></thead><tbody>${rows || '<tr><td colspan="4">Aucun produit</td></tr>'}</tbody></table>
+      <table><thead><tr><th>Produit</th><th>Vendeur</th><th>Stock valorisé</th><th>Commandes</th></tr></thead><tbody>${rows || '<tr><td colspan="4">Aucun produit enregistre</td></tr>'}</tbody></table>
     </section>
+
     <section>
       <h2>Actions prioritaires</h2>
       <ul>${opportunityRows || '<li>Aucune action critique pour le moment.</li>'}</ul>
     </section>
+
+    <section class="odd-section">
+      <h2>Contribution aux ODD</h2>
+      <div class="odd-row">
+        <span class="odd-tag">ODD 1</span><span class="odd-tag">ODD 2</span><span class="odd-tag">ODD 5</span><span class="odd-tag">ODD 8</span><span class="odd-tag">ODD 12</span><span class="odd-tag">ODD 13</span>
+      </div>
+    </section>
+
+    <div class="report-footer">
+      <p>FresCoop | Hackathon Filieres Agricoles UEMOA 2026 | GIM-UEMOA / ABX Accelerator</p>
+      <p>Demo : https://poesamfreschoop-three.vercel.app | contact@frescoop.sn | Dakar, Senegal</p>
+    </div>
   `);
 }
 
 function renderDocumentShell(title, body) {
-  return `<!doctype html><html lang="fr"><head><meta charset="utf-8" /><title>${escapeHtml(title)}</title><style>body{font-family:Arial,sans-serif;margin:42px;color:#071b14;line-height:1.55}h1{font-size:34px;margin:0 0 8px}h2{font-size:18px;margin:28px 0 8px}.code{padding:10px 12px;background:#e4f7ef;display:inline-block;font-weight:bold}section{border-top:1px solid #d7e4dc;padding-top:14px}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{border:1px solid #d7e4dc;padding:8px;text-align:left}th{background:#eef6f1}</style></head><body>${body}</body></html>`;
+  return `<!doctype html><html lang="fr"><head><meta charset="utf-8" /><title>${escapeHtml(title)}</title><style>
+*{box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:42px;color:#071b14;line-height:1.6;background:#f8faf9}
+h1{font-size:28px;margin:0;color:#0d3320}
+h2{font-size:17px;margin:24px 0 12px;color:#0d3320;border-bottom:2px solid #17a34a;padding-bottom:6px;display:inline-block}
+.subtitle{margin:2px 0 0;font-size:13px;color:#4a7c5f}
+.code{padding:8px 14px;background:#17a34a;color:#fff;display:inline-block;font-weight:bold;border-radius:4px;font-size:13px;margin:16px 0}
+section{padding:16px 0}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+th,td{border:1px solid #d7e4dc;padding:10px 12px;text-align:left}
+th{background:#0d3320;color:#fff;font-weight:600}
+.finance-table{width:auto;min-width:400px}
+.finance-table td:first-child{color:#4a7c5f}
+.finance-table td:last-child{text-align:right}
+.report-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:20px;border-bottom:3px solid #17a34a;margin-bottom:12px}
+.header-brand{display:flex;align-items:center;gap:14px}
+.logo-badge{width:48px;height:48px;background:#17a34a;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.logo-badge span{color:#fff;font-size:26px;font-weight:bold}
+.gim-badge{text-align:right;padding:10px 16px;border:2px solid #f59e0b;border-radius:8px;background:#fffbeb}
+.gim-badge strong{display:block;color:#b45309;font-size:16px}
+.gim-badge span{display:block;font-size:11px;color:#92400e}
+.badge-tag{display:inline-block;margin-top:4px;padding:2px 10px;background:#f59e0b;color:#fff;border-radius:3px;font-size:11px;font-weight:bold;text-transform:uppercase}
+.kpi-row{display:flex;gap:12px;margin:10px 0}
+.kpi-card{flex:1;padding:14px;border-radius:8px;text-align:center}
+.kpi-card.green{background:#ecfdf5;border:1px solid #6ee7b7}
+.kpi-card.gold{background:#fffbeb;border:1px solid #fcd34d}
+.kpi-card.coral{background:#fef2f2;border:1px solid #fca5a5}
+.kpi-card.blue{background:#eff6ff;border:1px solid #93c5fd}
+.kpi-value{display:block;font-size:22px;font-weight:bold;color:#0d3320}
+.kpi-label{display:block;font-size:11px;color:#4a7c5f;margin-top:4px}
+.odd-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.odd-tag{padding:6px 14px;background:#ecfdf5;border:1px solid #17a34a;border-radius:20px;font-size:12px;font-weight:600;color:#0d3320}
+.report-footer{margin-top:32px;padding-top:16px;border-top:2px solid #d7e4dc;text-align:center;font-size:12px;color:#4a7c5f}
+.report-footer p{margin:4px 0}
+@media print{body{background:#fff;padding:20px}.kpi-row{gap:6px}}
+</style></head><body>${body}</body></html>`;
 }
 
 function productsToRows(products) {
@@ -9375,12 +12591,12 @@ function transactionsToRows(items) {
 }
 
 function usersToRows(users) {
-  return [['ID', 'Date', 'Nom', 'Email', 'Role', 'Statut', 'Telephone', 'Organisation', 'Region'], ...users.map((user) => [user.id, user.createdAt, user.name, user.email, user.role, user.status, user.phone, user.organization, user.region])];
+  return [['ID', 'Date', 'Nom', 'Email', 'Role', 'Statut', 'Téléphone', 'Organisation', 'Region'], ...users.map((user) => [user.id, user.createdAt, user.name, user.email, user.role, user.status, user.phone, user.organization, user.region])];
 }
 
 function surveyLeadsToRows(leads) {
   return [
-    ['ID', 'Date', 'Nom', 'Telephone', 'Email', 'Profil', 'Region', 'Organisation', 'Produits', 'Besoins', 'Smartphone', 'Pilote', 'Canal', 'Statut', 'Notes'],
+    ['ID', 'Date', 'Nom', 'Téléphone', 'Email', 'Profil', 'Region', 'Organisation', 'Produits', 'Besoins', 'Smartphone', 'Pilote', 'Canal', 'Statut', 'Notes'],
     ...leads.map((lead) => [
       lead.id,
       lead.createdAt,
@@ -9410,7 +12626,24 @@ function downloadJson(filename, value) {
 }
 
 function downloadHtml(filename, html) {
-  downloadText(filename, html, 'text/html;charset=utf-8;');
+  const pdfName = filename.replace(/\.html$/i, '.pdf');
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = 'none';
+  document.body.appendChild(iframe);
+  const doc = iframe.contentWindow.document;
+  doc.open();
+  doc.write(html);
+  doc.close();
+  iframe.contentWindow.document.title = pdfName;
+  setTimeout(() => {
+    iframe.contentWindow.print();
+    setTimeout(() => document.body.removeChild(iframe), 1000);
+  }, 300);
 }
 
 function downloadText(filename, text, type) {
@@ -9473,6 +12706,14 @@ function normalize(value) {
     .toLowerCase();
 }
 
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 function uid(prefix) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -9483,7 +12724,12 @@ function buildVerificationCode(prefix) {
 
 function formatDate(value) {
   if (!value) return 'Non renseigne';
-  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(new Date(value));
+  const d = new Date(value);
+  const day = d.getDate().toString().padStart(2, '0');
+  const month = d.toLocaleString('fr-FR', { month: 'short' });
+  const hour = d.getHours().toString().padStart(2, '0');
+  const min = d.getMinutes().toString().padStart(2, '0');
+  return `${day} ${month} ${hour}:${min}`;
 }
 
 function formatNumber(value) {
