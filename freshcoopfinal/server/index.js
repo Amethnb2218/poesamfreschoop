@@ -282,6 +282,11 @@ createServer(async (request, response) => {
       return;
     }
 
+    if (request.url?.startsWith("/api/activity-proofs")) {
+      await handleActivityProofs(request, response);
+      return;
+    }
+
     if (request.url?.startsWith('/api/store/backups') || request.url?.startsWith('/api/store/restore')) {
       const authData = requireAuth(request);
       if (!authData || authData.role !== 'admin') {
@@ -1561,6 +1566,7 @@ function sendJson(response, statusCode, payload) {
   response.end(JSON.stringify(payload));
 }
 
+async function handleActivityProofs(request, response) {  const authData = requireAuth(request);  if (!authData) { sendJson(response, 401, { error: 'Non autorisé' }); return; }  if (request.method === 'POST') {    const body = await readBody(request);    const data = JSON.parse(body || '{}');    const store = await readStore();    const now = new Date().toISOString();    const proofId = `proof-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;    const proof = {      id: proofId,      userId: authData.uid,      proofType: data.proofType || 'autre',      description: String(data.description || '').slice(0, 500),      attachment: data.attachment || null,      sponsorIds: Array.isArray(data.sponsorIds) ? data.sponsorIds : [],      agentId: data.agentId || null,      status: 'soumis',      createdAt: now,    };    if (!store.activityProofs) store.activityProofs = [];    store.activityProofs.unshift(proof);    // Calculate verification score    const userProofs = store.activityProofs.filter(p => p.userId === authData.uid && (p.status === 'valide' || p.status === 'auto_valide' || p.status === 'soumis'));    const score = Math.min(100, userProofs.length * 15);    const level = score >= 75 ? 3 : score >= 50 ? 2 : score >= 25 ? 1 : 0;    await writeStore(store);    sendJson(response, 201, { ok: true, proof, score, level });    return;  }  if (request.method === 'PUT') {    const authAdmin = requireAuth(request);    if (!authAdmin || authAdmin.role !== 'admin') { sendJson(response, 403, { error: 'Réservé aux administrateurs' }); return; }    const body = await readBody(request);    const { proofId, status } = JSON.parse(body || '{}');    if (!proofId || !status) { sendJson(response, 400, { error: 'proofId et status requis' }); return; }    const store = await readStore();    if (!store.activityProofs) store.activityProofs = [];    const proof = store.activityProofs.find(p => p.id === proofId);    if (!proof) { sendJson(response, 404, { error: 'Preuve introuvable' }); return; }    proof.status = status;    proof.reviewedAt = new Date().toISOString();    proof.reviewedBy = authAdmin.uid;    const userProofs = store.activityProofs.filter(p => p.userId === proof.userId && (p.status === 'valide' || p.status === 'auto_valide'));    const score = Math.min(100, userProofs.length * 15);    const level = score >= 75 ? 3 : score >= 50 ? 2 : score >= 25 ? 1 : 0;    await writeStore(store);    sendJson(response, 200, { ok: true, proof, score, level });    return;  }  sendJson(response, 405, { error: 'Method not allowed' });}
 async function loadEnvFile(filePath) {
   try {
     const raw = await readFile(filePath, 'utf8');
