@@ -10628,3 +10628,52 @@ label, .field-label {
     padding-bottom: 40px;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   CONTACT PAGE — Cards & CTAs
+   ══════════════════════════════════════════════════════════════════ */
+.public-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin: 2.5rem 0;
+}
+.contact-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  transition: box-shadow 0.2s;
+}
+.contact-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+.contact-card__icon { font-size: 2rem; margin-bottom: 0.75rem; }
+.contact-card h3 { margin: 0 0 0.5rem; font-size: 1.1rem; color: #0a4b3e; }
+.contact-card a { color: #16a34a; font-weight: 600; text-decoration: none; }
+.contact-card p { margin: 0.25rem 0; font-size: 0.85rem; color: #6b7280; }
+
+.public-contact-cta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  margin: 3rem 0;
+}
+.contact-cta-block {
+  background: linear-gradient(135deg, #f0fdf4, #ffffff);
+  border: 1px solid #d1fae5;
+  border-radius: 12px;
+  padding: 1.75rem;
+}
+.contact-cta-block h3 { margin: 0 0 0.5rem; font-size: 1rem; color: #0a4b3e; }
+.contact-cta-block p { margin: 0 0 0.75rem; font-size: 0.88rem; color: #4b5563; line-height: 1.5; }
+.contact-cta-block .cta-link { color: #16a34a; font-weight: 600; text-decoration: none; font-size: 0.9rem; }
+
+.public-contact-team {
+  text-align: center;
+  margin: 3rem 0 1rem;
+  padding: 2rem;
+  background: rgba(10, 75, 62, 0.03);
+  border-radius: 12px;
+}
+.public-contact-team h3 { margin: 0 0 0.5rem; color: #0a4b3e; }
+.public-contact-team p { margin: 0.25rem 0; color: #4b5563; }
