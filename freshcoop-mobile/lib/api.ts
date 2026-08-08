@@ -36,11 +36,11 @@ function resolveAutoApiBase(): string {
     (Constants as any)?.manifest2?.extra?.expoGo?.debuggerHost;
   if (hostUri && typeof hostUri === 'string') {
     const host = hostUri.split(':')[0];
-    if (host && host !== 'localhost') return `http://${host}:4174`;
+    if (host && host !== 'localhost') return `http://${host}:4174`; // dev only
   }
 
-  if (Platform.OS === 'android') return 'http://10.0.2.2:4174';
-  return 'http://127.0.0.1:4174';
+  if (Platform.OS === 'android') return 'https://frescoop.onrender.com';
+  return 'https://frescoop.onrender.com';
 }
 
 export const API_BASE_AUTO = resolveAutoApiBase();
