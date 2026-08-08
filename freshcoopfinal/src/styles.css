@@ -1862,28 +1862,28 @@ button:disabled {
   gap: 6px;
 }
 
-.public-uemoa-section {
+.public-poesam-section {
   grid-template-columns: minmax(0, 0.78fr) minmax(340px, 0.62fr);
   align-items: center;
 }
 
-.public-uemoa-section {
+.public-poesam-section {
   background: #ffffff;
 }
 
-.public-uemoa-copy {
+.public-poesam-copy {
   display: grid;
   gap: 16px;
 }
 
-.public-uemoa-countries {
+.public-poesam-countries {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   max-width: 720px;
 }
 
-.public-uemoa-countries span {
+.public-poesam-countries span {
   padding: 8px 11px;
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -1893,7 +1893,7 @@ button:disabled {
   font-weight: 900;
 }
 
-.public-uemoa-map {
+.public-poesam-map {
   margin: 0;
   padding: 16px;
   border: 1px solid var(--line);
@@ -1902,7 +1902,7 @@ button:disabled {
   box-shadow: var(--shadow-sm);
 }
 
-.public-uemoa-map img {
+.public-poesam-map img {
   display: block;
   width: 100%;
   height: auto;
@@ -6496,37 +6496,37 @@ textarea {
 }
 
 /* ==========================================================================
-   UEMOA — Hero, Impact, Anti-gaspi, Bancabilite, USSD
+   POESAM — Hero, Impact, Anti-gaspi, Bancabilite, USSD
    ========================================================================== */
 
-.uemoa-hero {
+.poesam-hero {
   background: linear-gradient(135deg, var(--green-850) 0%, var(--green-700) 60%, var(--blue-700) 100%);
   color: #ffffff;
   border: 0;
   padding: 22px;
 }
 
-.uemoa-hero > div {
+.poesam-hero > div {
   max-width: 840px;
   display: grid;
   gap: 10px;
 }
 
-.uemoa-hero h2 {
+.poesam-hero h2 {
   color: #ffffff;
   font-size: clamp(1.4rem, 3vw, 2.1rem);
   line-height: 1.15;
   margin: 0;
 }
 
-.uemoa-hero p {
+.poesam-hero p {
   color: rgba(255, 255, 255, 0.92);
   margin: 0;
   font-size: 0.98rem;
   line-height: 1.55;
 }
 
-.uemoa-badge {
+.poesam-badge {
   display: inline-block;
   width: max-content;
   padding: 5px 10px;
@@ -6568,33 +6568,33 @@ textarea {
   font-weight: 700;
 }
 
-.uemoa-pitch-grid {
+.poesam-pitch-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 10px;
   margin-top: 10px;
 }
 
-.uemoa-pitch-grid article {
+.poesam-pitch-grid article {
   padding: 12px 14px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #ffffff;
 }
 
-.uemoa-pitch-grid article strong {
+.poesam-pitch-grid article strong {
   display: block;
   color: var(--green-850);
   margin-bottom: 4px;
 }
 
-.uemoa-pitch-grid article p {
+.poesam-pitch-grid article p {
   margin: 0;
   color: var(--muted);
   font-size: 0.87rem;
 }
 
-.uemoa-bullets {
+.poesam-bullets {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -6602,7 +6602,7 @@ textarea {
   gap: 8px;
 }
 
-.uemoa-bullets li {
+.poesam-bullets li {
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-left: 4px solid var(--green-700);
@@ -6612,7 +6612,7 @@ textarea {
   line-height: 1.5;
 }
 
-.uemoa-bullets li strong {
+.poesam-bullets li strong {
   color: var(--green-850);
 }
 
@@ -7289,19 +7289,19 @@ button.btn {
   box-shadow: 0 24px 54px rgba(7, 27, 20, 0.14);
 }
 
-/* Meilleur contraste panneaux UEMOA */
-.uemoa-hero {
+/* Meilleur contraste panneaux POESAM */
+.poesam-hero {
   padding: 20px 24px;
   margin-bottom: 4px;
   border-radius: 14px;
 }
 
-.uemoa-hero h2 {
+.poesam-hero h2 {
   font-size: clamp(1.3rem, 2.6vw, 1.8rem);
   margin: 6px 0;
 }
 
-.uemoa-hero p {
+.poesam-hero p {
   font-size: 0.92rem;
   line-height: 1.5;
 }
@@ -7351,7 +7351,7 @@ button.btn {
     padding: 14px;
   }
 
-  .uemoa-hero {
+  .poesam-hero {
     padding: 16px;
   }
 }
@@ -8704,7 +8704,7 @@ h3,
 .role-home-panel h2,
 .money-hero h2,
 .survey-hero h1,
-.uemoa-hero h2 {
+.poesam-hero h2 {
   letter-spacing: 0;
 }
 
@@ -8750,7 +8750,7 @@ h3,
   line-height: 1.12;
 }
 
-.uemoa-hero h2 {
+.poesam-hero h2 {
   font-size: 1.55rem;
   line-height: 1.18;
 }
@@ -8818,11 +8818,11 @@ h3,
     width: 100%;
   }
 
-  .public-uemoa-section {
+  .public-poesam-section {
     grid-template-columns: 1fr;
   }
 
-  .public-uemoa-map {
+  .public-poesam-map {
     padding: 8px;
   }
 
@@ -8851,7 +8851,7 @@ h3,
     line-height: 1.18;
   }
 
-  .uemoa-hero h2 {
+  .poesam-hero h2 {
     font-size: 1.25rem;
   }
 
@@ -9098,7 +9098,7 @@ h3,
   font-size: 1.05rem;
 }
 
-.pitch-hero .uemoa-badge {
+.pitch-hero .poesam-badge {
   background: #f59e0b;
   color: #fff;
   font-size: 0.7rem;
@@ -9236,7 +9236,7 @@ h3,
   margin-top: 1rem;
 }
 
-.gim-uemoa-logo {
+.poesam-logo {
   height: 56px;
   width: auto;
   border-radius: 8px;
@@ -9244,7 +9244,7 @@ h3,
   box-shadow: 0 2px 8px rgba(0,0,0,0.12);
 }
 
-.gim-uemoa-logo-pitch {
+.poesam-logo-pitch {
   height: 64px;
   width: auto;
   border-radius: 10px;
@@ -9252,14 +9252,14 @@ h3,
   box-shadow: 0 3px 12px rgba(0,0,0,0.2);
 }
 
-.gim-uemoa-logo-footer {
+.poesam-logo-footer {
   height: 28px;
   width: auto;
   border-radius: 4px;
   vertical-align: middle;
 }
 
-.footer-gim {
+.footer-poesam {
   display: flex;
   align-items: center;
   gap: 0.75rem;
