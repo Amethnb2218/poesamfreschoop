@@ -810,6 +810,46 @@ async function handleYaayChat(request, response) {
     }
 
     // ========= BYPASS SÉRÈRE =========
+
+    // ========= ROUTING TERANGA AI =========
+    // Questions agricoles → Teranga AI (prédiction, calendrier, conseil agronomique)
+    // Questions plateforme → OpenRouter (prix, commandes, score, paiements)
+    const AGRI_KEYWORDS = /\b(cultiver|semer|planter|récolte|recolte|rendement|sol|terre|engrais|irrigation|arroser|variété|variete|maladie|insecte|parasite|météo|meteo|pluie|hivernage|saison|calendrier|parcelle|hectare|arachide|mil|riz|maïs|mais|niébé|niebe|tomate|oignon|mangue|anacarde|coton|sorgho|fonio|gerte|dugub|maalo|nawet|taw|ndox|tool|mbey|suuf|noong|ngesa)\b/i;
+    const isAgriQuestion = AGRI_KEYWORDS.test(message);
+
+    if (isAgriQuestion) {
+      try {
+        const terangaRes = await fetch('https://teranga-ai.onrender.com/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [
+              ...(Array.isArray(history) ? history : []).slice(-4).map((h) => ({
+                role: h.from === 'user' ? 'user' : 'assistant',
+                content: String(h.text || '').slice(0, 500),
+              })),
+              { role: 'user', content: message.slice(0, 1000) },
+            ],
+            language: lang === 'wo' ? 'wo' : lang === 'pul' ? 'pu' : lang === 'sr' ? 'sr' : 'fr',
+          }),
+        });
+        if (terangaRes.ok) {
+          const terangaData = await terangaRes.json();
+          if (terangaData?.message) {
+            sendJson(response, 200, {
+              ok: true,
+              answer: terangaData.message,
+              model: 'teranga-ai',
+              source: 'agronomique',
+            });
+            return;
+          }
+        }
+      } catch (err) {
+        console.log('[Teranga AI] Fallback OpenRouter:', err?.message);
+      }
+    }
+
     // Les LLM gratuits ne maîtrisent pas le sérère (faible corpus d'entraînement).
     // On utilise un moteur local hand-crafted + encadrement FR pour éviter les
     // réponses wolof déguisées. C'est la solution la plus honnête et la plus fiable.
