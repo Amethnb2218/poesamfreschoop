@@ -7412,7 +7412,10 @@ function computeUemoaImpact(store) {
 }
 
 function AntiWastePage({ actions, currentUser, navigate, notify, store }) {
-  const alerts = useMemo(() => buildAntiWasteAlerts(store), [store]);
+  const allAlerts = useMemo(() => buildAntiWasteAlerts(store), [store]);
+  const alerts = currentUser.role === 'agriculteur'
+    ? allAlerts.filter(a => { const p = store.products.find(pr => pr.id === a.productId); return p && p.ownerId === currentUser.id; })
+    : allAlerts;
   const canPublish = currentUser.role === 'agriculteur' || currentUser.role === 'admin';
   const canBuy = isBuyerRole(currentUser.role);
 
@@ -7535,9 +7538,13 @@ function AntiWastePage({ actions, currentUser, navigate, notify, store }) {
                   <div><em>Prix suggéré</em><b>{formatMoney(alert.suggestedPrice)}/{alert.unit}</b></div>
                 </div>
                 <div className="button-row">
-                  {canPublish && <Button variant="secondary" onClick={() => applyFlashDiscount(alert)}><RefreshCcw size={16} /> Appliquer -{alert.suggestedDiscountPct}%</Button>}
+                  {canPublish && !store.products.find(p => p.id === alert.productId)?.flashSaleStartedAt && (
+                    <Button variant="secondary" onClick={() => applyFlashDiscount(alert)}><RefreshCcw size={16} /> Appliquer -{alert.suggestedDiscountPct}%</Button>
+                  )}
+                  {canPublish && store.products.find(p => p.id === alert.productId)?.flashSaleStartedAt && (
+                    <span style={{ fontSize: '0.82rem', color: '#16a34a', fontWeight: 600 }}>Réduction appliquée</span>
+                  )}
                   {canBuy && <Button onClick={() => buyFlash(alert)}><ShoppingCart size={16} /> Acheter maintenant</Button>}
-
                   {currentUser.role === 'agentTerrain' && <Button variant="secondary" onClick={() => navigate('/commandes?tab=tracking')}><PhoneCall size={16} /> Contacter producteur</Button>}
                 </div>
               </article>
