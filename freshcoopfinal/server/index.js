@@ -1514,45 +1514,46 @@ async function handleStore(request, response) {
     let incoming = normalizeStore(parsed);
     let currentStoreForMerge = null;
 
-    // === PROTECTION ANTI-RÉGRESSION ===
-    if (!forceWrite) {
-      try {
-        const current = await readStore();
-        currentStoreForMerge = current;
-        const checks = [
-          { key: 'users', min: 3 },
-          { key: 'products', min: 5 },
-          { key: 'orders', min: 2 },
-          { key: 'lots', min: 2 },
-        ];
-        for (const { key, min } of checks) {
-          const cur = (current[key] || []).length;
-          const next = (incoming[key] || []).length;
-          if (cur > min && next < cur * 0.7) {
-            console.warn(`[Store] PUT rejected: ${key} would drop from ${cur} to ${next} (-${Math.round((1 - next / cur) * 100)}%). Possible stale client.`);
-            sendJson(response, 409, {
-              ok: false,
-              error: `Sauvegarde refusée : cette opération supprimerait trop de ${key} (${cur} → ${next}). Votre version locale est probablement périmée. Rechargez la page.`,
-              code: 'stale_client',
-            });
-            return;
-          }
+    // === PROTECTION ANTI-RÉGRESSION (toujours active, même avec force) ===
+    try {
+      const current = await readStore();
+      currentStoreForMerge = current;
+      const checks = [
+        { key: 'users', min: 2 },
+        { key: 'products', min: 3 },
+        { key: 'orders', min: 2 },
+      ];
+      for (const { key, min } of checks) {
+        const cur = (current[key] || []).length;
+        const next = (incoming[key] || []).length;
+        if (cur > min && next < cur * 0.5) {
+          console.warn(`[Store] PUT rejected: ${key} would drop from ${cur} to ${next} (-${Math.round((1 - next / cur) * 100)}%). Stale client.`);
+          sendJson(response, 409, {
+            ok: false,
+            error: `Sauvegarde refusée : vos données locales sont périmées (${key}: ${cur} → ${next}). Rechargez la page.`,
+            code: 'stale_client',
+          });
+          return;
         }
-      } catch {
-        // readStore failed, on continue quand même
       }
+    } catch {
+      // readStore failed, on continue quand même
     }
     if (!currentStoreForMerge) {
       currentStoreForMerge = await readStore().catch(() => null);
     }
     incoming = preservePrivateUserFields(incoming, currentStoreForMerge);
 
+    // === MERGE : ne jamais perdre des users/produits existants côté serveur ===
+    if (currentStoreForMerge) {
+      incoming = mergeWithExisting(incoming, currentStoreForMerge);
+    }
+
     // === BACKUP ROTATIF (Turso) ===
     try {
       const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const prev = await readStore();
-      if (prev && (prev.users?.length || prev.products?.length)) {
-        await createBackup(`store-${stamp}`, prev);
+      if (currentStoreForMerge && (currentStoreForMerge.users?.length || currentStoreForMerge.products?.length)) {
+        await createBackup(`store-${stamp}`, currentStoreForMerge);
       }
     } catch {}
     await writeStore(incoming);
@@ -1659,6 +1660,21 @@ function normalizeStore(value) {
   store.orders = dedupeOrders(store.orders);
   store.notifications = normalizeNotifications(store.notifications);
   return store;
+}
+
+function mergeWithExisting(incoming, current) {
+  const merged = { ...incoming };
+  for (const key of Object.keys(emptyStore)) {
+    const incomingArr = Array.isArray(incoming[key]) ? incoming[key] : [];
+    const currentArr = Array.isArray(current[key]) ? current[key] : [];
+    if (currentArr.length === 0) continue;
+    const incomingIds = new Set(incomingArr.map(item => item?.id).filter(Boolean));
+    const missing = currentArr.filter(item => item?.id && !incomingIds.has(item.id));
+    if (missing.length > 0) {
+      merged[key] = [...incomingArr, ...missing];
+    }
+  }
+  return merged;
 }
 
 function preservePrivateUserFields(incoming, current) {

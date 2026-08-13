@@ -2101,7 +2101,7 @@ function Header({ actions, activePath, currentUser, logout, menuLinks, messages 
             const authHeaders = { 'Content-Type': 'application/json' };
             const savedToken = sessionStorage.getItem('frescoop.auth.token');
             if (savedToken) authHeaders['Authorization'] = `Bearer ${savedToken}`;
-            fetch(API_BASE + '/api/store?force=true', { method: 'PUT', headers: authHeaders, body: payload });
+            fetch(API_BASE + '/api/store', { method: 'PUT', headers: authHeaders, body: payload });
           }
         } catch {}
       }, 300);

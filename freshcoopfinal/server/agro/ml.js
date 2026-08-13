@@ -1196,17 +1196,29 @@ function assessRiskBayesian(crop, city, month) {
   const tempStress = Math.min(1, Math.max(0, ((monthData.temp_max + (cityData.tempOffset || 0)) - 35) / 10));
   const humidityRisk = monthData.humidity > 80 ? 0.8 : monthData.humidity > 60 ? 0.4 : 0.1;
 
-  // Crop-specific drought sensitivity
-  const droughtSensitivity = {
-    riz: 0.9, mais: 0.7, mil: 0.4, sorgho: 0.35, niebe: 0.45,
-    arachide: 0.55, tomate: 0.8, oignon: 0.75, pasteque: 0.6
+  // Crop-specific sensitivities
+  const cropRisks = {
+    riz:      { drought: 0.9, heat: 0.5, pest: 0.7, flood: 0.1 },
+    mais:     { drought: 0.7, heat: 0.7, pest: 0.6, flood: 0.6 },
+    mil:      { drought: 0.25, heat: 0.2, pest: 0.5, flood: 0.8 },
+    sorgho:   { drought: 0.3, heat: 0.25, pest: 0.5, flood: 0.7 },
+    niebe:    { drought: 0.4, heat: 0.4, pest: 0.8, flood: 0.8 },
+    arachide: { drought: 0.55, heat: 0.5, pest: 0.6, flood: 0.7 },
+    tomate:   { drought: 0.8, heat: 0.8, pest: 0.9, flood: 0.9 },
+    oignon:   { drought: 0.75, heat: 0.6, pest: 0.7, flood: 0.9 },
+    pasteque: { drought: 0.6, heat: 0.4, pest: 0.5, flood: 0.7 },
   };
-  const sensitivity = droughtSensitivity[crop] || 0.5;
+  const cr = cropRisks[crop] || { drought: 0.5, heat: 0.5, pest: 0.5, flood: 0.5 };
 
-  bn.addNode('drought', { high: (1 - rainNorm) * sensitivity });
-  bn.addNode('heat_stress', { high: tempStress });
-  bn.addNode('pest_pressure', { high: humidityRisk });
-  bn.addNode('flood_risk', { high: rainNorm > 0.85 ? 0.7 : 0.1 });
+  const droughtProb = (1 - rainNorm) * cr.drought;
+  const heatProb = tempStress * cr.heat;
+  const pestProb = humidityRisk * cr.pest;
+  const floodProb = rainNorm > 0.85 ? 0.7 * (1 - cr.flood) + 0.3 : rainNorm > 0.6 ? 0.3 * (1 - cr.flood) : 0.05;
+
+  bn.addNode('drought', { high: droughtProb });
+  bn.addNode('heat_stress', { high: heatProb });
+  bn.addNode('pest_pressure', { high: pestProb });
+  bn.addNode('flood_risk', { high: floodProb });
   bn.addNode('crop_failure', { high: 0.3 });
   bn.addNode('yield_loss', { high: 0.4 });
 
