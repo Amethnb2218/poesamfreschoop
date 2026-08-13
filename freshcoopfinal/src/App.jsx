@@ -12635,7 +12635,7 @@ function emptyLotForm() {
 function getPrimaryNavLinks(role) {
   const links = {
     admin: ['/', '/utilisateurs', '/prediction', '/conseiller', '/bancabilite', '/impact'],
-    agriculteur: ['/', '/produits', '/marche', '/commandes', '/prediction', '/conseiller', '/bancabilite'],
+    agriculteur: ['/', '/produits', '/marche', '/commandes', '/operations', '/prediction', '/conseiller', '/bancabilite'],
     agentTerrain: ['/', '/verification', '/commandes', '/operations'],
     client: ['/', '/marche', '/commandes'],
     cooperative: ['/', '/marche', '/commandes'],
