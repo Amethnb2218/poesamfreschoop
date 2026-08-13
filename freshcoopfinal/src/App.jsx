@@ -2088,25 +2088,17 @@ function Header({ actions, activePath, currentUser, logout, menuLinks, messages 
           || (Array.isArray(entry.recipientRoles) && entry.recipientRoles.includes(currentUser.role));
         return matchesUser ? { ...entry, read: true, readAt: entry.readAt || now } : entry;
       });
+      // Persist read status server-side
       try {
-        const raw = window.localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const stored = JSON.parse(raw);
-          stored.notifications = updated;
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+        const savedToken = sessionStorage.getItem('frescoop.auth.token');
+        if (savedToken) {
+          fetch(API_BASE + '/api/notifications/read', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${savedToken}` },
+            body: JSON.stringify({}),
+          });
         }
       } catch {}
-      setTimeout(() => {
-        try {
-          const payload = window.localStorage.getItem(STORAGE_KEY);
-          if (payload) {
-            const authHeaders = { 'Content-Type': 'application/json' };
-            const savedToken = sessionStorage.getItem('frescoop.auth.token');
-            if (savedToken) authHeaders['Authorization'] = `Bearer ${savedToken}`;
-            fetch(API_BASE + '/api/store', { method: 'PUT', headers: authHeaders, body: payload });
-          }
-        } catch {}
-      }, 300);
       return updated;
     });
   }

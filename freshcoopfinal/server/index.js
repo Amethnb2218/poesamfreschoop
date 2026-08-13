@@ -305,6 +305,32 @@ createServer(async (request, response) => {
       return;
     }
 
+    if (request.url?.startsWith('/api/notifications/read') && request.method === 'POST') {
+      const authData = requireAuth(request);
+      if (!authData) { sendJson(response, 401, { error: 'Non autorisé' }); return; }
+      const body = await readBody(request);
+      const { ids } = JSON.parse(body || '{}');
+      const store = await readStore();
+      const notifs = store.notifications || [];
+      const updated = [];
+      for (const notif of notifs) {
+        if (Array.isArray(ids) ? ids.includes(notif.id) : true) {
+          const isForUser = notif.recipientId === authData.uid
+            || notif.userId === authData.uid
+            || notif.recipientRole === authData.role
+            || (Array.isArray(notif.recipientRoles) && notif.recipientRoles.includes(authData.role));
+          if (isForUser && !notif.read) {
+            notif.read = true;
+            notif.readAt = new Date().toISOString();
+            updated.push(notif);
+          }
+        }
+      }
+      if (updated.length) await upsertItems('notifications', updated);
+      sendJson(response, 200, { ok: true, marked: updated.length });
+      return;
+    }
+
     if (request.url?.startsWith('/api/store/backups') || request.url?.startsWith('/api/store/restore')) {
       const authData = requireAuth(request);
       if (!authData || authData.role !== 'admin') {
