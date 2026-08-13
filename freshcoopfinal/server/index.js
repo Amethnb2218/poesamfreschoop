@@ -364,13 +364,48 @@ createServer(async (request, response) => {
         store.loanRepayments.push({ id: `rep-demo-${farmer.id.slice(-5)}`, farmerId: farmer.id, status: 'Remboursé', amount: 200000, createdAt: sixMonthsAgo });
       }
 
-      await upsertItems('users', store.users.filter(u => demoIds.includes(u.id)));
-      await upsertItems('orders', store.orders.filter(o => o.id?.startsWith('ord-demo-')));
-      await upsertItems('transactions', store.transactions.filter(t => t.id?.startsWith('txn-demo-')));
-      await upsertItems('activityProofs', store.activityProofs.filter(p => p.id?.startsWith('aproof-demo-')));
-      await upsertItems('paymentRecords', store.paymentRecords.filter(p => p.id?.startsWith('payrec-demo-')));
-      await upsertItems('ratings', store.ratings.filter(r => r.id?.startsWith('rat-demo-')));
-      await upsertItems('loanRepayments', store.loanRepayments.filter(r => r.id?.startsWith('rep-demo-')));
+      // Boost agropro@gmail.com to 90+
+      const agropro = store.users.find(u => String(u.email || '').toLowerCase() === 'agropro@gmail.com');
+      if (agropro) {
+        const aId = agropro.id;
+        agropro.gie = agropro.gie || 'Oui';
+        agropro.gieName = agropro.gieName || 'GIE AgriPro Kaolack';
+        agropro.foncier = agropro.foncier || 'Coutumier';
+        agropro.experienceYears = agropro.experienceYears || 10;
+        agropro.region = agropro.region || 'Kaolack';
+        store.orders = store.orders.filter(o => !o.id?.startsWith('ord-boost-agro-'));
+        store.ratings = store.ratings.filter(r => !r.id?.startsWith('rat-boost-agro-'));
+        store.transactions = store.transactions.filter(t => !t.id?.startsWith('txn-boost-agro-'));
+        store.activityProofs = store.activityProofs.filter(p => !p.id?.startsWith('aproof-boost-agro-'));
+        store.paymentRecords = store.paymentRecords.filter(p => !p.id?.startsWith('payrec-boost-agro-'));
+        store.loanRepayments = store.loanRepayments.filter(r => !r.id?.startsWith('rep-boost-agro-'));
+        for (let i = 0; i < 10; i++) {
+          const orderId = `ord-boost-agro-${i}`;
+          store.orders.push({ id: orderId, sellerId: aId, clientId: 'usr-demo', status: 'Livree', paymentStatus: 'Paye', totalPrice: 55000 + Math.round(Math.random() * 50000), createdAt: new Date(Date.now() - (i * 15 + 3) * 86400000).toISOString(), updatedAt: now, productSnapshot: { name: ['Tomates', 'Oignons', 'Piment', 'Carottes', 'Pommes de terre', 'Mil', 'Arachide', 'Niébé', 'Mangues', 'Bissap'][i], price: 600 + i * 150 }, quantity: 25 + i * 5, unit: 'kg' });
+          store.ratings.push({ id: `rat-boost-agro-${i}`, orderId, userId: 'usr-demo', sellerId: aId, rating: i < 8 ? 5 : 4, comment: ['Produit frais', 'Excellente qualité', 'Livraison rapide', 'Je recommande', 'Top vendeur', 'Très satisfait', 'Parfait', 'Bon produit', 'Correct', 'Bien'][i], createdAt: now });
+        }
+        for (let i = 0; i < 6; i++) {
+          store.transactions.push({ id: `txn-boost-agro-${i}`, ownerId: aId, amount: 60000 + i * 25000, type: 'vente', createdAt: new Date(Date.now() - i * 20 * 86400000).toISOString() });
+        }
+        const proofTypes = ['carte_exploitant', 'attestation_chef', 'carte_cooperative', 'photo_exploitation', 'gps_exploitation', 'recu_intrants'];
+        for (const pt of proofTypes) {
+          store.activityProofs.push({ id: `aproof-boost-agro-${pt}`, userId: aId, proofType: pt, status: 'valide', createdAt: sixMonthsAgo, reviewedAt: sixMonthsAgo, reviewedBy: 'usr-admin-poesam' });
+        }
+        for (let i = 0; i < 5; i++) {
+          store.paymentRecords.push({ id: `payrec-boost-agro-${i}`, sellerId: aId, amount: 50000 + i * 20000, paydunyaToken: `pd_agro_${i}`, partner: 'paydunya', createdAt: new Date(Date.now() - i * 25 * 86400000).toISOString() });
+        }
+        store.loanRepayments.push({ id: `rep-boost-agro-0`, farmerId: aId, status: 'Remboursé', amount: 250000, createdAt: sixMonthsAgo });
+        store.loanRepayments.push({ id: `rep-boost-agro-1`, farmerId: aId, status: 'Remboursé', amount: 180000, createdAt: new Date(Date.now() - 90 * 86400000).toISOString() });
+      }
+
+      const allDemoIds = [...demoIds, ...(agropro ? [agropro.id] : [])];
+      await upsertItems('users', store.users.filter(u => allDemoIds.includes(u.id)));
+      await upsertItems('orders', store.orders.filter(o => o.id?.startsWith('ord-demo-') || o.id?.startsWith('ord-boost-agro-')));
+      await upsertItems('transactions', store.transactions.filter(t => t.id?.startsWith('txn-demo-') || t.id?.startsWith('txn-boost-agro-')));
+      await upsertItems('activityProofs', store.activityProofs.filter(p => p.id?.startsWith('aproof-demo-') || p.id?.startsWith('aproof-boost-agro-')));
+      await upsertItems('paymentRecords', store.paymentRecords.filter(p => p.id?.startsWith('payrec-demo-') || p.id?.startsWith('payrec-boost-agro-')));
+      await upsertItems('ratings', store.ratings.filter(r => r.id?.startsWith('rat-demo-') || r.id?.startsWith('rat-boost-agro-')));
+      await upsertItems('loanRepayments', store.loanRepayments.filter(r => r.id?.startsWith('rep-demo-') || r.id?.startsWith('rep-boost-agro-')));
       invalidateCache();
       sendJson(response, 200, { ok: true, message: '2 comptes démo agriculteurs créés (score 90+). Mot de passe: demo1234' });
       return;
