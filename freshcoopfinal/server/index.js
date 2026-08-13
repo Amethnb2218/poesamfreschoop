@@ -216,6 +216,7 @@ const emptyStore = {
   kpiAggregates: [],
   loans: [],
   surveyLeads: [],
+  activityProofs: [],
 };
 
 const mimeTypes = {

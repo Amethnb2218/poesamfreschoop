@@ -12314,7 +12314,7 @@ function getPrimaryNavLinks(role) {
   const links = {
     admin: ['/', '/utilisateurs', '/prediction', '/conseiller', '/bancabilite', '/impact'],
     agriculteur: ['/', '/produits', '/commandes', '/prediction', '/conseiller', '/bancabilite'],
-    agentTerrain: ['/', '/verification', '/conseiller', '/commandes', '/operations'],
+    agentTerrain: ['/', '/verification', '/commandes', '/operations'],
     client: ['/', '/marche', '/commandes'],
     acheteurB2B: ['/', '/marche', '/lots', '/commandes'],
     partenaire: ['/', '/bancabilite', '/impact'],
@@ -12357,7 +12357,6 @@ function getMenuLinks(role) {
       '/',
       '/collecte-agriscore',
       '/verification',
-      '/conseiller',
       '/commandes',
       '/produits',
       '/operations',
