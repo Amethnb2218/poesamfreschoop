@@ -13255,7 +13255,7 @@ function renderBusinessReportHtml(store) {
 
     <div class="report-footer">
       <p>FresCoop | POESAM 2026 | Orange Digital Center Sénégal</p>
-      <p>Demo : https://poesamfreschoop-three.vercel.app | contact@frescoop.sn | Dakar, Senegal</p>
+      <p>Demo : https://frescoop.onrender.com | contact@frescoop.sn | Dakar, Senegal</p>
     </div>
   `);
 }
