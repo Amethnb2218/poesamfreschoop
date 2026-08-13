@@ -37,8 +37,11 @@ const ODDS = [
 
 export default function ImpactScreen() {
   const { user, store, refresh, loading } = useSession();
-  if (!user) return null;
 
+  // Les hooks doivent être appelés avant tout retour anticipé, sinon leur
+  // nombre change entre deux rendus quand la session s'initialise. Aucun des
+  // useMemo ci-dessous ne dépend de `user` : le garde-fou est donc simplement
+  // déplacé juste avant le rendu.
   const metrics = useMemo(() => {
     const lots = store.lots || [];
     const totalKg = lots.reduce((acc: number, l: any) => acc + Number(l.weight || 0), 0);
@@ -98,6 +101,8 @@ export default function ImpactScreen() {
       revenueAfter: metrics.transactions,
     };
   }, [metrics]);
+
+  if (!user) return null;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
