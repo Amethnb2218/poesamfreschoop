@@ -326,8 +326,17 @@ createServer(async (request, response) => {
       if (!store.paymentRecords) store.paymentRecords = [];
       if (!store.users) store.users = [];
 
+      // Remove old demo data first
+      const demoIds = demoFarmers.map(f => f.id);
+      store.users = store.users.filter(u => !demoIds.includes(u.id));
+      store.orders = store.orders.filter(o => !o.id?.startsWith('ord-demo-'));
+      store.ratings = store.ratings.filter(r => !r.id?.startsWith('rat-demo-'));
+      store.transactions = store.transactions.filter(t => !t.id?.startsWith('txn-demo-'));
+      store.activityProofs = store.activityProofs.filter(p => !p.id?.startsWith('aproof-demo-'));
+      store.paymentRecords = store.paymentRecords.filter(p => !p.id?.startsWith('payrec-demo-'));
+      store.loanRepayments = store.loanRepayments.filter(r => !r.id?.startsWith('rep-demo-'));
+
       for (const farmer of demoFarmers) {
-        if (store.users.some(u => u.id === farmer.id)) continue;
         store.users.push({ ...farmer, role: 'agriculteur', status: 'Actif', createdAt: sixMonthsAgo, passwordHash: hash, bio: '', verificationScore: 92, verificationLevel: 3 });
 
         for (let i = 0; i < 8; i++) {
