@@ -1705,6 +1705,21 @@ async function handleActivityProofs(request, response) {
     if (!store.activityProofs) store.activityProofs = [];
     store.activityProofs.unshift(proof);
 
+    const submitter = store.users.find(u => u.id === authData.uid);
+    const submitterName = submitter?.name || 'Un agriculteur';
+    if (data.agentId) {
+      if (!store.notifications) store.notifications = [];
+      store.notifications.unshift({
+        id: `notif-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+        userId: data.agentId,
+        title: 'Nouvelle preuve à confirmer',
+        body: `${submitterName} a soumis une preuve "Visite agent terrain" et vous a désigné comme agent vérificateur.`,
+        type: 'verification',
+        read: false,
+        createdAt: now,
+      });
+    }
+
     const userProofs = store.activityProofs.filter(p => p.userId === authData.uid && (p.status === 'valide' || p.status === 'auto_valide' || p.status === 'soumis'));
     const score = Math.min(100, userProofs.length * 15);
     const level = score >= 75 ? 3 : score >= 50 ? 2 : score >= 25 ? 1 : 0;
