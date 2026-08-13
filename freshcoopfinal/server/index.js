@@ -399,8 +399,42 @@ createServer(async (request, response) => {
         store.loanRepayments.push({ id: `rep-boost-agro-1`, farmerId: aId, status: 'Remboursé', amount: 180000, createdAt: new Date(Date.now() - 90 * 86400000).toISOString() });
       }
 
+      // Anti-gaspi demo products (near expiry)
+      const antiGaspiOwner = agropro ? agropro.id : demoFarmers[0].id;
+      store.products = store.products.filter(p => !p.id?.startsWith('demo-antigaspi-'));
+      const agNow = Date.now();
+      const antiGaspiProducts = [
+        { id: 'demo-antigaspi-tomates', name: 'Tomates cerises', category: 'Legumes', quantity: 42, unit: 'kg', price: 950, daysAgo: 4, shelfLifeDays: 5, zone: 'Kaolack' },
+        { id: 'demo-antigaspi-mangues', name: 'Mangues Kent', category: 'Fruits', quantity: 65, unit: 'kg', price: 1200, daysAgo: 6, shelfLifeDays: 8, zone: 'Thiès' },
+        { id: 'demo-antigaspi-salade', name: 'Laitue fraîche', category: 'Legumes', quantity: 28, unit: 'kg', price: 700, daysAgo: 4, shelfLifeDays: 5, zone: 'Dakar' },
+        { id: 'demo-antigaspi-oignons', name: 'Oignons mûrs', category: 'Legumes', quantity: 80, unit: 'kg', price: 450, daysAgo: 5, shelfLifeDays: 7, zone: 'Kaolack' },
+        { id: 'demo-antigaspi-piment', name: 'Piment frais', category: 'Legumes', quantity: 15, unit: 'kg', price: 1500, daysAgo: 3, shelfLifeDays: 4, zone: 'Kaffrine' },
+      ];
+      for (const item of antiGaspiProducts) {
+        store.products.push({
+          id: item.id,
+          createdAt: new Date(agNow - item.daysAgo * 86400000).toISOString(),
+          updatedAt: now,
+          ownerId: antiGaspiOwner,
+          name: item.name,
+          category: item.category,
+          quantity: item.quantity,
+          unit: item.unit,
+          price: item.price,
+          zone: item.zone,
+          description: 'Produit frais à écouler rapidement avant péremption.',
+          status: 'Publie',
+          shelfLifeDays: item.shelfLifeDays,
+          expiryDate: new Date(agNow + Math.max(0, item.shelfLifeDays - item.daysAgo) * 86400000).toISOString().slice(0, 10),
+          images: [],
+          flashSaleStartedAt: '',
+          flashSaleDiscountPct: 0,
+        });
+      }
+
       const allDemoIds = [...demoIds, ...(agropro ? [agropro.id] : [])];
       await upsertItems('users', store.users.filter(u => allDemoIds.includes(u.id)));
+      await upsertItems('products', store.products.filter(p => p.id?.startsWith('demo-antigaspi-')));
       await upsertItems('orders', store.orders.filter(o => o.id?.startsWith('ord-demo-') || o.id?.startsWith('ord-boost-agro-')));
       await upsertItems('transactions', store.transactions.filter(t => t.id?.startsWith('txn-demo-') || t.id?.startsWith('txn-boost-agro-')));
       await upsertItems('activityProofs', store.activityProofs.filter(p => p.id?.startsWith('aproof-demo-') || p.id?.startsWith('aproof-boost-agro-')));
