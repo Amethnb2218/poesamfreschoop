@@ -1806,8 +1806,8 @@ async function handleActivityProofs(request, response) {
       });
     }
 
-    const userProofs = store.activityProofs.filter(p => p.userId === authData.uid && (p.status === 'valide' || p.status === 'auto_valide' || p.status === 'soumis'));
-    const score = Math.min(100, userProofs.length * 15);
+    const validatedProofs = store.activityProofs.filter(p => p.userId === authData.uid && (p.status === 'valide' || p.status === 'auto_valide'));
+    const score = Math.min(100, validatedProofs.length * 15);
     const level = score >= 75 ? 3 : score >= 50 ? 2 : score >= 25 ? 1 : 0;
 
     await writeStore(store);

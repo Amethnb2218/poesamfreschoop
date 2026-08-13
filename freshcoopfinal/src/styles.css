@@ -2386,9 +2386,9 @@ button:disabled {
 
 .stat-card {
   display: grid;
-  gap: 8px;
-  min-height: 132px;
-  padding: 18px;
+  gap: 4px;
+  min-height: 0;
+  padding: 14px 16px;
 }
 
 .stat-card svg {
@@ -2405,8 +2405,8 @@ button:disabled {
 
 .stat-card strong {
   color: var(--ink);
-  font-size: clamp(1.25rem, 2vw, 1.9rem);
-  line-height: 1.05;
+  font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+  line-height: 1.1;
 }
 
 .stat-blue svg {
@@ -7229,7 +7229,7 @@ button.btn {
 }
 
 .status-grid {
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
 }
 
 .status-grid > * {

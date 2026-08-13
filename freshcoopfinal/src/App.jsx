@@ -5102,10 +5102,7 @@ function ActivityProofPage({ actions, currentUser, navigate, notify, store }) {
       if (!resp.ok || !data.ok) { notify(data.error || 'Erreur lors de la soumission', 'error'); return; }
 
       actions.setActivityProofs((items) => [data.proof, ...items]);
-      if (data.level >= 1) {
-        actions.setUsers((items) => items.map((u) => u.id === currentUser.id ? { ...u, verificationScore: data.score, verificationLevel: data.level, status: 'Actif' } : u));
-      }
-      notify('Preuve soumise avec succès !', 'success');
+      notify('Preuve soumise avec succès ! Elle sera examinée par un agent terrain.', 'success');
       setSelectedType(''); setDescription(''); setFile(null); setSponsor1(''); setSponsor2(''); setSelectedAgent('');
     } catch (err) {
       notify(err.message || 'Erreur réseau', 'error');
