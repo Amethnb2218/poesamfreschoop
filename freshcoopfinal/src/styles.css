@@ -10928,3 +10928,73 @@ label, .field-label {
     padding: 8px 11px;
   }
 }
+
+/* ==========================================================================
+   RENDU DES REPONSES DE L ASSISTANT (markdown simple)
+   ========================================================================== */
+
+.assistant-rich {
+  display: grid;
+  gap: 3px;
+}
+
+.assistant-rich strong {
+  font-weight: 900;
+  color: inherit;
+}
+
+/* Ligne vide du markdown : respiration, sans la hauteur d'une ligne pleine. */
+.assistant-rich-space {
+  height: 6px;
+}
+
+.assistant-rich-heading {
+  font-weight: 900;
+  margin-top: 4px;
+}
+
+.assistant-rich-bullet {
+  display: grid;
+  grid-template-columns: 12px 1fr;
+  gap: 6px;
+  align-items: start;
+}
+
+.assistant-rich-bullet > span:first-child {
+  opacity: 0.55;
+  line-height: 1.45;
+}
+
+/* ==========================================================================
+   ESPACEMENT HERO -> CONTENU
+   --------------------------------------------------------------------------
+   Le bas du hero (88px) et le haut du cadre de page (96px) etaient
+   dimensionnes pour accueillir le bandeau de KPI qui chevauchait le hero de
+   -48px. Ce bandeau a ete retire : sans reprise de ces valeurs, il restait
+   ~184px de vide entre le titre et le premier panneau, et le contenu partait
+   sous la ligne de flottaison sur un portable.
+   ========================================================================== */
+
+.hero-image {
+  padding-bottom: 36px;
+}
+
+.page-frame {
+  padding-top: 28px;
+}
+
+@media (max-width: 1024px) {
+  .page-frame {
+    padding-top: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-image {
+    padding-bottom: 28px;
+  }
+
+  .page-frame {
+    padding-top: 20px;
+  }
+}
