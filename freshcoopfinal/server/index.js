@@ -1332,7 +1332,7 @@ N'invente pas de faits prÃ©cis que tu ne connais pas. Mais utilise ta culture gÃ
 
 function callGroq(messages, options = {}) {
   const groqKey = process.env.GROQ_API_KEY;
-  const model = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+  const model = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
   return new Promise(async (resolve, reject) => {
     try {
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
