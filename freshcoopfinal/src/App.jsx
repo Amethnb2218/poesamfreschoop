@@ -7980,7 +7980,7 @@ function BancabilitePage({ actions, currentUser, notify, store }) {
     }
     const dossier = buildBancabiliteDossier(currentUser, store);
     if (dossier.score < 60) {
-      notify(`Score insuffisant (${dossier.score}/100, Grade ${dossier.grade}). Un grade B minimum (≥ 60) est requis pour demander un prêt.`, 'error');
+      notify(`Score insuffisant (${dossier.score}/100, Grade ${dossier.grade}). Un grade B minimum (≥ 80) est requis pour être considéré bancable.`, 'error');
       return;
     }
     const hasCni = (store.activityProofs || []).some((p) => p.userId === currentUser.id && /cni/i.test(p.proofType) && (p.status === 'valide' || p.status === 'auto_valide'));
@@ -8577,7 +8577,7 @@ function computeAgentReliability(agent, store) {
   }, 0);
   const successPoints = Math.min(20, loansFromCollections * 5);
   const score = Math.min(100, anciennetePoints + volumePoints + coherencePoints + successPoints);
-  const grade = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
+  const grade = score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 50 ? 'C' : 'D';
   return { score, grade, totalCollections, witnessRate, monthsActive, anciennetePoints, volumePoints, coherencePoints, successPoints };
 }
 
@@ -8888,10 +8888,10 @@ function buildBancabiliteDossier(user, store) {
   // ══════════════════════════════════════════════════════════════════
   const criteria = [...fiabiliteCriteria, ...identiteCriteria];
   const score = Math.min(100, fiabiliteScore + identiteScore);
-  const grade = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
-  const verdict = grade === 'A' ? 'Passeport économique complet — éligible crédit bancaire' :
-                  grade === 'B' ? 'Profil vérifié — éligible SFD / microfinance' :
-                  grade === 'C' ? 'Profil en construction — éligible prêt garanti' : 'Identité économique insuffisante — accompagnement recommandé';
+  const grade = score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 50 ? 'C' : 'D';
+  const verdict = grade === 'A' ? 'Passeport économique complet — profil bancable' :
+                  grade === 'B' ? 'Profil documenté — bancable auprès des SFD et banques partenaires' :
+                  grade === 'C' ? 'Passeport en construction — continuez à documenter votre activité' : 'Données insuffisantes — soumettez vos preuves d\'activité';
 
   const fiabiliteGrade = fiabiliteScore >= 40 ? 'Fiable' : fiabiliteScore >= 25 ? 'En consolidation' : 'À vérifier';
   const identiteGrade = identiteScore >= 40 ? 'Complète' : identiteScore >= 25 ? 'Partielle' : 'Insuffisante';
