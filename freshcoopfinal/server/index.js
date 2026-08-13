@@ -217,6 +217,9 @@ const emptyStore = {
   loans: [],
   surveyLeads: [],
   activityProofs: [],
+  ratings: [],
+  loanRepayments: [],
+  cashbackRecords: [],
 };
 
 const mimeTypes = {
