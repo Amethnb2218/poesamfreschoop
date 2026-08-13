@@ -1721,6 +1721,18 @@ function mergeWithExisting(incoming, current) {
       });
     }
 
+    // For notifications: never revert read status to unread
+    if (key === 'notifications') {
+      merged[key] = incomingArr.map(item => {
+        if (!item?.id) return item;
+        const serverItem = currentById.get(item.id);
+        if (serverItem && serverItem.read && !item.read) {
+          return { ...item, read: true, readAt: serverItem.readAt || item.readAt };
+        }
+        return item;
+      });
+    }
+
     // Add items that exist on server but not in incoming
     const missing = currentArr.filter(item => item?.id && !incomingIds.has(item.id));
     if (missing.length > 0) {
