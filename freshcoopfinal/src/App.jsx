@@ -6915,7 +6915,7 @@ const ADVISOR_SUGGESTIONS = {
 
 function speakText(text, lang = 'fr', gender = 'female') {
   if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
+  if (window.speechSynthesis.speaking) { window.speechSynthesis.cancel(); return; }
   const clean = String(text || '').replace(/[*#\-•]/g, '').replace(/\n+/g, '. ');
   const utterance = new SpeechSynthesisUtterance(clean);
   const langMap = { fr: 'fr-FR', wo: 'fr-FR', pu: 'fr-FR', sr: 'fr-FR' };
@@ -12635,7 +12635,7 @@ function emptyLotForm() {
 function getPrimaryNavLinks(role) {
   const links = {
     admin: ['/', '/utilisateurs', '/prediction', '/conseiller', '/bancabilite', '/impact'],
-    agriculteur: ['/', '/produits', '/commandes', '/prediction', '/conseiller', '/bancabilite'],
+    agriculteur: ['/', '/produits', '/marche', '/commandes', '/prediction', '/conseiller', '/bancabilite'],
     agentTerrain: ['/', '/verification', '/commandes', '/operations'],
     client: ['/', '/marche', '/commandes'],
     cooperative: ['/', '/marche', '/commandes'],
