@@ -368,11 +368,12 @@ createServer(async (request, response) => {
       const agropro = store.users.find(u => String(u.email || '').toLowerCase() === 'agropro@gmail.com');
       if (agropro) {
         const aId = agropro.id;
-        agropro.gie = agropro.gie || 'Oui';
-        agropro.gieName = agropro.gieName || 'GIE AgriPro Kaolack';
-        agropro.foncier = agropro.foncier || 'Coutumier';
-        agropro.experienceYears = agropro.experienceYears || 10;
-        agropro.region = agropro.region || 'Kaolack';
+        agropro.gie = 'Oui';
+        agropro.gieName = 'GIE AgriPro Kaolack';
+        agropro.foncier = 'Coutumier';
+        agropro.experienceYears = 12;
+        agropro.region = 'Kaolack';
+        agropro.createdAt = sixMonthsAgo;
         store.orders = store.orders.filter(o => !o.id?.startsWith('ord-boost-agro-'));
         store.ratings = store.ratings.filter(r => !r.id?.startsWith('rat-boost-agro-'));
         store.transactions = store.transactions.filter(t => !t.id?.startsWith('txn-boost-agro-'));
