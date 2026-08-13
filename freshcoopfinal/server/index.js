@@ -5,6 +5,8 @@ import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { initDatabase, readStore as tursoReadStore, writeStore as tursoWriteStore, createBackup, listBackups, restoreBackup } from './db.js';
+import { handleAgroRequest } from './agro/routes.js';
+import { askAdvisor, isAgronomyQuestion } from './agro/advisor.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
@@ -274,6 +276,11 @@ createServer(async (request, response) => {
 
     if (request.url?.startsWith('/api/paydunya/')) {
       await handlePaydunya(request, response);
+      return;
+    }
+
+    if (request.url?.startsWith('/api/agro/')) {
+      await handleAgroRequest(request, response, { sendJson, readBody, requireAuth, callOpenRouter });
       return;
     }
 
@@ -794,15 +801,9 @@ async function handleYaayChat(request, response) {
     return;
   }
 
+  // Pas de sortie immédiate sans clé : le conseiller agricole sait répondre
+  // hors-ligne. Le garde-fou est déplacé après le routage agronomique.
   const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    sendJson(response, 503, {
-      ok: false,
-      error: 'OPENROUTER_API_KEY non configurée',
-      fallback: true,
-    });
-    return;
-  }
 
   try {
     const body = await readBody(request);
@@ -816,43 +817,60 @@ async function handleYaayChat(request, response) {
 
     // ========= BYPASS SÉRÈRE =========
 
-    // ========= ROUTING TERANGA AI =========
-    // Questions agricoles → Teranga AI (prédiction, calendrier, conseil agronomique)
-    // Questions plateforme → OpenRouter (prix, commandes, score, paiements)
-    const AGRI_KEYWORDS = /\b(cultiver|semer|planter|récolte|recolte|rendement|sol|terre|engrais|irrigation|arroser|variété|variete|maladie|insecte|parasite|météo|meteo|pluie|hivernage|saison|calendrier|parcelle|hectare|arachide|mil|riz|maïs|mais|niébé|niebe|tomate|oignon|mangue|anacarde|coton|sorgho|fonio|gerte|dugub|maalo|nawet|taw|ndox|tool|mbey|suuf|noong|ngesa)\b/i;
-    const isAgriQuestion = AGRI_KEYWORDS.test(message);
+    const modelList = (process.env.OPENROUTER_MODELS ||
+      process.env.OPENROUTER_MODEL ||
+      'openai/gpt-oss-120b:free,meta-llama/llama-3.3-70b-instruct:free,google/gemma-3-27b-it:free'
+    )
+      .split(',')
+      .map((m) => m.trim())
+      .filter(Boolean);
 
-    if (isAgriQuestion) {
-      try {
-        const terangaRes = await fetch('https://teranga-ai.onrender.com/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messages: [
-              ...(Array.isArray(history) ? history : []).slice(-4).map((h) => ({
-                role: h.from === 'user' ? 'user' : 'assistant',
-                content: String(h.text || '').slice(0, 500),
-              })),
-              { role: 'user', content: message.slice(0, 1000) },
-            ],
-            language: lang === 'wo' ? 'wo' : lang === 'pul' ? 'pu' : lang === 'sr' ? 'sr' : 'fr',
-          }),
+    // ========= ROUTAGE CONSEILLER AGRICOLE =========
+    // Les questions agronomiques (semis, sol, engrais, ravageurs, variétés)
+    // vont au conseiller FresCoop : prompt agronomique Sahel dédié + repli
+    // hors-ligne. Les questions plateforme (prix, commandes, score, paiement)
+    // restent sur l'assistant généraliste ci-dessous.
+    // Le sérère est exclu : il garde son moteur local (voir bypass plus bas),
+    // les LLM gratuits ne le maîtrisent pas.
+    if (lang !== 'sr' && isAgronomyQuestion(message)) {
+      const result = await askAdvisor({
+        message,
+        language: lang === 'pul' ? 'pu' : lang,
+        context,
+        history,
+        callLlm: apiKey
+          ? async (messages) => {
+              let lastError = null;
+              for (const model of modelList) {
+                try {
+                  return await callOpenRouter(apiKey, model, messages, { temperature: 0.6, max_tokens: 900 });
+                } catch (error) {
+                  lastError = error;
+                }
+              }
+              throw lastError || new Error('Aucun modèle disponible');
+            }
+          : null,
+      });
+
+      if (result.answer) {
+        sendJson(response, 200, {
+          ok: true,
+          answer: result.answer,
+          model: result.model || 'frescoop-agro-local',
+          source: 'agronomique',
         });
-        if (terangaRes.ok) {
-          const terangaData = await terangaRes.json();
-          if (terangaData?.message) {
-            sendJson(response, 200, {
-              ok: true,
-              answer: terangaData.message,
-              model: 'teranga-ai',
-              source: 'agronomique',
-            });
-            return;
-          }
-        }
-      } catch (err) {
-        console.log('[Teranga AI] Fallback OpenRouter:', err?.message);
+        return;
       }
+    }
+
+    if (!apiKey) {
+      sendJson(response, 503, {
+        ok: false,
+        error: 'OPENROUTER_API_KEY non configurée',
+        fallback: true,
+      });
+      return;
     }
 
     // Les LLM gratuits ne maîtrisent pas le sérère (faible corpus d'entraînement).
@@ -903,14 +921,6 @@ async function handleYaayChat(request, response) {
       }))),
       { role: 'user', content: message.slice(0, 1000) },
     ];
-
-    const modelList = (process.env.OPENROUTER_MODELS ||
-      process.env.OPENROUTER_MODEL ||
-      'openai/gpt-oss-120b:free,meta-llama/llama-3.3-70b-instruct:free,google/gemma-3-27b-it:free'
-    )
-      .split(',')
-      .map((m) => m.trim())
-      .filter(Boolean);
 
     let result = null;
     const errors = [];
