@@ -1,11 +1,30 @@
 import { createClient } from '@libsql/client';
+import { mkdirSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const url = process.env.TURSO_DATABASE_URL;
-const authToken = process.env.TURSO_AUTH_TOKEN;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+let url = process.env.TURSO_DATABASE_URL;
+let authToken = process.env.TURSO_AUTH_TOKEN;
+
+// En production, l'absence d'URL reste une erreur fatale : mieux vaut refuser
+// de démarrer que d'écrire dans une base locale éphémère à l'insu de tous.
+// En développement, on retombe sur un fichier SQLite local — @libsql/client
+// accepte les URL `file:` avec exactement la même API, donc le reste de ce
+// module est inchangé. Cela permet de lancer le projet sans identifiants cloud.
 if (!url) {
-  console.error('[Turso] TURSO_DATABASE_URL non définie — impossible de démarrer');
-  process.exit(1);
+  if (process.env.NODE_ENV === 'production') {
+    console.error('[Turso] TURSO_DATABASE_URL non définie — impossible de démarrer');
+    process.exit(1);
+  }
+
+  const dataDir = path.join(__dirname, 'data');
+  mkdirSync(dataDir, { recursive: true });
+  url = `file:${path.join(dataDir, 'frescoop.db')}`;
+  authToken = undefined;
+  console.warn('[DB] TURSO_DATABASE_URL non définie — mode développement sur SQLite local (server/data/frescoop.db).');
+  console.warn('[DB] Renseignez TURSO_DATABASE_URL et TURSO_AUTH_TOKEN dans .env pour utiliser la base partagée.');
 }
 
 const client = createClient({ url, authToken });
