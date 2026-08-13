@@ -1815,7 +1815,7 @@ async function handleActivityProofs(request, response) {
     return;
   }
 
-  if (request.method === 'PUT') {
+  if (request.method === 'PUT' || request.method === 'PATCH') {
     const authAdmin = requireAuth(request);
     if (!authAdmin || (authAdmin.role !== 'admin' && authAdmin.role !== 'agentTerrain')) { sendJson(response, 403, { error: 'Réservé aux administrateurs et agents terrain' }); return; }
     const body = await readBody(request);
