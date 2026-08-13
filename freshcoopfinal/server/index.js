@@ -280,6 +280,11 @@ createServer(async (request, response) => {
       return;
     }
 
+    if (request.url?.startsWith('/api/agro/daily-tips')) {
+      await handleDailyTips(request, response);
+      return;
+    }
+
     if (request.url?.startsWith('/api/agro/')) {
       await handleAgroRequest(request, response, { sendJson, readBody, requireAuth, callOpenRouter });
       return;
@@ -799,6 +804,87 @@ async function handlePaydunya(request, response) {
   }
 
   sendJson(response, 404, { error: 'Endpoint PayDunya inconnu' });
+}
+
+const DAILY_TIPS_SECRET = process.env.DAILY_TIPS_SECRET || 'frescoop-cron-2026';
+
+const ZONE_SEASONS = {
+  kaolack: { zone: 'Bassin arachidier', cultures: 'arachide, mil, niébé, maïs' },
+  dakar: { zone: 'Niayes', cultures: 'tomate, oignon, chou, piment' },
+  thies: { zone: 'Niayes / Bassin arachidier', cultures: 'arachide, mil, pastèque' },
+  'saint-louis': { zone: 'Fleuve', cultures: 'riz irrigué, tomate industrielle, oignon' },
+  ziguinchor: { zone: 'Basse Casamance', cultures: 'riz pluvial, maïs, anacarde' },
+  tambacounda: { zone: 'Sénégal oriental', cultures: 'maïs, coton, sésame, arachide' },
+  kolda: { zone: 'Haute Casamance', cultures: 'arachide, maïs, riz' },
+  fatick: { zone: 'Sine Saloum', cultures: 'arachide, mil, riz pluvial' },
+  louga: { zone: 'Sylvo-pastorale', cultures: 'mil, niébé, élevage' },
+};
+
+async function handleDailyTips(request, response) {
+  if (request.method !== 'POST') {
+    sendJson(response, 405, { error: 'Method not allowed' });
+    return;
+  }
+  const body = await readBody(request);
+  const { secret } = JSON.parse(body || '{}');
+  if (secret !== DAILY_TIPS_SECRET) {
+    sendJson(response, 403, { error: 'Secret invalide' });
+    return;
+  }
+  if (!process.env.GROQ_API_KEY) {
+    sendJson(response, 503, { error: 'GROQ_API_KEY non configurée' });
+    return;
+  }
+
+  try {
+    const store = await readStore();
+    const farmers = (store.users || []).filter(u => u.role === 'agriculteur' && u.status === 'Actif');
+    if (!farmers.length) {
+      sendJson(response, 200, { ok: true, notified: 0, message: 'Aucun agriculteur actif' });
+      return;
+    }
+
+    const now = new Date();
+    const month = now.toLocaleString('fr-FR', { month: 'long' });
+    const zones = [...new Set(farmers.map(f => (f.region || 'kaolack').toLowerCase().trim()))];
+
+    const tipsByZone = {};
+    for (const zone of zones) {
+      const zoneInfo = ZONE_SEASONS[zone] || { zone: zone, cultures: 'cultures locales' };
+      try {
+        const result = await callGroq([
+          { role: 'system', content: `Tu es un conseiller agricole expert du Sénégal. Donne UN conseil pratique et actionnable pour aujourd'hui. Max 2 phrases. Pas de markdown. Langue : français simple.` },
+          { role: 'user', content: `Nous sommes en ${month}. Zone : ${zoneInfo.zone}. Cultures principales : ${zoneInfo.cultures}. Donne le conseil du jour pour un agriculteur de cette zone.` },
+        ], { temperature: 0.8, max_tokens: 150 });
+        tipsByZone[zone] = result.answer;
+      } catch {
+        tipsByZone[zone] = `En ${month}, surveillez l'état de vos parcelles et les prévisions météo. Consultez le conseiller FresCoop pour des recommandations personnalisées.`;
+      }
+    }
+
+    if (!store.notifications) store.notifications = [];
+    let notified = 0;
+    for (const farmer of farmers) {
+      const zone = (farmer.region || 'kaolack').toLowerCase().trim();
+      const tip = tipsByZone[zone] || tipsByZone['kaolack'];
+      store.notifications.unshift({
+        id: `tip-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+        userId: farmer.id,
+        title: 'Conseil du jour',
+        body: tip,
+        type: 'conseil',
+        read: false,
+        createdAt: now.toISOString(),
+      });
+      notified++;
+    }
+
+    await writeStore(store);
+    sendJson(response, 200, { ok: true, notified, zones: Object.keys(tipsByZone) });
+  } catch (err) {
+    console.error('[DailyTips]', err?.message || err);
+    sendJson(response, 500, { error: err?.message || 'Erreur' });
+  }
 }
 
 async function handleYaayVoice(request, response) {
@@ -1731,7 +1817,7 @@ async function handleActivityProofs(request, response) {
 
   if (request.method === 'PUT') {
     const authAdmin = requireAuth(request);
-    if (!authAdmin || authAdmin.role !== 'admin') { sendJson(response, 403, { error: 'Réservé aux administrateurs' }); return; }
+    if (!authAdmin || (authAdmin.role !== 'admin' && authAdmin.role !== 'agentTerrain')) { sendJson(response, 403, { error: 'Réservé aux administrateurs et agents terrain' }); return; }
     const body = await readBody(request);
     const { proofId, status } = JSON.parse(body || '{}');
     if (!proofId || !status) { sendJson(response, 400, { error: 'proofId et status requis' }); return; }
