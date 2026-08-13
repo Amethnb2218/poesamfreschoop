@@ -1695,16 +1695,36 @@ function normalizeStore(value) {
   return store;
 }
 
+const ORDER_STATUS_RANK = { 'Paiement en attente': 0, 'Confirmee': 1, 'Confirmée': 1, 'En preparation': 2, 'En préparation': 2, 'Prete': 3, 'Prête': 3, 'En livraison': 4, 'Livree': 5, 'Livrée': 5, 'Annulee': 6, 'Annulée': 6 };
+
 function mergeWithExisting(incoming, current) {
   const merged = { ...incoming };
   for (const key of Object.keys(emptyStore)) {
     const incomingArr = Array.isArray(incoming[key]) ? incoming[key] : [];
     const currentArr = Array.isArray(current[key]) ? current[key] : [];
     if (currentArr.length === 0) continue;
+    const currentById = new Map(currentArr.filter(item => item?.id).map(item => [item.id, item]));
     const incomingIds = new Set(incomingArr.map(item => item?.id).filter(Boolean));
+
+    // For orders: never let a client downgrade a status
+    if (key === 'orders') {
+      merged[key] = incomingArr.map(item => {
+        if (!item?.id) return item;
+        const serverItem = currentById.get(item.id);
+        if (!serverItem) return item;
+        const incomingRank = ORDER_STATUS_RANK[item.status] ?? -1;
+        const serverRank = ORDER_STATUS_RANK[serverItem.status] ?? -1;
+        if (serverRank > incomingRank) {
+          return { ...item, status: serverItem.status, updatedAt: serverItem.updatedAt || item.updatedAt };
+        }
+        return item;
+      });
+    }
+
+    // Add items that exist on server but not in incoming
     const missing = currentArr.filter(item => item?.id && !incomingIds.has(item.id));
     if (missing.length > 0) {
-      merged[key] = [...incomingArr, ...missing];
+      merged[key] = [...(merged[key] || incomingArr), ...missing];
     }
   }
   return merged;
