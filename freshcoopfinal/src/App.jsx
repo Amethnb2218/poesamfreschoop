@@ -6450,9 +6450,8 @@ function PredictionPage({ currentUser, notify }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showModel, setShowModel] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
-  // Referentiels : le selecteur est construit depuis l'API pour eviter toute
-  // divergence avec le moteur (une ville proposee est forcement calculable).
   useEffect(() => {
     let cancelled = false;
     Promise.all([
@@ -6470,7 +6469,6 @@ function PredictionPage({ currentUser, notify }) {
     return () => { cancelled = true; };
   }, []);
 
-  // Region du compte -> preselection de la zone la plus proche.
   const didPreselect = useRef(false);
   useEffect(() => {
     if (didPreselect.current || !countries.length || !currentUser?.region) return;
@@ -6536,20 +6534,17 @@ function PredictionPage({ currentUser, notify }) {
 
   return (
     <PageFrame>
+      {/* HERO — une phrase, pas un paragraphe */}
       <section className="panel poesam-hero">
         <div>
-          <span className="poesam-badge">AIDE A LA DECISION AGRONOMIQUE</span>
-          <h2>Quand semer, ou planter, et quel rendement attendre ?</h2>
-          <p>
-            Le moteur croise le profil hydrique de la culture, la pluviometrie et les temperatures de la zone,
-            la fenetre de semis agronomique et un modele de rendement entraine sur des donnees FAOSTAT, DAPSA,
-            ISRA et ANACIM. Aucun chiffre n'est saisi a la main : tout est recalcule a la demande.
-          </p>
+          <span className="poesam-badge">PREDICTION IA</span>
+          <h2>Trouvez le meilleur moment pour semer</h2>
+          <p>Selectionnez votre culture et votre zone. L'IA calcule le mois optimal, le rendement attendu et les risques en temps reel.</p>
         </div>
       </section>
 
+      {/* SELECTEURS */}
       <section className="panel">
-        <PanelTitle icon={Sprout} title="Choisir la culture et la zone" />
         <div className="field-row">
           <Field label="Culture">
             <select value={crop} onChange={(event) => setCrop(event.target.value)}>
@@ -6558,7 +6553,7 @@ function PredictionPage({ currentUser, notify }) {
               ))}
             </select>
           </Field>
-          <Field label="Zone de production">
+          <Field label="Zone">
             <select value={city} onChange={(event) => setCity(event.target.value)}>
               {countries.map((group) => (
                 <optgroup key={group.country} label={group.label}>
@@ -6576,96 +6571,87 @@ function PredictionPage({ currentUser, notify }) {
 
       {!loading && !error && prediction && (
         <>
+          {/* VERDICT PRINCIPAL — ce que l'utilisateur veut voir en premier */}
           <div className="status-grid">
             <StatCard
               icon={CalendarDays}
-              label="Meilleur mois de semis"
+              label="Semez en"
               value={prediction.optimal?.monthName || '—'}
               tone="green"
             />
             <StatCard
               icon={Gauge}
-              label={`Score de conditions (${prediction.optimal?.monthName || ''})`}
+              label="Score conditions"
               value={`${prediction.optimal?.score ?? 0}/100`}
               tone={scoreTone(prediction.optimal?.score ?? 0)}
             />
-            <StatCard
-              icon={Droplets}
-              label="Besoin en eau du cycle"
-              value={`${prediction.cropInfo?.waterNeeds ?? 0} mm`}
-              tone="blue"
-            />
-            <StatCard
-              icon={Thermometer}
-              label="Temperature optimale"
-              value={`${prediction.cropInfo?.optimalTemp ?? 0} °C`}
-              tone="gold"
-            />
+            {ensemble && (
+              <StatCard icon={Leaf} label="Rendement attendu" value={`${perHectareTons} t/ha`} tone="green" />
+            )}
+            {risk && (
+              <StatCard icon={ShieldCheck} label="Securite" value={`${risk.safetyScore}/100`} tone={scoreTone(risk.safetyScore)} />
+            )}
           </div>
 
+          {/* GRAPHIQUE — fenetre de semis visuelle */}
+          <section className="panel">
+            <PanelTitle icon={CalendarDays} title="Fenetre de semis — 6 prochains mois" />
+            {timelineData.length ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={timelineData} margin={{ top: 10, right: 16, left: -18, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#d7e4dc" />
+                  <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                  <YAxis domain={[0, 100]} tickLine={false} axisLine={false} />
+                  <RechartsTooltip formatter={(value) => [`${value}/100`, 'Score']} />
+                  <Bar dataKey="score" radius={[8, 8, 0, 0]} name="Score conditions">
+                    {timelineData.map((entry) => (
+                      <Cell
+                        key={entry.month}
+                        fill={entry.month === prediction.optimal?.month ? '#1f835d' : '#adc8ba'}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyState icon={CalendarDays} title="Aucune projection" body="Selectionnez une culture et une zone." />
+            )}
+          </section>
+
+          {/* EAU + RISQUES — cote a cote, simple */}
           <div className="split-layout">
             <section className="panel">
-              <PanelTitle icon={CalendarDays} title="Fenetre de semis sur 6 mois" />
-              <p className="agro-hint">
-                Score de 0 a 100 par mois pour {prediction.crop} a {cityLabel} (zone {prediction.zone}).
-                Plus le score est haut, plus les conditions sont favorables.
-              </p>
-              {timelineData.length ? (
-                <ResponsiveContainer width="100%" height={260}>
-                  <BarChart data={timelineData} margin={{ top: 10, right: 16, left: -18, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#d7e4dc" />
-                    <XAxis dataKey="name" tickLine={false} axisLine={false} />
-                    <YAxis domain={[0, 100]} tickLine={false} axisLine={false} />
-                    <RechartsTooltip formatter={(value) => [`${value}/100`, 'Score']} />
-                    <Bar dataKey="score" radius={[8, 8, 0, 0]} name="Score conditions">
-                      {timelineData.map((entry) => (
-                        <Cell
-                          key={entry.month}
-                          fill={entry.month === prediction.optimal?.month ? '#1f835d' : '#adc8ba'}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <EmptyState icon={CalendarDays} title="Aucune projection" body="Selectionnez une culture et une zone." />
-              )}
-              <div className="agro-timeline-list">
-                {(prediction.timeline || []).map((item) => (
-                  <article key={item.month} className={item.month === prediction.optimal?.month ? 'agro-month best' : 'agro-month'}>
-                    <strong>{item.monthName}</strong>
-                    <span className={`agro-score-pill tone-${scoreTone(item.score)}`}>{item.score}</span>
-                    <small>{item.recommendation?.text}</small>
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            <section className="panel">
-              <PanelTitle icon={Droplets} title="Bilan hydrique et risques" />
+              <PanelTitle icon={Droplets} title="Eau" />
               {prediction.optimal?.waterAnalysis && (
                 <>
                   <Meter
-                    label={`Couverture des besoins en eau (${prediction.optimal.waterAnalysis.expected} / ${prediction.optimal.waterAnalysis.needed} mm)`}
+                    label={`${prediction.optimal.waterAnalysis.expected} / ${prediction.optimal.waterAnalysis.needed} mm couverts`}
                     tone="blue"
                     value={Math.round((prediction.optimal.waterAnalysis.expected / (prediction.optimal.waterAnalysis.needed || 1)) * 100)}
                   />
                   {prediction.optimal.waterAnalysis.irrigationNeeded ? (
                     <NoticeCard
                       icon={Droplets}
-                      title={`Irrigation necessaire — deficit de ${prediction.optimal.waterAnalysis.deficit} mm`}
-                      body="La pluie attendue ne couvre pas le cycle. Prevoyez un appoint (goutte-a-goutte, californien) ou choisissez une variete a cycle plus court."
+                      title={`Irrigation necessaire (deficit ${prediction.optimal.waterAnalysis.deficit} mm)`}
+                      body="Prevoyez un appoint en eau ou une variete a cycle court."
                     />
                   ) : (
                     <NoticeCard
                       icon={CloudRain}
-                      title="Pluviometrie suffisante"
-                      body="La pluie attendue couvre les besoins du cycle. Un suivi des poches de secheresse reste recommande."
+                      title="Pluie suffisante"
+                      body="La pluviometrie couvre le cycle. Surveillez les poches de secheresse."
                     />
                   )}
                 </>
               )}
+              <div className="status-grid small" style={{ marginTop: '12px' }}>
+                <StatCard icon={Droplets} label="Besoin total" value={`${prediction.cropInfo?.waterNeeds ?? 0} mm`} tone="blue" />
+                <StatCard icon={Thermometer} label="Temperature ideale" value={`${prediction.cropInfo?.optimalTemp ?? 0} °C`} tone="gold" />
+              </div>
+            </section>
 
+            <section className="panel">
+              <PanelTitle icon={ShieldCheck} title="Risques" />
               <div className="agro-risk-list">
                 {(prediction.optimal?.risks || []).length ? (
                   prediction.optimal.risks.map((item) => (
@@ -6676,70 +6662,87 @@ function PredictionPage({ currentUser, notify }) {
                   ))
                 ) : (
                   <article className="agro-risk sev-none">
-                    <strong>Aucun risque majeur detecte</strong>
-                    <span>Les conditions du mois optimal restent dans les tolerances de la culture.</span>
+                    <strong>Aucun risque majeur</strong>
+                    <span>Conditions favorables pour ce mois.</span>
                   </article>
                 )}
               </div>
-
               {risk && (
-                <div className="agro-bayes">
-                  <PanelTitle icon={ShieldCheck} title={`Reseau bayesien — securite ${risk.safetyScore}/100`} />
-                  <p className="agro-hint">{risk.recommendation}</p>
-                  <div className="data-grid">
-                    <article><span>Secheresse</span><strong>{risk.factors?.drought_probability}</strong></article>
-                    <article><span>Stress thermique</span><strong>{risk.factors?.heat_stress_probability}</strong></article>
-                    <article><span>Pression parasitaire</span><strong>{risk.factors?.pest_pressure_probability}</strong></article>
-                    <article><span>Risque inondation</span><strong>{risk.factors?.flood_risk_probability}</strong></article>
-                    <article><span>Echec de culture</span><strong>{risk.outcomes?.crop_failure_probability}</strong></article>
-                    <article><span>Perte de rendement</span><strong>{risk.outcomes?.yield_loss_probability}</strong></article>
-                  </div>
+                <div className="data-grid" style={{ marginTop: '12px' }}>
+                  <article><span>Secheresse</span><strong>{risk.factors?.drought_probability}</strong></article>
+                  <article><span>Chaleur</span><strong>{risk.factors?.heat_stress_probability}</strong></article>
+                  <article><span>Parasites</span><strong>{risk.factors?.pest_pressure_probability}</strong></article>
+                  <article><span>Inondation</span><strong>{risk.factors?.flood_risk_probability}</strong></article>
                 </div>
               )}
             </section>
           </div>
 
+          {/* VARIETES RECOMMANDEES */}
+          <section className="panel">
+            <PanelTitle icon={BadgeCheck} title="Varietes recommandees" />
+            <div className="record-grid">
+              {(prediction.recommendedVarieties || []).map((variety) => (
+                <article key={variety.name} className="record-card">
+                  <strong>{variety.name}</strong>
+                  <span>Cycle {variety.cycle} jours</span>
+                  <span>Rendement {variety.yield}</span>
+                  <Badge>{variety.zone}</Badge>
+                </article>
+              ))}
+            </div>
+            <p className="agro-hint">
+              Cycle : {prediction.cropInfo?.cycleDays} jours. Semences certifiees ISRA recommandees.
+            </p>
+          </section>
+
+          {/* DETAILS TECHNIQUES — masques par defaut */}
           <section className="panel">
             <PanelToolbar
               icon={TrendingUp}
-              title="Rendement estime"
+              title="Details techniques"
               action={
-                <Button variant="secondary" onClick={() => setShowModel((prev) => !prev)}>
-                  {showModel ? 'Masquer le detail modele' : 'Detail du modele'}
+                <Button variant="secondary" onClick={() => setShowDetails((prev) => !prev)}>
+                  {showDetails ? 'Masquer' : 'Voir les details'}
                 </Button>
               }
             />
-            {ensemble ? (
+            {showDetails && (
               <>
-                <div className="status-grid small">
-                  <StatCard icon={Leaf} label="Rendement attendu" value={`${perHectareTons} t/ha`} tone="green" />
-                  <StatCard
-                    icon={BarChart3}
-                    label="Intervalle de confiance 90%"
-                    value={ensemble.confidence_interval ? `${ensemble.confidence_interval.low} – ${ensemble.confidence_interval.high} kg` : '—'}
-                    tone="blue"
-                  />
-                  <StatCard icon={BadgeCheck} label="Precision validee (LOOCV)" value={ensemble.accuracy} tone="gold" />
-                  <StatCard
-                    icon={CloudRain}
-                    label="Source meteo"
-                    value={yieldData.weather_source === 'openweathermap' ? 'Temps reel' : 'Moyennes climatiques'}
-                    tone="coral"
-                  />
-                </div>
-                <p className="agro-hint">
-                  Estimation pour un semis en {MONTH_LABELS[yieldData.sowMonth] || '—'} a {cityLabel}.
-                  Methode : {ensemble.method}. Accord des modeles : {ensemble.model_agreement}.
-                  Entraine sur {ensemble.training_samples} observations ({ensemble.scope}).
-                </p>
-                {yieldData.realtime_data && (
-                  <p className="agro-hint">
-                    Meteo actuelle : {yieldData.realtime_data.current_temp} °C, humidite {yieldData.realtime_data.humidity} %
-                    {yieldData.realtime_data.description ? ` (${yieldData.realtime_data.description})` : ''}.
-                  </p>
+                {ensemble && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <div className="status-grid small">
+                      <StatCard icon={Leaf} label="Rendement" value={`${perHectareTons} t/ha`} tone="green" />
+                      <StatCard
+                        icon={BarChart3}
+                        label="Intervalle 90%"
+                        value={ensemble.confidence_interval ? `${ensemble.confidence_interval.low} – ${ensemble.confidence_interval.high} kg` : '—'}
+                        tone="blue"
+                      />
+                      <StatCard icon={BadgeCheck} label="Precision" value={ensemble.accuracy} tone="gold" />
+                      <StatCard
+                        icon={CloudRain}
+                        label="Meteo"
+                        value={yieldData.weather_source === 'openweathermap' ? 'Temps reel' : 'Climatique'}
+                        tone="coral"
+                      />
+                    </div>
+                    <p className="agro-hint">
+                      Semis en {MONTH_LABELS[yieldData.sowMonth] || '—'} a {cityLabel}. Methode : {ensemble.method}.
+                      Entraine sur {ensemble.training_samples} observations ({ensemble.scope}).
+                    </p>
+                    {yieldData.realtime_data && (
+                      <p className="agro-hint">
+                        Meteo actuelle : {yieldData.realtime_data.current_temp} °C, humidite {yieldData.realtime_data.humidity}%
+                        {yieldData.realtime_data.description ? ` (${yieldData.realtime_data.description})` : ''}.
+                      </p>
+                    )}
+                  </div>
                 )}
-
-                {showModel && (
+                <Button variant="secondary" onClick={() => setShowModel((prev) => !prev)} style={{ marginBottom: '12px' }}>
+                  {showModel ? 'Masquer modele ML' : 'Voir modele ML'}
+                </Button>
+                {showModel && ensemble && (
                   <div className="agro-model">
                     <div className="data-grid">
                       <article><span>Regression (ridge)</span><strong>{yieldData.regression?.predicted_yield_kg} kg/ha</strong></article>
@@ -6747,42 +6750,28 @@ function PredictionPage({ currentUser, notify }) {
                       <article><span>RMSE</span><strong>{yieldData.regression?.rmse} kg</strong></article>
                       <article><span>KNN (k={yieldData.knn?.k})</span><strong>{yieldData.knn?.predicted_yield_kg} kg/ha</strong></article>
                       <article><span>Confiance KNN</span><strong>{yieldData.knn?.confidence}</strong></article>
-                      <article><span>Erreur croisee (MAPE)</span><strong>{ensemble.cv_mape}</strong></article>
-                      <article><span>Ponderation regression</span><strong>{ensemble.weights?.regression}</strong></article>
-                      <article><span>Ponderation KNN</span><strong>{ensemble.weights?.knn}</strong></article>
+                      <article><span>MAPE</span><strong>{ensemble.cv_mape}</strong></article>
+                      <article><span>Poids regression</span><strong>{ensemble.weights?.regression}</strong></article>
+                      <article><span>Poids KNN</span><strong>{ensemble.weights?.knn}</strong></article>
                     </div>
                     <p className="agro-hint">
-                      Modele : {yieldData.regression?.model_type}. Validation : {ensemble.validation}.
-                      Donnees : {ensemble.data_source}.
+                      {yieldData.regression?.model_type}. Validation : {ensemble.validation}. Source : {ensemble.data_source}.
                     </p>
                   </div>
                 )}
-              </>
-            ) : (
-              <EmptyState
-                icon={TrendingUp}
-                title="Rendement non disponible"
-                body="Le modele n'a pas assez d'observations pour cette combinaison culture / zone."
-              />
-            )}
-          </section>
 
-          <section className="panel">
-            <PanelTitle icon={BadgeCheck} title="Varietes recommandees pour cette zone" />
-            <div className="record-grid">
-              {(prediction.recommendedVarieties || []).map((variety) => (
-                <article key={variety.name} className="record-card">
-                  <strong>{variety.name}</strong>
-                  <span>Cycle {variety.cycle} jours</span>
-                  <span>Rendement de reference {variety.yield}</span>
-                  <Badge>{variety.zone}</Badge>
-                </article>
-              ))}
-            </div>
-            <p className="agro-hint">
-              Cycle de la culture : {prediction.cropInfo?.cycleDays} jours. Verifiez la disponibilite des semences
-              certifiees aupres de l'ISRA ou de votre cooperative avant de fixer la date de semis.
-            </p>
+                {/* Timeline detaillee */}
+                <div className="agro-timeline-list" style={{ marginTop: '16px' }}>
+                  {(prediction.timeline || []).map((item) => (
+                    <article key={item.month} className={item.month === prediction.optimal?.month ? 'agro-month best' : 'agro-month'}>
+                      <strong>{item.monthName}</strong>
+                      <span className={`agro-score-pill tone-${scoreTone(item.score)}`}>{item.score}</span>
+                      <small>{item.recommendation?.text}</small>
+                    </article>
+                  ))}
+                </div>
+              </>
+            )}
           </section>
         </>
       )}
