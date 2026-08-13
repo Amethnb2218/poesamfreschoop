@@ -37,7 +37,7 @@ const COLLECTIONS = [
   'reservations', 'dispatches', 'paymentRecords', 'payoutRecords',
   'consentRecords', 'economicProfiles', 'partnerOffers', 'alerts',
   'auditLogs', 'kpiAggregates', 'loans', 'surveyLeads',
-  'activityProofs',
+  'activityProofs', 'ratings', 'loanRepayments', 'cashbackRecords',
 ];
 
 export async function initDatabase() {
