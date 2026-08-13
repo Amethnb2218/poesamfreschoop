@@ -2261,7 +2261,7 @@ function DashboardPage({ currentUser, navigate, stats, store }) {
     return <FieldAgentHomePage currentUser={currentUser} navigate={navigate} store={store} />;
   }
 
-  if (currentUser.role === 'client') {
+  if (currentUser.role === 'client' || currentUser.role === 'cooperative') {
     return <ClientHomePage currentUser={currentUser} navigate={navigate} store={store} />;
   }
 
@@ -4426,9 +4426,9 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
                 showOrderList ? (
                   <>
                     {isBuyerRole(currentUser.role) ? (
-                      <ClientOrderList currentUser={currentUser} onCancel={cancelOrder} onPay={(orderId) => navigate(`/paiement?orders=${orderId}`)} onRate={async (orderId) => { const r = await askRating(); if (r >= 1) rateOrder(orderId, r); }} onSelect={toggleOrderSelection} orders={pagedOrders} selectedIds={selectedOrderSet} store={store} />
+                      <ClientOrderList currentUser={currentUser} onCancel={cancelOrder} onPay={(orderId) => navigate(`/paiement?orders=${orderId}`)} onRate={async (orderId) => { const r = await askRating(); if (r?.rating >= 1) rateOrder(orderId, r.rating, r.comment || ''); }} onSelect={toggleOrderSelection} orders={pagedOrders} selectedIds={selectedOrderSet} store={store} />
                     ) : (
-                      <OrderCardGrid currentUser={currentUser} onAgentStep={markAgentStep} onCancel={cancelOrder} onRate={async (orderId) => { const r = await askRating(); if (r >= 1) rateOrder(orderId, r); }} onSelect={toggleOrderSelection} onStatusChange={updateOrder} orders={pagedOrders} selectedIds={selectedOrderSet} store={store} />
+                      <OrderCardGrid currentUser={currentUser} onAgentStep={markAgentStep} onCancel={cancelOrder} onRate={async (orderId) => { const r = await askRating(); if (r?.rating >= 1) rateOrder(orderId, r.rating, r.comment || ''); }} onSelect={toggleOrderSelection} onStatusChange={updateOrder} orders={pagedOrders} selectedIds={selectedOrderSet} store={store} />
                     )}
                     <CatalogPager page={orderPage} totalPages={orderTotalPages} onPageChange={setOrderPage} />
                   </>
@@ -4526,14 +4526,15 @@ function RatingModalHost() {
   const [request, setRequest] = useState(null);
   const [hover, setHover] = useState(0);
   const [selected, setSelected] = useState(0);
+  const [comment, setComment] = useState('');
   useEffect(() => {
-    ratingHandler = (opts) => { setSelected(0); setHover(0); setRequest(opts); };
+    ratingHandler = (opts) => { setSelected(0); setHover(0); setComment(''); setRequest(opts); };
     return () => { ratingHandler = null; };
   }, []);
   if (!request) return null;
   const { resolve } = request;
-  const close = () => { resolve(0); setRequest(null); };
-  const submit = () => { resolve(selected); setRequest(null); };
+  const close = () => { resolve({ rating: 0, comment: '' }); setRequest(null); };
+  const submit = () => { resolve({ rating: selected, comment }); setRequest(null); };
   return (
     <div className="confirm-modal-backdrop" onClick={close} role="dialog" aria-modal="true">
       <div className="confirm-modal rating-modal" onClick={(e) => e.stopPropagation()}>
@@ -4547,6 +4548,15 @@ function RatingModalHost() {
           ))}
         </div>
         {selected > 0 && <p className="rating-label">{selected === 5 ? 'Excellent !' : selected === 4 ? 'Très bien' : selected === 3 ? 'Correct' : selected === 2 ? 'Décevant' : 'Mauvais'}</p>}
+        {selected > 0 && (
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Ajoutez un commentaire (optionnel)"
+            rows={3}
+            style={{ width: '100%', marginTop: '0.75rem', padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid #d4ddd8', fontSize: '0.85rem', resize: 'vertical' }}
+          />
+        )}
         <div className="confirm-modal-actions">
           <button type="button" className="btn btn-secondary" onClick={close}>Annuler</button>
           <button type="button" className="btn btn-primary" disabled={!selected} onClick={submit}>Valider ({selected}/5)</button>
@@ -12603,6 +12613,7 @@ function getPrimaryNavLinks(role) {
     agriculteur: ['/', '/produits', '/commandes', '/prediction', '/conseiller', '/bancabilite'],
     agentTerrain: ['/', '/verification', '/commandes', '/operations'],
     client: ['/', '/marche', '/commandes'],
+    cooperative: ['/', '/marche', '/commandes'],
     acheteurB2B: ['/', '/marche', '/lots', '/commandes'],
     partenaire: ['/', '/bancabilite', '/impact'],
   }[role] || ['/'];
