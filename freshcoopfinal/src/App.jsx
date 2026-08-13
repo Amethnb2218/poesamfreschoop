@@ -2561,8 +2561,8 @@ function SellerHomePage({ currentUser, navigate, store }) {
   })();
 
   const bancabiliteScore = buildBancabiliteDossier(currentUser, store).score;
-  const scoreLevel = bancabiliteScore >= 75 ? 'Bancable' : bancabiliteScore >= 40 ? 'En progression' : 'Débutant';
-  const scoreTone = bancabiliteScore >= 75 ? 'green' : bancabiliteScore >= 40 ? 'blue' : 'gold';
+  const scoreLevel = bancabiliteScore >= 80 ? 'Bancable (Grade B)' : bancabiliteScore >= 50 ? 'En progression' : 'Débutant';
+  const scoreTone = bancabiliteScore >= 80 ? 'green' : bancabiliteScore >= 50 ? 'blue' : 'gold';
 
   // --- Recommandation agronomique (moteur local /api/agro) ---
   // On compare les cultures candidates sur la zone du vendeur et on retient
@@ -2617,9 +2617,9 @@ function SellerHomePage({ currentUser, navigate, store }) {
     <PageFrame>
       <section className="money-hero seller-money-hero bancabilite-hero">
         <div>
-          <span className="eyebrow">Mon espace vendeur</span>
-          <h2>Vendez, prouvez, obtenez un crédit.</h2>
-          <p>Vos ventes et livraisons construisent votre dossier bancaire automatiquement.</p>
+          <span className="eyebrow">Mon espace producteur</span>
+          <h2>Produisez, vendez, documentez.</h2>
+          <p>Chaque activité construit votre Passeport Économique et renforce votre évaluation auprès des financeurs.</p>
           <div className="button-row">
             <Button onClick={() => navigate('/bancabilite')}><Landmark size={18} /> Mon score</Button>
             <Button variant="secondary" onClick={() => navigate('/produits')}><Plus size={18} /> Produits</Button>
@@ -2627,7 +2627,7 @@ function SellerHomePage({ currentUser, navigate, store }) {
           </div>
         </div>
         <div className="money-hero-score bancabilite-ring">
-          <span>Bancabilité</span>
+          <span>Passeport Économique</span>
           <strong className={`score-${scoreTone}`}>{bancabiliteScore}</strong>
           <small>{scoreLevel}</small>
         </div>
@@ -2675,7 +2675,7 @@ function SellerHomePage({ currentUser, navigate, store }) {
 
       <div className="split-layout">
         <section className="panel opportunity-panel">
-          <PanelTitle icon={BellRing} title="Actions pour augmenter votre score" />
+          <PanelTitle icon={BellRing} title="Renforcer votre Passeport" />
           {actions.length ? (
             <div className="opportunity-list">
               {actions.map((item) => (
@@ -2738,15 +2738,14 @@ function SellerHomePage({ currentUser, navigate, store }) {
         </section>
 
         <section className="panel">
-          <PanelTitle icon={Landmark} title="Mon crédit" />
+          <PanelTitle icon={Landmark} title="Mon Passeport Économique" />
           <div className="finance-score-card">
-            <div className="score-ring" style={{ background: `conic-gradient(${bancabiliteScore >= 75 ? '#1f835d' : bancabiliteScore >= 40 ? '#4fb07e' : bancabiliteScore >= 20 ? '#d99912' : '#e54d35'} 0deg ${Math.round(bancabiliteScore * 3.6)}deg, var(--line, #e5e7eb) ${Math.round(bancabiliteScore * 3.6)}deg)` }}><strong>{bancabiliteScore}</strong><span>/100</span></div>
+            <div className="score-ring" style={{ background: `conic-gradient(${bancabiliteScore >= 80 ? '#1f835d' : bancabiliteScore >= 50 ? '#4fb07e' : bancabiliteScore >= 20 ? '#d99912' : '#e54d35'} 0deg ${Math.round(bancabiliteScore * 3.6)}deg, var(--line, #e5e7eb) ${Math.round(bancabiliteScore * 3.6)}deg)` }}><strong>{bancabiliteScore}</strong><span>/100</span></div>
             <div>
-              <strong>{bancabiliteScore >= 75 ? "Éligible au crédit" : "Dossier en construction"}</strong>
-              <p>{bancabiliteScore >= 75 ? "Exportez votre dossier." : "Vendez pour augmenter votre score."}</p>
+              <strong>{bancabiliteScore >= 80 ? "Profil bancable — Grade B" : "Passeport en construction"}</strong>
+              <p>{bancabiliteScore >= 80 ? "Votre activité est documentée. Exportez votre Passeport Économique." : "Chaque vente et preuve renforce votre Passeport Économique."}</p>
               <div className="button-row">
-                <Button variant="secondary" onClick={() => navigate('/bancabilite')}><FileCheck2 size={16} /> Dossier</Button>
-                {bancabiliteScore >= 60 && <Button onClick={() => navigate('/bancabilite')}><Landmark size={16} /> Crédit</Button>}
+                <Button variant="secondary" onClick={() => navigate('/bancabilite')}><FileCheck2 size={16} /> Mon Passeport</Button>
               </div>
             </div>
           </div>
@@ -2758,9 +2757,9 @@ function SellerHomePage({ currentUser, navigate, store }) {
         <div className="permissions-progress-grid">
           <div className={`perm-item ${bancabiliteScore >= 0 ? 'unlocked' : 'locked'}`}><CheckCircle2 size={16} /><div><strong>Publier</strong><small>0+</small></div></div>
           <div className={`perm-item ${bancabiliteScore >= 20 ? 'unlocked' : 'locked'}`}>{bancabiliteScore >= 20 ? <CheckCircle2 size={16} /> : <CircleAlert size={16} />}<div><strong>Preuves</strong><small>20+</small></div></div>
-          <div className={`perm-item ${bancabiliteScore >= 40 ? 'unlocked' : 'locked'}`}>{bancabiliteScore >= 40 ? <CheckCircle2 size={16} /> : <CircleAlert size={16} />}<div><strong>Micro-crédit</strong><small>40+</small></div></div>
-          <div className={`perm-item ${bancabiliteScore >= 60 ? 'unlocked' : 'locked'}`}>{bancabiliteScore >= 60 ? <CheckCircle2 size={16} /> : <CircleAlert size={16} />}<div><strong>Export PDF</strong><small>60+</small></div></div>
-          <div className={`perm-item ${bancabiliteScore >= 75 ? 'unlocked' : 'locked'}`}>{bancabiliteScore >= 75 ? <CheckCircle2 size={16} /> : <CircleAlert size={16} />}<div><strong>Partenaires</strong><small>75+</small></div></div>
+          <div className={`perm-item ${bancabiliteScore >= 50 ? 'unlocked' : 'locked'}`}>{bancabiliteScore >= 50 ? <CheckCircle2 size={16} /> : <CircleAlert size={16} />}<div><strong>Export PDF</strong><small>50+</small></div></div>
+          <div className={`perm-item ${bancabiliteScore >= 80 ? 'unlocked' : 'locked'}`}>{bancabiliteScore >= 80 ? <CheckCircle2 size={16} /> : <CircleAlert size={16} />}<div><strong>Bancable</strong><small>80+</small></div></div>
+          <div className={`perm-item ${bancabiliteScore >= 90 ? 'unlocked' : 'locked'}`}>{bancabiliteScore >= 90 ? <CheckCircle2 size={16} /> : <CircleAlert size={16} />}<div><strong>Grade A</strong><small>90+</small></div></div>
         </div>
       </section>
     </PageFrame>
