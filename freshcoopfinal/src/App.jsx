@@ -6779,6 +6779,74 @@ function PredictionPage({ currentUser, notify }) {
 }
 
 // ============================================================================
+// RENDU DES REPONSES DE L ASSISTANT
+// ----------------------------------------------------------------------------
+// Le conseiller et les reponses hors-ligne renvoient du markdown simple
+// (**gras**, puces "- ", retours a la ligne). Affiche brut, l utilisateur voyait
+// les asterisques. On rend ici le sous-ensemble reellement utilise, en
+// construisant des elements React : pas de dependance markdown supplementaire
+// et aucun dangerouslySetInnerHTML, donc aucune surface XSS ajoutee.
+// ============================================================================
+
+const BULLET_LINE = /^[-•][ \t]+(.*)$/;
+const HEADING_LINE = /^#{1,4}[ \t]+(.*)$/;
+const BOLD_SPLIT = /(\*\*[^*]+\*\*)/g;
+
+function renderInlineBold(text, keyPrefix) {
+  // Découpe sur **gras** en conservant les séparateurs.
+  return String(text)
+    .split(BOLD_SPLIT)
+    .filter((part) => part !== '')
+    .map((part, index) => {
+      const key = `${keyPrefix}-${index}`;
+      if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+        return <strong key={key}>{part.slice(2, -2)}</strong>;
+      }
+      return <span key={key}>{part}</span>;
+    });
+}
+
+function FormattedMessage({ text }) {
+  const lines = String(text || '').split('\n');
+
+  return (
+    <div className="assistant-rich">
+      {lines.map((rawLine, index) => {
+        const key = `line-${index}`;
+        // On travaille sur la ligne détourée : les motifs restent ancrés et
+        // simples, sans `\s*` suivi de `\s+` qui provoquerait du backtracking.
+        const line = rawLine.trim();
+
+        if (!line) return <div key={key} className="assistant-rich-space" />;
+
+        // Puces : "- texte" ou "• texte"
+        const bullet = BULLET_LINE.exec(line);
+        if (bullet) {
+          return (
+            <div key={key} className="assistant-rich-bullet">
+              <span aria-hidden="true">•</span>
+              <span>{renderInlineBold(bullet[1], key)}</span>
+            </div>
+          );
+        }
+
+        // Titres markdown "### texte"
+        const heading = HEADING_LINE.exec(line);
+        if (heading) {
+          return (
+            <div key={key} className="assistant-rich-heading">
+              {renderInlineBold(heading[1], key)}
+            </div>
+          );
+        }
+
+        return <div key={key}>{renderInlineBold(line, key)}</div>;
+      })}
+    </div>
+  );
+}
+
+// ============================================================================
 // CONSEILLER AGRICOLE
 // ----------------------------------------------------------------------------
 // Chat agronomique dedie : prompt systeme specialise Sahel cote serveur, avec
@@ -7186,7 +7254,7 @@ function ConseillerPage({ currentUser, notify }) {
 
         {messages.map((msg, index) => (
           <div key={index} style={bubbleStyle(msg.from === 'user')}>
-            {msg.text}
+            {msg.from === 'bot' ? <FormattedMessage text={msg.text} /> : msg.text}
           </div>
         ))}
 
@@ -10427,7 +10495,7 @@ function LanguageAssistant({ currentUser, store }) {
           <div className="assistant-messages" ref={scrollRef}>
             {messages.map((msg, index) => (
               <div key={index} className={`assistant-msg ${msg.from}`}>
-                {msg.text}
+                {msg.from === 'bot' ? <FormattedMessage text={msg.text} /> : msg.text}
                 {msg.audio && <audio src={msg.audio} controls style={{ width: '100%', height: '28px', marginTop: '4px' }} />}
               </div>
             ))}
