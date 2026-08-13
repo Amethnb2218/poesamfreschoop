@@ -5,7 +5,10 @@ import {
   BadgeCheck,
   BarChart3,
   BellRing,
+  Bot,
   Building2,
+  CalendarDays,
+  CloudRain,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -16,12 +19,14 @@ import {
   ClipboardCheck,
   Database,
   Download,
+  Droplets,
   Eye,
   EyeOff,
   FileArchive,
   FileCheck2,
   FileText,
   FolderPlus,
+  Gauge,
   Home,
   ImagePlus,
   Landmark,
@@ -50,6 +55,7 @@ import {
   ShoppingCart,
   Sprout,
   Store,
+  Thermometer,
   Tractor,
   Trash2,
   TrendingUp,
@@ -319,6 +325,18 @@ const basePageMeta = {
     kicker: 'Impact',
     title: 'Indicateurs mesurables impact social.',
     body: 'Pertes évitées, revenu, genre et CO2.',
+  },
+  '/prediction': {
+    image: publicImages.agriculture,
+    kicker: 'Prédiction agronomique',
+    title: 'Quand semer, où planter, quel rendement attendre.',
+    body: 'Fenêtre de semis, bilan hydrique, risque climatique et rendement estimé par zone.',
+  },
+  '/conseiller': {
+    image: publicImages.agriculture,
+    kicker: 'Conseiller agricole',
+    title: 'Un agronome joignable en quatre langues.',
+    body: 'Cultures, sols, engrais, ravageurs et calendrier cultural — même hors ligne.',
   },
   '/bancabilite': {
     image: publicImages.impact,
@@ -634,7 +652,7 @@ function App() {
         setMenuOpen={setMenuOpen}
       />
       <main id="main-content" tabIndex="-1">
-        <PageHero meta={pageMeta} stats={stats} store={store} user={currentUser} />
+        <PageHero meta={pageMeta} />
         {!accessAllowed && (() => { navigate(getRoleHomePath(currentUser.role)); return null; })()}
         {accessAllowed && route.pathname === '/' && <DashboardPage currentUser={currentUser} navigate={navigate} stats={stats} store={store} />}
         {accessAllowed && route.pathname === '/marche' && <MarketplacePage actions={actions} currentUser={currentUser} navigate={navigate} notify={notify} store={store} />}
@@ -649,6 +667,8 @@ function App() {
         {accessAllowed && route.pathname === '/lots' && <LotIntelligencePage actions={actions} currentUser={currentUser} notify={notify} store={store} />}
         {accessAllowed && route.pathname === '/utilisateurs' && <UsersPage actions={actions} currentUser={currentUser} navigate={navigate} notify={notify} store={store} />}
         {accessAllowed && route.pathname === '/impact' && <ImpactPage stats={stats} store={store} />}
+        {accessAllowed && route.pathname === '/prediction' && <PredictionPage currentUser={currentUser} notify={notify} />}
+        {accessAllowed && route.pathname === '/conseiller' && <ConseillerPage currentUser={currentUser} notify={notify} />}
         {accessAllowed && route.pathname === '/bancabilite' && <BancabilitePage actions={actions} currentUser={currentUser} notify={notify} store={store} />}
         {accessAllowed && route.pathname === '/collecte-agriscore' && <AgriScoreCollectePage actions={actions} currentUser={currentUser} notify={notify} store={store} />}
         {accessAllowed && route.pathname === '/ussd' && <UssdSimulatorPage currentUser={currentUser} store={store} />}
@@ -2097,9 +2117,17 @@ function Header({ actions, activePath, currentUser, logout, menuLinks, messages 
         {primaryLinks.map((item) => {
           const Icon = item.icon;
           return (
-            <button key={item.path} className={activePath === item.path ? 'active' : ''} type="button" onClick={() => navigate(item.path)}>
+            <button
+              key={item.path}
+              className={activePath === item.path ? 'active' : ''}
+              type="button"
+              onClick={() => navigate(item.path)}
+              title={item.label}
+              aria-label={item.label}
+              aria-current={activePath === item.path ? 'page' : undefined}
+            >
               <Icon size={16} />
-              {item.label}
+              <span className="nav-label">{item.label}</span>
             </button>
           );
         })}
@@ -2198,8 +2226,11 @@ function Header({ actions, activePath, currentUser, logout, menuLinks, messages 
   );
 }
 
-function PageHero({ meta, stats, store, user }) {
-  const metrics = getHeroMetrics(user, stats, store);
+// Le hero ne porte plus de bandeau de KPI : chaque page expose ses propres
+// indicateurs, et sur les accueils ce bandeau doublonnait la grille money-kpi
+// (meme montant de ventes deux fois, score trois fois). Les chiffres qu'il
+// affichait ont ete repris dans les grilles et les titres de panneaux.
+function PageHero({ meta }) {
   return (
     <section className="page-hero">
       <div className="hero-image" style={{ backgroundImage: `linear-gradient(90deg, rgba(5,23,18,0.92), rgba(5,23,18,0.34)), url("${meta.image}")` }}>
@@ -2208,11 +2239,6 @@ function PageHero({ meta, stats, store, user }) {
           <h1>{meta.title}</h1>
           <p>{meta.body}</p>
         </div>
-      </div>
-      <div className="hero-metrics">
-        {metrics.map((metric) => (
-          <StatCard key={metric.label} icon={metric.icon} label={metric.label} value={metric.value} tone={metric.tone} />
-        ))}
       </div>
     </section>
   );
@@ -2256,7 +2282,10 @@ function FieldAgentHomePage({ currentUser, navigate, store }) {
           <h2>Suivez et coordonnez les commandes.</h2>
           <p>Appelez les agriculteurs, confirmez les stocks et organisez les livraisons.</p>
           <div className="button-row">
-            <Button onClick={() => navigate('/commandes')}><PhoneCall size={18} /> Commandes</Button>
+            {/* L'agent coordonne depuis l'onglet Suivi : c'est la que vivent
+                agentWorkflow.farmerCalledAt et deliveryOrganizedAt, et c'est la
+                cible de toutes les notifications qui lui sont adressees. */}
+            <Button onClick={() => navigate('/commandes?tab=tracking')}><PhoneCall size={18} /> Suivi commandes</Button>
             <Button variant="secondary" onClick={() => navigate('/operations')}><Truck size={18} /> Opérations</Button>
           </div>
         </div>
@@ -2274,7 +2303,7 @@ function FieldAgentHomePage({ currentUser, navigate, store }) {
       <div className="quick-grid">
         <QuickAction icon={Users} title="Former les acteurs" body="Accompagner agriculteurs sur les parcours FresCoop et USSD." onClick={() => navigate('/ussd')} />
         <QuickAction icon={ShieldCheck} title="Vérifier les produits" body="Confirmer la disponibilité, la zone, la qualité annoncée et la coherence terrain." onClick={() => navigate('/produits')} />
-        <QuickAction icon={PhoneCall} title="Coordonner commandes" body="Appeler l'agriculteur et confirmer la preparation." onClick={() => navigate('/commandes')} />
+        <QuickAction icon={PhoneCall} title="Coordonner commandes" body="Appeler l'agriculteur et confirmer la preparation." onClick={() => navigate('/commandes?tab=tracking')} />
         <QuickAction icon={ClipboardCheck} title="Collecte AgriScore" body="Collecter les données terrain d'un agriculteur pour son dossier de crédit." onClick={() => navigate('/collecte-agriscore')} />
       </div>
     </PageFrame>
@@ -2416,11 +2445,14 @@ function AdminHomePage({ navigate, stats, store }) {
         </div>
       </section>
 
+      {/* "Bancables" n'est pas repris ici : l'anneau du hero l'affiche deja avec
+          le score moyen. On garde la place pour les preuves, qui ne figurent
+          nulle part ailleurs sur cet accueil. */}
       <div className="money-kpi-grid">
-        <MoneyKpi icon={Landmark} label="Bancables" value={bancables} detail="score 75+" />
+        <MoneyKpi icon={CircleDollarSign} label="Valeur marché" value={formatMoney(revenue.catalogValue)} detail={`${stats.products} produit(s)`} />
         <MoneyKpi icon={Activity} label="En progression" value={enProgression} detail="score 40-74" />
         <MoneyKpi icon={Users} label="Débutants" value={débutants} detail="score 0-39" />
-        <MoneyKpi icon={CircleDollarSign} label="Valeur marché" value={formatMoney(revenue.catalogValue)} detail={`${stats.products} produit(s)`} />
+        <MoneyKpi icon={ShieldCheck} label="Preuves" value={stats.proofs} detail="émises" />
       </div>
 
       <div className="split-layout">
@@ -2514,32 +2546,68 @@ function SellerHomePage({ currentUser, navigate, store }) {
   const dossiers = store.dossiers.filter((item) => item.ownerId === currentUser.id);
   const inventoryValue = products.reduce((sum, product) => sum + getProductInventoryValue(product), 0);
   const orderValue = orders.reduce((sum, order) => sum + getOrderTotal(order, store), 0);
+  const openValue = openOrders.reduce((sum, order) => sum + getOrderTotal(order, store), 0);
   const actions = buildSellerOpportunities(store, currentUser);
+
+  const sellerRating = (() => {
+    const given = (store.ratings || []).filter((item) => item.sellerId === currentUser.id);
+    if (!given.length) return { average: '—', count: 0 };
+    const average = given.reduce((sum, item) => sum + item.rating, 0) / given.length;
+    return { average: `${average.toFixed(1)}/5`, count: given.length };
+  })();
 
   const bancabiliteScore = buildBancabiliteDossier(currentUser, store).score;
   const scoreLevel = bancabiliteScore >= 75 ? 'Bancable' : bancabiliteScore >= 40 ? 'En progression' : 'Débutant';
   const scoreTone = bancabiliteScore >= 75 ? 'green' : bancabiliteScore >= 40 ? 'blue' : 'gold';
 
-  // --- Teranga AI Recommendation Widget ---
-  const [terangaRec, setTerangaRec] = useState(null);
-  const [terangaLoading, setTerangaLoading] = useState(true);
+  // --- Recommandation agronomique (moteur local /api/agro) ---
+  // On compare les cultures candidates sur la zone du vendeur et on retient
+  // celle qui obtient le meilleur score de conditions de semis, puis on
+  // recupere son rendement estime. Aucune valeur n'est inventee : si le
+  // moteur ne repond pas, le bloc ne s'affiche pas.
+  const [cropAdvice, setCropAdvice] = useState(null);
+  const [cropAdviceLoading, setCropAdviceLoading] = useState(true);
   useEffect(() => {
-    const regionMap = { Kaolack: 'kaolack', 'Thiès': 'thies', Dakar: 'dakar', 'Saint-Louis': 'saint-louis', Fatick: 'fatick', Ziguinchor: 'ziguinchor', Kolda: 'kolda', Tambacounda: 'tambacounda' };
-    const city = regionMap[currentUser.region] || 'kaolack';
-    const crops = ['arachide', 'mil', 'riz', 'mais', 'sorgho'];
-    const crop = crops[Math.floor(Math.random() * crops.length)];
-    fetch(`https://teranga-ai.onrender.com/api/predict/${crop}/${city}`)
-      .then((res) => res.json())
-      .then((data) => {
-        const yieldVal = data.predicted_yield || data.yield || data.rendement || ((Math.random() * 2 + 1).toFixed(1));
-        setTerangaRec({ region: currentUser.region || 'Kaolack', crop, yield: yieldVal });
-      })
-      .catch(() => {
-        setTerangaRec({ region: currentUser.region || 'Kaolack', crop: 'arachide', yield: '1.8', fallback: true });
-      })
-      .finally(() => setTerangaLoading(false));
+    let cancelled = false;
+    const regionMap = {
+      kaolack: 'kaolack', thies: 'thies', dakar: 'dakar', 'saint louis': 'saint_louis',
+      'saint-louis': 'saint_louis', fatick: 'fatick', ziguinchor: 'ziguinchor', kolda: 'kolda',
+      tambacounda: 'tambacounda', diourbel: 'diourbel', kaffrine: 'kaffrine', louga: 'louga',
+      matam: 'matam', sedhiou: 'sedhiou', kedougou: 'kedougou',
+    };
+    const city = regionMap[normalize(currentUser.region || '')] || 'kaolack';
+    const candidates = ['arachide', 'mil', 'mais', 'niebe', 'sorgho'];
+
+    (async () => {
+      try {
+        const results = await Promise.all(
+          candidates.map(async (crop) => {
+            const res = await fetch(`${API_BASE}/api/agro/predict/${crop}/${city}`);
+            if (!res.ok) return null;
+            const data = await res.json();
+            return { crop, name: data.crop, score: data.optimal?.score ?? 0, month: data.optimal?.month, monthName: data.optimal?.monthName };
+          }),
+        );
+        const best = results.filter(Boolean).sort((a, b) => b.score - a.score)[0];
+        if (!best || cancelled) return;
+
+        let tons = null;
+        const yieldRes = await fetch(`${API_BASE}/api/agro/yield/${best.crop}/${city}?month=${best.month}`);
+        if (yieldRes.ok) {
+          const yieldData = await yieldRes.json();
+          const kg = yieldData?.ensemble?.predicted_yield_kg;
+          if (kg > 0) tons = (kg / 1000).toFixed(1);
+        }
+        if (!cancelled) setCropAdvice({ ...best, city, tons });
+      } catch {
+        if (!cancelled) setCropAdvice(null);
+      } finally {
+        if (!cancelled) setCropAdviceLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
   }, [currentUser.region]);
-  // --- End Teranga AI ---
 
   return (
     <PageFrame>
@@ -2561,33 +2629,42 @@ function SellerHomePage({ currentUser, navigate, store }) {
         </div>
       </section>
 
+      {/* Le score n'est pas repris ici : il est deja porte par l'anneau du hero
+          et par le bloc "Mon credit". Ces quatre KPI sont les seuls chiffres
+          qui n'apparaissent nulle part ailleurs sur la page. */}
       <div className="money-kpi-grid">
-        <MoneyKpi icon={Landmark} label="Score" value={`${bancabiliteScore}/100`} detail={scoreLevel} />
         <MoneyKpi icon={CircleDollarSign} label="Ventes" value={formatMoney(orderValue)} detail={`${orders.length} commande(s)`} />
-        <MoneyKpi icon={Star} label="Avis clients" value={(() => { const r = (store.ratings || []).filter((rt) => rt.sellerId === currentUser.id); return r.length ? `${(r.reduce((s, rt) => s + rt.rating, 0) / r.length).toFixed(1)}/5` : '—'; })()} detail={`${(store.ratings || []).filter((rt) => rt.sellerId === currentUser.id).length} avis`} />
+        <MoneyKpi icon={ShoppingCart} label="A convertir" value={formatMoney(openValue)} detail={`${openOrders.length} en cours`} />
+        <MoneyKpi icon={Star} label="Avis clients" value={sellerRating.average} detail={`${sellerRating.count} avis`} />
         <MoneyKpi icon={FileCheck2} label="Preuves" value={transactions.length + dossiers.length} detail="au dossier" />
       </div>
 
-      {/* Teranga AI Recommendation */}
-      <section className="panel" style={{ border: '1px solid #d1fae5', background: 'linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%)', marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-          <Leaf size={20} style={{ color: '#16a34a' }} />
-          <strong style={{ color: '#15803d', fontSize: '1rem' }}>Recommandation Teranga AI</strong>
-        </div>
-        {terangaLoading ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6b7280' }}>
-            <Loader2 size={16} className="spin" style={{ animation: 'spin 1s linear infinite' }} />
-            <span>Analyse en cours...</span>
-          </div>
-        ) : terangaRec ? (
-          <div>
-            <p style={{ margin: '0 0 0.5rem', color: '#374151', lineHeight: '1.5' }}>
-              Ce mois à <strong>{terangaRec.region}</strong> : <strong style={{ color: '#16a34a' }}>{terangaRec.crop}</strong> recommandé, rendement prévu <strong>{terangaRec.yield} T/ha</strong>
-            </p>
-            <span style={{ fontSize: '0.7rem', color: '#9ca3af', fontStyle: 'italic' }}>Powered by Teranga AI</span>
-          </div>
-        ) : null}
-      </section>
+      {/* Recommandation agronomique */}
+      {(cropAdviceLoading || cropAdvice) && (
+        <section className="panel crop-advice-panel">
+          <PanelTitle icon={Sprout} title="Recommandation agronomique" />
+          {cropAdviceLoading ? (
+            <div className="agro-loading"><Loader2 size={16} className="agro-spin" /> Analyse de votre zone…</div>
+          ) : (
+            <div>
+              <p className="crop-advice-text">
+                Sur votre zone (<strong>{cropAdvice.city.replace('_', '-')}</strong>), la culture aux meilleures
+                conditions est <strong>{cropAdvice.name}</strong> — semis conseillé en <strong>{cropAdvice.monthName}</strong>
+                {' '}(score {cropAdvice.score}/100)
+                {cropAdvice.tons ? <> , rendement estimé <strong>{cropAdvice.tons} t/ha</strong></> : null}.
+              </p>
+              <div className="button-row">
+                <Button variant="secondary" onClick={() => navigate('/prediction')}>
+                  <Sprout size={18} /> Voir l'analyse complète
+                </Button>
+                <Button variant="secondary" onClick={() => navigate('/conseiller')}>
+                  <Bot size={18} /> Demander au conseiller
+                </Button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       <div className="split-layout">
         <section className="panel opportunity-panel">
@@ -2611,7 +2688,10 @@ function SellerHomePage({ currentUser, navigate, store }) {
         </section>
 
         <section className="panel">
-          <PanelTitle icon={PackageCheck} title="Mes produits" />
+          <PanelTitle
+            icon={PackageCheck}
+            title={products.length ? `Mes produits (${publishedProducts.length} publié(s) · ${formatMoney(inventoryValue)} en stock)` : 'Mes produits'}
+          />
           {products.length ? (
             <div className="ranking-list">
               {products
@@ -2637,7 +2717,10 @@ function SellerHomePage({ currentUser, navigate, store }) {
 
       <div className="split-layout">
         <section className="panel">
-          <PanelTitle icon={ClipboardCheck} title="Commandes recentes" />
+          <PanelTitle
+            icon={ClipboardCheck}
+            title={orders.length ? `Commandes récentes (${orders.length})` : 'Commandes récentes'}
+          />
           {orders.length ? (
             <div className="compact-list">
               {orders.slice(0, 5).map((order) => <OrderLine key={order.id} order={order} store={store} withProgress />)}
@@ -2694,7 +2777,9 @@ function ClientHomePage({ currentUser, navigate, store }) {
           <p>Trouvez des produits locaux, commandez et échangez avec les vendeurs.</p>
           <div className="button-row">
             <Button onClick={() => navigate('/marche')}><ShoppingCart size={18} /> Marché</Button>
-            <Button variant="secondary" onClick={() => navigate('/commandes')}><ReceiptText size={18} /> Commandes</Button>
+            {/* Pour un acheteur l'onglet par defaut est le panier : sans
+                ?tab=orders, ce bouton n'ouvre pas les commandes. */}
+            <Button variant="secondary" onClick={() => navigate('/commandes?tab=orders')}><ReceiptText size={18} /> Commandes</Button>
           </div>
         </div>
         <div className="home-highlight">
@@ -2713,8 +2798,8 @@ function ClientHomePage({ currentUser, navigate, store }) {
 
       <div className="quick-grid">
         <QuickAction icon={Search} title="Trouver un produit" body="Rechercher par nom, zone ou catégorie." onClick={() => navigate('/marche')} />
-        <QuickAction icon={CheckCircle2} title="Mon panier" body="Voir et confirmer mes articles." onClick={() => navigate('/commandes')} />
-        <QuickAction icon={MessageSquare} title="Messages" body="Parler aux vendeurs." onClick={() => navigate('/commandes')} />
+        <QuickAction icon={CheckCircle2} title="Mon panier" body="Voir et confirmer mes articles." onClick={() => navigate('/commandes?tab=cart')} />
+        <QuickAction icon={MessageSquare} title="Messages" body="Parler aux vendeurs." onClick={() => navigate('/commandes?tab=conversations')} />
         <QuickAction icon={Settings} title="Mon compte" body="Profil et coordonnées." onClick={() => navigate('/compte')} />
       </div>
 
@@ -4029,7 +4114,9 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
       recipientId: sellerId,
       title: `Nouvelle note : ${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}`,
       body: `${currentUser.name} vous a attribué ${rating}/5. Votre moyenne globale est maintenant ${newAvg}/5 (${allSellerRatings.length} avis).`,
-      path: '/commandes',
+      // Deep-link vers la commande notee, comme les autres notifications liees
+      // a une commande, au lieu d'ouvrir la liste complete.
+      path: `/commandes?tab=orders&order=${encodeURIComponent(orderId)}`,
       relatedId: orderId,
       type: 'rating',
     });
@@ -6325,6 +6412,556 @@ function ImpactPage({ stats, store }) {
   );
 }
 
+// ============================================================================
+// PREDICTION AGRONOMIQUE
+// ----------------------------------------------------------------------------
+// Aide a la decision de semis : fenetre optimale, bilan hydrique, risque
+// bayesien et rendement estime. Tout le calcul est fait par /api/agro/*
+// (moteur local, aucune cle API requise cote prediction).
+// ============================================================================
+
+const MONTH_LABELS = ['', 'Janvier', 'Fevrier', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Aout', 'Septembre', 'Octobre', 'Novembre', 'Decembre'];
+
+function scoreTone(score) {
+  if (score >= 80) return 'green';
+  if (score >= 60) return 'blue';
+  if (score >= 40) return 'gold';
+  return 'coral';
+}
+
+function riskLabel(type) {
+  return {
+    drought: 'Deficit hydrique',
+    flood: "Exces d'eau",
+    temperature: 'Stress thermique',
+    timing: 'Calendrier',
+    zone: 'Adaptation varietale',
+  }[type] || type;
+}
+
+function PredictionPage({ currentUser, notify }) {
+  const [crops, setCrops] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [crop, setCrop] = useState('arachide');
+  const [city, setCity] = useState('kaolack');
+  const [prediction, setPrediction] = useState(null);
+  const [yieldData, setYieldData] = useState(null);
+  const [risk, setRisk] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [showModel, setShowModel] = useState(false);
+
+  // Referentiels : le selecteur est construit depuis l'API pour eviter toute
+  // divergence avec le moteur (une ville proposee est forcement calculable).
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      fetch(API_BASE + '/api/agro/crops').then((r) => r.json()),
+      fetch(API_BASE + '/api/agro/cities').then((r) => r.json()),
+    ])
+      .then(([cropsData, citiesData]) => {
+        if (cancelled) return;
+        setCrops(cropsData.crops || []);
+        setCountries(citiesData.countries || []);
+      })
+      .catch(() => {
+        if (!cancelled) setError("Referentiels indisponibles. Verifiez que l'API repond.");
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Region du compte -> preselection de la zone la plus proche.
+  const didPreselect = useRef(false);
+  useEffect(() => {
+    if (didPreselect.current || !countries.length || !currentUser?.region) return;
+    const target = normalize(currentUser.region);
+    const all = countries.flatMap((group) => group.cities);
+    const match = all.find((c) => normalize(c.name) === target || target.includes(normalize(c.name)));
+    if (match) setCity(match.id);
+    didPreselect.current = true;
+  }, [countries, currentUser?.region]);
+
+  useEffect(() => {
+    if (!crop || !city) return;
+    let cancelled = false;
+    setLoading(true);
+    setError('');
+
+    (async () => {
+      try {
+        const predictRes = await fetch(`${API_BASE}/api/agro/predict/${crop}/${city}`);
+        if (!predictRes.ok) throw new Error('Prediction indisponible pour ce couple culture / zone.');
+        const predictData = await predictRes.json();
+        if (cancelled) return;
+        setPrediction(predictData);
+
+        const month = predictData?.optimal?.month || new Date().getMonth() + 1;
+        const [yieldRes, riskRes] = await Promise.all([
+          fetch(`${API_BASE}/api/agro/yield/${crop}/${city}?month=${month}`),
+          fetch(`${API_BASE}/api/agro/risk/${crop}/${city}/${month}`),
+        ]);
+        if (cancelled) return;
+        setYieldData(yieldRes.ok ? await yieldRes.json() : null);
+        setRisk(riskRes.ok ? await riskRes.json() : null);
+      } catch (err) {
+        if (cancelled) return;
+        setError(err.message || 'Calcul impossible.');
+        setPrediction(null);
+        setYieldData(null);
+        setRisk(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [crop, city]);
+
+  const cityLabel = useMemo(() => {
+    for (const group of countries) {
+      const found = group.cities.find((c) => c.id === city);
+      if (found) return `${found.name} — ${found.area}`;
+    }
+    return city;
+  }, [countries, city]);
+
+  const timelineData = (prediction?.timeline || []).map((item) => ({
+    name: (item.monthName || '').slice(0, 4),
+    score: item.score,
+    month: item.month,
+  }));
+
+  const ensemble = yieldData?.ensemble;
+  const perHectareTons = ensemble ? (ensemble.predicted_yield_kg / 1000).toFixed(2) : null;
+
+  return (
+    <PageFrame>
+      <section className="panel poesam-hero">
+        <div>
+          <span className="poesam-badge">AIDE A LA DECISION AGRONOMIQUE</span>
+          <h2>Quand semer, ou planter, et quel rendement attendre ?</h2>
+          <p>
+            Le moteur croise le profil hydrique de la culture, la pluviometrie et les temperatures de la zone,
+            la fenetre de semis agronomique et un modele de rendement entraine sur des donnees FAOSTAT, DAPSA,
+            ISRA et ANACIM. Aucun chiffre n'est saisi a la main : tout est recalcule a la demande.
+          </p>
+        </div>
+      </section>
+
+      <section className="panel">
+        <PanelTitle icon={Sprout} title="Choisir la culture et la zone" />
+        <div className="field-row">
+          <Field label="Culture">
+            <select value={crop} onChange={(event) => setCrop(event.target.value)}>
+              {crops.map((item) => (
+                <option key={item.id} value={item.id}>{item.name}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Zone de production">
+            <select value={city} onChange={(event) => setCity(event.target.value)}>
+              {countries.map((group) => (
+                <optgroup key={group.country} label={group.label}>
+                  {group.cities.map((item) => (
+                    <option key={item.id} value={item.id}>{item.name} — {item.area}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </Field>
+        </div>
+        {loading && <div className="agro-loading"><Loader2 size={18} className="agro-spin" /> Calcul en cours…</div>}
+        {error && <NoticeCard icon={CircleAlert} title="Calcul indisponible" body={error} />}
+      </section>
+
+      {!loading && !error && prediction && (
+        <>
+          <div className="status-grid">
+            <StatCard
+              icon={CalendarDays}
+              label="Meilleur mois de semis"
+              value={prediction.optimal?.monthName || '—'}
+              tone="green"
+            />
+            <StatCard
+              icon={Gauge}
+              label={`Score de conditions (${prediction.optimal?.monthName || ''})`}
+              value={`${prediction.optimal?.score ?? 0}/100`}
+              tone={scoreTone(prediction.optimal?.score ?? 0)}
+            />
+            <StatCard
+              icon={Droplets}
+              label="Besoin en eau du cycle"
+              value={`${prediction.cropInfo?.waterNeeds ?? 0} mm`}
+              tone="blue"
+            />
+            <StatCard
+              icon={Thermometer}
+              label="Temperature optimale"
+              value={`${prediction.cropInfo?.optimalTemp ?? 0} °C`}
+              tone="gold"
+            />
+          </div>
+
+          <div className="split-layout">
+            <section className="panel">
+              <PanelTitle icon={CalendarDays} title="Fenetre de semis sur 6 mois" />
+              <p className="agro-hint">
+                Score de 0 a 100 par mois pour {prediction.crop} a {cityLabel} (zone {prediction.zone}).
+                Plus le score est haut, plus les conditions sont favorables.
+              </p>
+              {timelineData.length ? (
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={timelineData} margin={{ top: 10, right: 16, left: -18, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#d7e4dc" />
+                    <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                    <YAxis domain={[0, 100]} tickLine={false} axisLine={false} />
+                    <RechartsTooltip formatter={(value) => [`${value}/100`, 'Score']} />
+                    <Bar dataKey="score" radius={[8, 8, 0, 0]} name="Score conditions">
+                      {timelineData.map((entry) => (
+                        <Cell
+                          key={entry.month}
+                          fill={entry.month === prediction.optimal?.month ? '#1f835d' : '#adc8ba'}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <EmptyState icon={CalendarDays} title="Aucune projection" body="Selectionnez une culture et une zone." />
+              )}
+              <div className="agro-timeline-list">
+                {(prediction.timeline || []).map((item) => (
+                  <article key={item.month} className={item.month === prediction.optimal?.month ? 'agro-month best' : 'agro-month'}>
+                    <strong>{item.monthName}</strong>
+                    <span className={`agro-score-pill tone-${scoreTone(item.score)}`}>{item.score}</span>
+                    <small>{item.recommendation?.text}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className="panel">
+              <PanelTitle icon={Droplets} title="Bilan hydrique et risques" />
+              {prediction.optimal?.waterAnalysis && (
+                <>
+                  <Meter
+                    label={`Couverture des besoins en eau (${prediction.optimal.waterAnalysis.expected} / ${prediction.optimal.waterAnalysis.needed} mm)`}
+                    tone="blue"
+                    value={Math.round((prediction.optimal.waterAnalysis.expected / (prediction.optimal.waterAnalysis.needed || 1)) * 100)}
+                  />
+                  {prediction.optimal.waterAnalysis.irrigationNeeded ? (
+                    <NoticeCard
+                      icon={Droplets}
+                      title={`Irrigation necessaire — deficit de ${prediction.optimal.waterAnalysis.deficit} mm`}
+                      body="La pluie attendue ne couvre pas le cycle. Prevoyez un appoint (goutte-a-goutte, californien) ou choisissez une variete a cycle plus court."
+                    />
+                  ) : (
+                    <NoticeCard
+                      icon={CloudRain}
+                      title="Pluviometrie suffisante"
+                      body="La pluie attendue couvre les besoins du cycle. Un suivi des poches de secheresse reste recommande."
+                    />
+                  )}
+                </>
+              )}
+
+              <div className="agro-risk-list">
+                {(prediction.optimal?.risks || []).length ? (
+                  prediction.optimal.risks.map((item) => (
+                    <article key={item.type} className={`agro-risk sev-${item.severity}`}>
+                      <strong>{riskLabel(item.type)}</strong>
+                      <span>{item.detail}</span>
+                    </article>
+                  ))
+                ) : (
+                  <article className="agro-risk sev-none">
+                    <strong>Aucun risque majeur detecte</strong>
+                    <span>Les conditions du mois optimal restent dans les tolerances de la culture.</span>
+                  </article>
+                )}
+              </div>
+
+              {risk && (
+                <div className="agro-bayes">
+                  <PanelTitle icon={ShieldCheck} title={`Reseau bayesien — securite ${risk.safetyScore}/100`} />
+                  <p className="agro-hint">{risk.recommendation}</p>
+                  <div className="data-grid">
+                    <article><span>Secheresse</span><strong>{risk.factors?.drought_probability}</strong></article>
+                    <article><span>Stress thermique</span><strong>{risk.factors?.heat_stress_probability}</strong></article>
+                    <article><span>Pression parasitaire</span><strong>{risk.factors?.pest_pressure_probability}</strong></article>
+                    <article><span>Risque inondation</span><strong>{risk.factors?.flood_risk_probability}</strong></article>
+                    <article><span>Echec de culture</span><strong>{risk.outcomes?.crop_failure_probability}</strong></article>
+                    <article><span>Perte de rendement</span><strong>{risk.outcomes?.yield_loss_probability}</strong></article>
+                  </div>
+                </div>
+              )}
+            </section>
+          </div>
+
+          <section className="panel">
+            <PanelToolbar
+              icon={TrendingUp}
+              title="Rendement estime"
+              action={
+                <Button variant="secondary" onClick={() => setShowModel((prev) => !prev)}>
+                  {showModel ? 'Masquer le detail modele' : 'Detail du modele'}
+                </Button>
+              }
+            />
+            {ensemble ? (
+              <>
+                <div className="status-grid small">
+                  <StatCard icon={Leaf} label="Rendement attendu" value={`${perHectareTons} t/ha`} tone="green" />
+                  <StatCard
+                    icon={BarChart3}
+                    label="Intervalle de confiance 90%"
+                    value={ensemble.confidence_interval ? `${ensemble.confidence_interval.low} – ${ensemble.confidence_interval.high} kg` : '—'}
+                    tone="blue"
+                  />
+                  <StatCard icon={BadgeCheck} label="Precision validee (LOOCV)" value={ensemble.accuracy} tone="gold" />
+                  <StatCard
+                    icon={CloudRain}
+                    label="Source meteo"
+                    value={yieldData.weather_source === 'openweathermap' ? 'Temps reel' : 'Moyennes climatiques'}
+                    tone="coral"
+                  />
+                </div>
+                <p className="agro-hint">
+                  Estimation pour un semis en {MONTH_LABELS[yieldData.sowMonth] || '—'} a {cityLabel}.
+                  Methode : {ensemble.method}. Accord des modeles : {ensemble.model_agreement}.
+                  Entraine sur {ensemble.training_samples} observations ({ensemble.scope}).
+                </p>
+                {yieldData.realtime_data && (
+                  <p className="agro-hint">
+                    Meteo actuelle : {yieldData.realtime_data.current_temp} °C, humidite {yieldData.realtime_data.humidity} %
+                    {yieldData.realtime_data.description ? ` (${yieldData.realtime_data.description})` : ''}.
+                  </p>
+                )}
+
+                {showModel && (
+                  <div className="agro-model">
+                    <div className="data-grid">
+                      <article><span>Regression (ridge)</span><strong>{yieldData.regression?.predicted_yield_kg} kg/ha</strong></article>
+                      <article><span>R² ajuste</span><strong>{yieldData.regression?.adj_r_squared}</strong></article>
+                      <article><span>RMSE</span><strong>{yieldData.regression?.rmse} kg</strong></article>
+                      <article><span>KNN (k={yieldData.knn?.k})</span><strong>{yieldData.knn?.predicted_yield_kg} kg/ha</strong></article>
+                      <article><span>Confiance KNN</span><strong>{yieldData.knn?.confidence}</strong></article>
+                      <article><span>Erreur croisee (MAPE)</span><strong>{ensemble.cv_mape}</strong></article>
+                      <article><span>Ponderation regression</span><strong>{ensemble.weights?.regression}</strong></article>
+                      <article><span>Ponderation KNN</span><strong>{ensemble.weights?.knn}</strong></article>
+                    </div>
+                    <p className="agro-hint">
+                      Modele : {yieldData.regression?.model_type}. Validation : {ensemble.validation}.
+                      Donnees : {ensemble.data_source}.
+                    </p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <EmptyState
+                icon={TrendingUp}
+                title="Rendement non disponible"
+                body="Le modele n'a pas assez d'observations pour cette combinaison culture / zone."
+              />
+            )}
+          </section>
+
+          <section className="panel">
+            <PanelTitle icon={BadgeCheck} title="Varietes recommandees pour cette zone" />
+            <div className="record-grid">
+              {(prediction.recommendedVarieties || []).map((variety) => (
+                <article key={variety.name} className="record-card">
+                  <strong>{variety.name}</strong>
+                  <span>Cycle {variety.cycle} jours</span>
+                  <span>Rendement de reference {variety.yield}</span>
+                  <Badge>{variety.zone}</Badge>
+                </article>
+              ))}
+            </div>
+            <p className="agro-hint">
+              Cycle de la culture : {prediction.cropInfo?.cycleDays} jours. Verifiez la disponibilite des semences
+              certifiees aupres de l'ISRA ou de votre cooperative avant de fixer la date de semis.
+            </p>
+          </section>
+        </>
+      )}
+    </PageFrame>
+  );
+}
+
+// ============================================================================
+// CONSEILLER AGRICOLE
+// ----------------------------------------------------------------------------
+// Chat agronomique dedie : prompt systeme specialise Sahel cote serveur, avec
+// repli sur un moteur de mots-cles hors-ligne quand le LLM est indisponible.
+// ============================================================================
+
+const ADVISOR_LANGS = [
+  ['fr', 'Francais'],
+  ['wo', 'Wolof'],
+  ['pu', 'Pulaar'],
+  ['sr', 'Serere'],
+];
+
+const ADVISOR_WELCOME = {
+  fr: "Bonjour, je suis votre conseiller agronomique FresCoop. Posez-moi vos questions sur les cultures, les semis, les sols, les engrais, les ravageurs ou le calendrier cultural.",
+  wo: "Salamaleekum, maa ngi tudd conseiller agronomique FresCoop. Laaj ma ci mbey mi, tool bi, fetal walla nawet bi.",
+  pu: "Jam waali, ko miin woni conseiller agronomique FresCoop. Naamno mi ko faati e gese, remooɓe, lewru walla coggu.",
+  sr: "Nafio, mi tedd conseiller agronomique FresCoop. Penden mi ke tool, mbey ole nawet.",
+};
+
+const ADVISOR_SUGGESTIONS = {
+  fr: [
+    "Quand semer l'arachide a Kaolack ?",
+    'Quel engrais pour le mil sur sol dior ?',
+    'Comment traiter les pucerons de la tomate ?',
+    'Quelle variete de riz pour la vallee du fleuve ?',
+  ],
+  wo: ['Kañ lañu jëmbët gerte ci Kaolack ?', 'Ban fetal la war ci dugub ?', 'Nan lañu faj tamaat yi ?'],
+  pu: ['Nde woni sahaa aawugol gerte ?', 'Ko honɗum fetal wonande gawri ?', 'Noy safrata tomate ?'],
+  sr: ['Nafio, le ma ŋ tool a ?', 'Ke fetal a noong ?'],
+};
+
+function ConseillerPage({ currentUser, notify }) {
+  const [lang, setLang] = useState('fr');
+  const [messages, setMessages] = useState([{ from: 'bot', text: ADVISOR_WELCOME.fr }]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length > 1) return prev;
+      return [{ from: 'bot', text: ADVISOR_WELCOME[lang] || ADVISOR_WELCOME.fr }];
+    });
+  }, [lang]);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, loading]);
+
+  async function send(text) {
+    const content = (text ?? input).trim();
+    if (!content || loading) return;
+
+    const history = messages.slice(-6).map((m) => ({ from: m.from, text: m.text }));
+    setMessages((prev) => [...prev, { from: 'user', text: content }]);
+    setInput('');
+    setLoading(true);
+
+    try {
+      const token = sessionStorage.getItem('frescoop.auth.token');
+      const res = await fetch(API_BASE + '/api/agro/advisor', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          message: content,
+          language: lang,
+          context: {
+            userName: currentUser?.name,
+            userRole: currentUser?.role,
+            region: currentUser?.region,
+          },
+          history,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.answer) throw new Error(data?.error || 'Reponse indisponible');
+      setMessages((prev) => [...prev, { from: 'bot', text: data.answer, source: data.source }]);
+    } catch (err) {
+      notify?.(err.message || 'Le conseiller est momentanement indisponible.', 'error');
+      setMessages((prev) => [
+        ...prev,
+        { from: 'bot', text: "Je ne peux pas repondre pour le moment. Reessayez dans un instant — vos questions precedentes restent affichees." },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <PageFrame>
+      <section className="panel poesam-hero">
+        <div>
+          <span className="poesam-badge">CONSEIL AGRONOMIQUE</span>
+          <h2>Un agronome dans votre poche, en quatre langues</h2>
+          <p>
+            Le conseiller connait les zones agro-ecologiques du Sahel, les varietes ISRA, les doses d'engrais,
+            la lutte biologique et le calendrier cultural. Il repond meme sans connexion au modele : un moteur
+            de reponses local prend le relais.
+          </p>
+        </div>
+      </section>
+
+      <section className="panel">
+        <PanelTitle icon={Bot} title="Poser une question" />
+        <div className="assistant-lang advisor-lang">
+          {ADVISOR_LANGS.map(([code, label]) => (
+            <button
+              key={code}
+              type="button"
+              className={lang === code ? 'active' : ''}
+              onClick={() => setLang(code)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="assistant-messages advisor-messages" ref={scrollRef}>
+          {messages.map((msg, index) => (
+            <div key={index} className={`assistant-msg ${msg.from}`}>
+              {msg.text}
+              {msg.source === 'offline' && (
+                <small className="advisor-source">Reponse du moteur local (modele indisponible)</small>
+              )}
+            </div>
+          ))}
+          {loading && (
+            <div className="assistant-msg bot advisor-typing">
+              <Loader2 size={14} className="agro-spin" /> Le conseiller reflechit…
+            </div>
+          )}
+        </div>
+
+        <div className="assistant-suggestions">
+          {(ADVISOR_SUGGESTIONS[lang] || ADVISOR_SUGGESTIONS.fr).map((prompt) => (
+            <button key={prompt} type="button" onClick={() => send(prompt)} disabled={loading}>{prompt}</button>
+          ))}
+        </div>
+
+        <form className="assistant-form advisor-form" onSubmit={(event) => { event.preventDefault(); send(); }}>
+          <input
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            placeholder={lang === 'fr' ? 'Ex : quel engrais pour le mais a Tambacounda ?' : 'Laaj ma…'}
+            aria-label="Votre question agronomique"
+          />
+          <button type="submit" aria-label="Envoyer" disabled={loading}>
+            {loading ? <Loader2 size={16} className="agro-spin" /> : <Send size={16} />}
+          </button>
+        </form>
+      </section>
+
+      <section className="panel">
+        <PanelTitle icon={Sprout} title="Ce que le conseiller couvre" />
+        <div className="odd-grid">
+          <article><strong>Calendrier cultural</strong><p>Dates de semis par zone, cycles varietaux, echelonnement des parcelles.</p></article>
+          <article><strong>Fertilisation</strong><p>Doses NPK et uree par culture, fumure organique, prix des intrants subventionnes.</p></article>
+          <article><strong>Protection des cultures</strong><p>Lutte biologique (neem, savon noir, Bt), identification des ravageurs courants.</p></article>
+          <article><strong>Sols et rotations</strong><p>Dior, deck, hollalde, ferralitique : cultures adaptees et amendements.</p></article>
+          <article><strong>Adaptation climatique</strong><p>Varietes a cycle court, zai et demi-lunes, agroforesterie, semis echelonne.</p></article>
+          <article><strong>Financement</strong><p>Orientation vers La Banque Agricole, DER, SFD et le score de bancabilite FresCoop.</p></article>
+        </div>
+      </section>
+    </PageFrame>
+  );
+}
+
 function computeUemoaImpact(store) {
   const products = store.products || [];
   const orders = store.orders || [];
@@ -6486,7 +7123,7 @@ function AntiWastePage({ actions, currentUser, navigate, notify, store }) {
                   {canPublish && <Button variant="secondary" onClick={() => applyFlashDiscount(alert)}><RefreshCcw size={16} /> Appliquer -{alert.suggestedDiscountPct}%</Button>}
                   {canBuy && <Button onClick={() => buyFlash(alert)}><ShoppingCart size={16} /> Acheter maintenant</Button>}
 
-                  {currentUser.role === 'agentTerrain' && <Button variant="secondary" onClick={() => navigate('/commandes')}><PhoneCall size={16} /> Contacter producteur</Button>}
+                  {currentUser.role === 'agentTerrain' && <Button variant="secondary" onClick={() => navigate('/commandes?tab=tracking')}><PhoneCall size={16} /> Contacter producteur</Button>}
                 </div>
               </article>
             ))}
@@ -10828,48 +11465,6 @@ function countUsersByRole(users) {
   return counts;
 }
 
-function getHeroMetrics(user, stats, store) {
-  const revenue = buildRevenueSnapshot(store);
-  if (user.role === 'admin') {
-    return [
-      { icon: CircleDollarSign, label: 'Valeur catalogue', value: formatMoney(revenue.catalogValue), tone: 'green' },
-      { icon: ShoppingCart, label: 'Produits publies', value: store.products.filter((item) => item.status === 'Publie').length, tone: 'blue' },
-      { icon: Store, label: 'Vendeurs actifs', value: `${revenue.activeSellerCount}/${revenue.sellerCount}`, tone: 'gold' },
-      { icon: ShieldCheck, label: 'Preuves', value: stats.proofs, tone: 'coral' },
-    ];
-  }
-
-  if (isSellerRole(user.role)) {
-    const products = store.products.filter((item) => item.ownerId === user.id);
-    const orders = store.orders.filter((item) => item.sellerId === user.id && item.status !== 'Annulee');
-    const openValue = orders.filter((item) => item.status !== 'Livree').reduce((sum, item) => sum + getOrderTotal(item, store), 0);
-    return [
-      { icon: CircleDollarSign, label: 'Commandes', value: formatMoney(orders.reduce((sum, item) => sum + getOrderTotal(item, store), 0)), tone: 'green' },
-      { icon: ShoppingCart, label: 'A convertir', value: formatMoney(openValue), tone: 'blue' },
-      { icon: Store, label: 'Produits', value: products.length, tone: 'gold' },
-      { icon: MessageSquare, label: 'Messages', value: store.messages.filter((item) => item.sellerId === user.id).length, tone: 'coral' },
-    ];
-  }
-
-  if (isBuyerRole(user.role)) {
-    const cart = readCartFromStorage(store.products);
-    const orders = getVisibleOrders(store.orders, user);
-    return [
-      { icon: ShoppingCart, label: 'Panier', value: cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0), tone: 'green' },
-      { icon: ReceiptText, label: 'Commandes', value: orders.length, tone: 'blue' },
-      { icon: Store, label: 'Produits dispo', value: store.products.filter((item) => item.status === 'Publie').length, tone: 'gold' },
-      { icon: MessageSquare, label: 'Conversations', value: buildConversations(getVisibleMessages(store.messages, user)).length, tone: 'coral' },
-    ];
-  }
-
-  return [
-    { icon: Store, label: 'Produits publies', value: stats.products, tone: 'green' },
-    { icon: ShoppingCart, label: 'Commandes', value: stats.orders, tone: 'blue' },
-    { icon: FileCheck2, label: 'Attestations', value: stats.attestations, tone: 'coral' },
-    { icon: UserCheck, label: 'Role actif', value: roleLabel(user.role), tone: 'gold' },
-  ];
-}
-
 function buildRevenueSnapshot(store) {
   const sellers = getSellerUsers(store);
   const sellerIds = new Set(sellers.map((item) => item.id));
@@ -10968,7 +11563,7 @@ function buildSellerOpportunities(store, user) {
       title: 'Convertir les commandes ouvertes',
       body: 'Confirmez, preparez et livrez pour transformer le panier en revenu.',
       value: formatMoney(openOrderValue),
-      path: '/commandes',
+      path: '/commandes?tab=orders',
     },
     unanswered.length > 0 && {
       id: 'unanswered',
@@ -10976,7 +11571,9 @@ function buildSellerOpportunities(store, user) {
       title: 'Repondre aux clients',
       body: 'Un client qui pose une question est proche de l achat.',
       value: `${unanswered.length} message(s)`,
-      path: '/commandes',
+      // Sans ?tab=conversations, le vendeur atterrit sur l'onglet "Reçues"
+      // (onglet par defaut) et doit trouver lui-meme les conversations.
+      path: '/commandes?tab=conversations',
     },
     !transactions.length && {
       id: 'transactions',
@@ -11719,12 +12316,12 @@ function emptyLotForm() {
 
 function getPrimaryNavLinks(role) {
   const links = {
-    admin: ['/', '/utilisateurs', '/bancabilite', '/impact'],
-    agriculteur: ['/', '/produits', '/commandes', '/bancabilite'],
-    agentTerrain: ['/', '/verification', '/commandes', '/operations'],
+    admin: ['/', '/utilisateurs', '/prediction', '/conseiller', '/bancabilite', '/impact'],
+    agriculteur: ['/', '/produits', '/commandes', '/prediction', '/conseiller', '/bancabilite'],
+    agentTerrain: ['/', '/verification', '/prediction', '/conseiller', '/commandes', '/operations'],
     client: ['/', '/marche', '/commandes'],
-    acheteurB2B: ['/', '/marche', '/lots', '/commandes'],
-    partenaire: ['/', '/bancabilite', '/impact'],
+    acheteurB2B: ['/', '/marche', '/lots', '/prediction', '/commandes'],
+    partenaire: ['/', '/prediction', '/bancabilite', '/impact'],
   }[role] || ['/'];
 
   return links.map(navItemByPath).filter(Boolean);
@@ -11738,6 +12335,8 @@ function getMenuLinks(role) {
       '/collecte-agriscore',
       '/verification',
       '/produits',
+      '/prediction',
+      '/conseiller',
       '/lots',
       '/operations',
       '/bancabilite',
@@ -11750,6 +12349,8 @@ function getMenuLinks(role) {
       '/',
       '/verification',
       '/produits',
+      '/prediction',
+      '/conseiller',
       '/marche',
       '/commandes',
       '/bancabilite',
@@ -11760,6 +12361,8 @@ function getMenuLinks(role) {
       '/',
       '/collecte-agriscore',
       '/verification',
+      '/prediction',
+      '/conseiller',
       '/commandes',
       '/produits',
       '/operations',
@@ -11779,6 +12382,7 @@ function getMenuLinks(role) {
       '/',
       '/marche',
       '/lots',
+      '/prediction',
       '/commandes',
       '/paiement',
       '/compte',
@@ -11787,6 +12391,7 @@ function getMenuLinks(role) {
       '/',
       '/bancabilite',
       '/impact',
+      '/prediction',
       '/lots',
       '/compte',
     ],
@@ -11800,14 +12405,17 @@ function getMenuGroups(role, menuLinks) {
     admin: [
       { title: 'Pilotage', paths: ['/', '/utilisateurs', '/compte'] },
       { title: 'Activité & scoring', paths: ['/verification', '/produits', '/lots', '/operations'] },
+      { title: 'Conseil agronomique', paths: ['/prediction', '/conseiller'] },
       { title: 'Financement & inclusion', paths: ['/bancabilite', '/impact', '/ussd', '/donnees'] },
     ],
     agriculteur: [
       { title: 'Mon activité', paths: ['/', '/produits', '/marche', '/commandes', '/compte'] },
+      { title: 'Cultiver mieux', paths: ['/prediction', '/conseiller'] },
       { title: 'Mon financement', paths: ['/verification', '/bancabilite', '/ussd'] },
     ],
     agentTerrain: [
       { title: 'Terrain', paths: ['/', '/collecte-agriscore', '/verification', '/commandes', '/produits', '/operations', '/lots', '/compte'] },
+      { title: 'Conseil agronomique', paths: ['/prediction', '/conseiller'] },
       { title: 'Inclusion', paths: ['/impact', '/ussd'] },
     ],
     client: [
@@ -11815,9 +12423,11 @@ function getMenuGroups(role, menuLinks) {
     ],
     acheteurB2B: [
       { title: 'Sourcing B2B', paths: ['/', '/marche', '/lots', '/commandes', '/paiement', '/compte'] },
+      { title: 'Anticiper les campagnes', paths: ['/prediction'] },
     ],
     partenaire: [
       { title: 'Finance & scoring', paths: ['/', '/bancabilite', '/impact', '/lots', '/compte'] },
+      { title: 'Risque agronomique', paths: ['/prediction'] },
       { title: 'Outils terrain', paths: ['/ussd'] },
     ],
   };
@@ -11857,6 +12467,8 @@ function navItemByPath(path) {
     '/operations': { path: '/operations', label: 'Opérations', icon: Warehouse, description: 'Hubs, stockage et logistique' },
     '/utilisateurs': { path: '/utilisateurs', label: 'Utilisateurs', icon: Users, description: 'Comptes, rôles et statuts' },
     '/impact': { path: '/impact', label: 'Impact', icon: BarChart3, description: 'KPI filières agricoles: pertes évitées, revenu, genre, CO2' },
+    '/prediction': { path: '/prediction', label: 'Prédiction', icon: Sprout, description: 'Fenêtre de semis, bilan hydrique, risque et rendement estimé' },
+    '/conseiller': { path: '/conseiller', label: 'Conseiller', icon: Bot, description: 'Conseil agronomique en 4 langues, avec repli hors-ligne' },
     '/collecte-agriscore': { path: '/collecte-agriscore', label: 'Collecte AgriScore', icon: ClipboardCheck, description: 'Collecte terrain assistée pour scoring agricole' },
     '/bancabilite': { path: '/bancabilite', label: 'Bancabilité', icon: Landmark, description: 'Score crédit et dossier finance exportable' },
     '/ussd': { path: '/ussd', label: 'USSD', icon: PhoneCall, description: 'Accès *384*FRES# pour téléphones sans Internet' },

@@ -250,6 +250,18 @@ export const basePageMeta = {
     title: 'Pertes évitées, revenu additionnel, genre, CO2: des chiffres mesurables.',
     body: 'Les KPI du hackathon UEMOA sont calculés à partir des produits, transactions, commandes, dossiers et capteurs saisis.',
   },
+  '/prediction': {
+    image: publicImages.agriculture,
+    kicker: 'Aide a la decision agronomique',
+    title: 'Quand semer, ou planter, et quel rendement attendre.',
+    body: 'Fenetre de semis optimale, bilan hydrique, risque climatique et rendement estime, calcules par zone agro-ecologique sur des donnees FAOSTAT, DAPSA, ISRA et ANACIM.',
+  },
+  '/conseiller': {
+    image: publicImages.agriculture,
+    kicker: 'Conseil agronomique',
+    title: 'Un agronome joignable en quatre langues.',
+    body: 'Cultures, semis, sols, engrais, ravageurs et calendrier cultural. Le conseiller repond meme sans acces au modele grace a un moteur de reponses local.',
+  },
   '/bancabilite': {
     image: publicImages.impact,
     kicker: 'Inclusion financiere',

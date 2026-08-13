@@ -672,18 +672,11 @@ button:disabled {
   line-height: 1.62;
 }
 
-.hero-metrics,
 .status-grid,
 .quick-grid,
 .data-grid {
   display: grid;
   gap: 14px;
-}
-
-.hero-metrics {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  width: min(calc(100% - 44px), 1560px);
-  margin: -62px auto 0;
 }
 
 .page-frame {
@@ -5742,7 +5735,6 @@ button:disabled {
   }
 
   .quick-grid,
-  .hero-metrics,
   .image-mosaic,
   .record-grid,
   .hub-grid,
@@ -5875,7 +5867,6 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
-  .hero-metrics,
   .public-kpi-band,
   .public-steps,
   .public-value-grid,
@@ -5970,11 +5961,6 @@ button:disabled {
   .hero-copy p,
   .auth-visual p {
     font-size: 1rem;
-  }
-
-  .hero-metrics {
-    width: calc(100% - 28px);
-    margin-top: -44px;
   }
 
   .panel,
@@ -7224,17 +7210,6 @@ textarea {
   font-size: 0.78rem;
 }
 
-.hero-metrics {
-  margin-top: -48px;
-  position: relative;
-  z-index: 2;
-  padding: 16px;
-  background: #ffffff;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--line);
-}
-
 .stat-card {
   padding: 14px;
 }
@@ -7335,11 +7310,6 @@ button.btn {
   .hero-image {
     min-height: 300px;
     padding: 48px 14px 72px;
-  }
-
-  .hero-metrics {
-    margin-top: -36px;
-    padding: 10px;
   }
 
   .page-frame {
@@ -10776,5 +10746,215 @@ label, .field-label {
   }
   .genre-response {
     padding: 20px;
+  }
+}
+
+/* ==========================================================================
+   PREDICTION AGRONOMIQUE & CONSEILLER AGRICOLE
+   ========================================================================== */
+
+.agro-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.agro-spin {
+  animation: agro-rotate 0.9s linear infinite;
+}
+
+@keyframes agro-rotate {
+  to { transform: rotate(360deg); }
+}
+
+.agro-hint {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+/* --- Frise des 6 prochains mois ----------------------------------------- */
+.agro-timeline-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.agro-month {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.agro-month.best {
+  border-color: var(--green-700);
+  background: var(--green-100);
+  box-shadow: 0 6px 18px rgba(31, 131, 93, 0.14);
+}
+
+.agro-month strong {
+  font-size: 0.9rem;
+}
+
+.agro-month small {
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.agro-score-pill {
+  justify-self: start;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.agro-score-pill.tone-green { background: var(--green-700); }
+.agro-score-pill.tone-blue { background: var(--blue-700); }
+.agro-score-pill.tone-gold { background: var(--gold-600); }
+.agro-score-pill.tone-coral { background: var(--coral-600); }
+
+/* --- Risques identifies -------------------------------------------------- */
+.agro-risk-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.agro-risk {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border-left: 4px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--wash);
+}
+
+.agro-risk strong { font-size: 0.88rem; }
+
+.agro-risk span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.agro-risk.sev-high { border-left-color: var(--coral-600); background: var(--coral-100); }
+.agro-risk.sev-medium { border-left-color: var(--gold-600); background: var(--gold-100); }
+.agro-risk.sev-none { border-left-color: var(--green-700); background: var(--green-100); }
+
+.agro-bayes {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.agro-model {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line);
+}
+
+/* --- Conseiller : chat en pleine page ----------------------------------- */
+.advisor-lang {
+  border-bottom: 0;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  max-width: 480px;
+}
+
+.advisor-messages {
+  min-height: 280px;
+  max-height: 460px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.advisor-typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.advisor-source {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.advisor-form {
+  grid-template-columns: 1fr auto;
+  border-top: 0;
+  padding: 10px 0 0;
+}
+
+.advisor-form input {
+  min-height: 42px;
+}
+
+.advisor-form button {
+  min-width: 46px;
+  min-height: 42px;
+}
+
+.advisor-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .advisor-messages { max-height: 340px; }
+  .agro-timeline-list { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+}
+
+.crop-advice-panel {
+  margin-bottom: 1rem;
+  border: 1px solid var(--green-700);
+  background: linear-gradient(135deg, var(--green-100), var(--wash));
+}
+
+.crop-advice-text {
+  margin: 10px 0 14px;
+  color: var(--ink-2);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+/* Barre de navigation : au-dela de 4 liens, la largeur disponible ne suffit
+   plus sur les ecrans intermediaires. Comme .primary-nav est en nowrap +
+   overflow hidden, les derniers liens seraient rognes sans prevenir. On passe
+   donc en mode icone seule avant d'atteindre le point de rupture ou la nav
+   laisse la place au menu burger. Le libelle reste accessible via title et
+   aria-label. */
+@media (max-width: 1320px) {
+  .primary-nav .nav-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .primary-nav button {
+    gap: 0;
+    padding: 8px 11px;
   }
 }
