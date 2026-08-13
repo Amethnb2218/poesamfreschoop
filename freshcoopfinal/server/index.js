@@ -4,7 +4,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { initDatabase, readStore as tursoReadStore, writeStore as tursoWriteStore, createBackup, listBackups, restoreBackup, upsertItems } from './db.js';
+import { initDatabase, readStore as tursoReadStore, writeStore as tursoWriteStore, createBackup, listBackups, restoreBackup, upsertItems, invalidateCache } from './db.js';
 import { handleAgroRequest } from './agro/routes.js';
 import { askAdvisor, isAgronomyQuestion } from './agro/advisor.js';
 
@@ -361,7 +361,14 @@ createServer(async (request, response) => {
         store.loanRepayments.push({ id: `rep-demo-${farmer.id.slice(-5)}`, farmerId: farmer.id, status: 'Remboursé', amount: 200000, createdAt: sixMonthsAgo });
       }
 
-      await writeStore(store);
+      await upsertItems('users', store.users.filter(u => demoIds.includes(u.id)));
+      await upsertItems('orders', store.orders.filter(o => o.id?.startsWith('ord-demo-')));
+      await upsertItems('transactions', store.transactions.filter(t => t.id?.startsWith('txn-demo-')));
+      await upsertItems('activityProofs', store.activityProofs.filter(p => p.id?.startsWith('aproof-demo-')));
+      await upsertItems('paymentRecords', store.paymentRecords.filter(p => p.id?.startsWith('payrec-demo-')));
+      await upsertItems('ratings', store.ratings.filter(r => r.id?.startsWith('rat-demo-')));
+      await upsertItems('loanRepayments', store.loanRepayments.filter(r => r.id?.startsWith('rep-demo-')));
+      invalidateCache();
       sendJson(response, 200, { ok: true, message: '2 comptes démo agriculteurs créés (score 90+). Mot de passe: demo1234' });
       return;
     }
