@@ -305,6 +305,50 @@ createServer(async (request, response) => {
       return;
     }
 
+    if (request.url === '/api/seed-demo' && request.method === 'POST') {
+      const authData = requireAuth(request);
+      if (!authData || authData.role !== 'admin') { sendJson(response, 403, { error: 'Admin requis' }); return; }
+      const store = await readStore();
+      const now = new Date().toISOString();
+      const sixMonthsAgo = new Date(Date.now() - 180 * 86400000).toISOString();
+      const hash = createHash('sha256').update('demo1234').digest('hex');
+
+      const demoFarmers = [
+        { id: 'usr-demo-fatou', name: 'Fatou Diallo', email: 'fatou.diallo@demo.sn', phone: '+221 77 123 45 67', region: 'Kaolack', organization: 'GIE Femmes de Kaolack', gie: 'Oui', gieName: 'GIE Ndeysan', foncier: 'Coutumier', experienceYears: 12, gender: 'Femme' },
+        { id: 'usr-demo-ibrahima', name: 'Ibrahima Sow', email: 'ibrahima.sow@demo.sn', phone: '+221 76 987 65 43', region: 'Kaffrine', organization: 'Coopérative Niayes Vertes', gie: 'Oui', gieName: 'Coop Niayes Vertes', foncier: 'Titre formel', experienceYears: 15, gender: 'Homme' },
+      ];
+
+      for (const farmer of demoFarmers) {
+        if (store.users.some(u => u.id === farmer.id)) continue;
+        store.users.push({ ...farmer, role: 'agriculteur', status: 'Actif', createdAt: sixMonthsAgo, passwordHash: hash, bio: '', verificationScore: 92, verificationLevel: 3 });
+
+        for (let i = 0; i < 8; i++) {
+          const orderId = `ord-demo-${farmer.id.slice(-5)}-${i}`;
+          store.orders.push({ id: orderId, sellerId: farmer.id, clientId: 'usr-demo', status: 'Livree', paymentStatus: 'Paye', totalPrice: 40000 + Math.round(Math.random() * 60000), createdAt: new Date(Date.now() - (i * 20 + 5) * 86400000).toISOString(), updatedAt: now, productSnapshot: { name: ['Arachide', 'Mil', 'Niébé', 'Oignon', 'Tomate'][i % 5], price: 800 + i * 100 }, quantity: 20 + i * 5, unit: 'kg' });
+          store.ratings.push({ id: `rat-demo-${farmer.id.slice(-5)}-${i}`, orderId, userId: 'usr-demo', sellerId: farmer.id, rating: i < 6 ? 5 : 4, comment: ['Excellent produit', 'Livraison rapide', 'Très satisfait', 'Qualité top', 'Je recommande', 'Bon rapport qualité-prix', 'Correct', 'Bien'][i], createdAt: now });
+        }
+
+        for (let i = 0; i < 5; i++) {
+          store.transactions.push({ id: `txn-demo-${farmer.id.slice(-5)}-${i}`, ownerId: farmer.id, amount: 50000 + i * 20000, type: 'vente', createdAt: new Date(Date.now() - i * 25 * 86400000).toISOString() });
+        }
+
+        const proofTypes = ['carte_exploitant', 'attestation_chef', 'carte_cooperative', 'photo_exploitation', 'gps_exploitation'];
+        for (const pt of proofTypes) {
+          store.activityProofs.push({ id: `aproof-demo-${farmer.id.slice(-5)}-${pt}`, userId: farmer.id, proofType: pt, status: 'valide', createdAt: sixMonthsAgo, reviewedAt: sixMonthsAgo, reviewedBy: 'usr-admin-poesam' });
+        }
+
+        for (let i = 0; i < 4; i++) {
+          store.paymentRecords.push({ id: `payrec-demo-${farmer.id.slice(-5)}-${i}`, sellerId: farmer.id, amount: 45000 + i * 15000, paydunyaToken: `pd_demo_${i}`, partner: 'paydunya', createdAt: new Date(Date.now() - i * 30 * 86400000).toISOString() });
+        }
+
+        store.loanRepayments.push({ id: `rep-demo-${farmer.id.slice(-5)}`, farmerId: farmer.id, status: 'Remboursé', amount: 200000, createdAt: sixMonthsAgo });
+      }
+
+      await writeStore(store);
+      sendJson(response, 200, { ok: true, message: '2 comptes démo agriculteurs créés (score 90+). Mot de passe: demo1234' });
+      return;
+    }
+
     if (request.url?.startsWith('/api/notifications/read') && request.method === 'POST') {
       const authData = requireAuth(request);
       if (!authData) { sendJson(response, 401, { error: 'Non autorisé' }); return; }
