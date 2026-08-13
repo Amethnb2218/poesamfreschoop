@@ -12,6 +12,20 @@ export type MoreLink = {
 };
 
 export const MORE_LINKS: Record<string, MoreLink> = {
+  prediction: {
+    key: 'prediction',
+    label: 'Prédiction',
+    description: 'Quand semer, bilan hydrique, rendement',
+    icon: 'leaf',
+    path: '/more/prediction',
+  },
+  conseiller: {
+    key: 'conseiller',
+    label: 'Conseiller',
+    description: 'Conseil agronomique en 4 langues',
+    icon: 'chatbubbles',
+    path: '/more/conseiller',
+  },
   roi: {
     key: 'roi',
     label: 'Mon gain FresCoop',
@@ -113,6 +127,8 @@ export function getMoreLinksForRole(role: string | undefined): MoreLink[] {
       case 'admin':
         return [
           'utilisateurs',
+          'prediction',
+          'conseiller',
           'dossiers',
           'attestations',
           'preuves',
@@ -126,6 +142,8 @@ export function getMoreLinksForRole(role: string | undefined): MoreLink[] {
         ];
       case 'agriculteur':
         return [
+          'prediction',
+          'conseiller',
           'roi',
           'antigaspi',
           'bancabilite',
@@ -136,7 +154,7 @@ export function getMoreLinksForRole(role: string | undefined): MoreLink[] {
           'secteurAgri',
         ];
       case 'agentTerrain':
-        return ['antigaspi', 'ussd'];
+        return ['prediction', 'conseiller', 'antigaspi', 'ussd'];
       case 'transporteur':
         return [
           'antigaspi',
@@ -148,9 +166,9 @@ export function getMoreLinksForRole(role: string | undefined): MoreLink[] {
       case 'client':
         return ['antigaspi', 'paiement', 'attestations'];
       case 'acheteurB2B':
-        return ['antigaspi', 'paiement', 'attestations'];
+        return ['prediction', 'antigaspi', 'paiement', 'attestations'];
       case 'partenaire':
-        return ['bancabilite', 'preuves', 'antigaspi', 'ussd'];
+        return ['prediction', 'bancabilite', 'preuves', 'antigaspi', 'ussd'];
       default:
         return [];
     }
