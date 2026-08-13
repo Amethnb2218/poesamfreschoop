@@ -1865,14 +1865,29 @@ async function handleActivityProofs(request, response) {
 
     const submitter = store.users.find(u => u.id === authData.uid);
     const submitterName = submitter?.name || 'Un agriculteur';
+    if (!store.notifications) store.notifications = [];
     if (data.agentId) {
-      if (!store.notifications) store.notifications = [];
       store.notifications.unshift({
         id: `notif-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
         userId: data.agentId,
+        recipientRole: 'agentTerrain',
         title: 'Nouvelle preuve à confirmer',
         body: `${submitterName} a soumis une preuve "Visite agent terrain" et vous a désigné comme agent vérificateur.`,
         type: 'verification',
+        path: '/verification',
+        read: false,
+        createdAt: now,
+      });
+    } else {
+      store.notifications.unshift({
+        id: `notif-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+        recipientRole: 'admin',
+        title: 'Nouvelle preuve soumise',
+        body: `${submitterName} a soumis une preuve "${data.proofType || 'activité'}" à valider.`,
+        type: 'proof_review',
+        path: '/verification',
+        relatedId: proofId,
+        targetUserId: authData.uid,
         read: false,
         createdAt: now,
       });
@@ -1882,10 +1897,8 @@ async function handleActivityProofs(request, response) {
     const score = Math.min(100, validatedProofs.length * 15);
     const level = score >= 80 ? 3 : score >= 50 ? 2 : score >= 25 ? 1 : 0;
 
-    const itemsToUpsert = [proof];
-    if (store.notifications?.[0]?.id) itemsToUpsert.push(store.notifications[0]);
     await upsertItems('activityProofs', [proof]);
-    if (data.agentId && store.notifications?.[0]) {
+    if (store.notifications?.[0]) {
       await upsertItems('notifications', [store.notifications[0]]);
     }
     sendJson(response, 201, { ok: true, proof, score, level });

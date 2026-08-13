@@ -8237,10 +8237,10 @@ function BancabilitePage({ actions, currentUser, notify, store }) {
       <section className="panel poesam-hero">
         <div>
           <span className="poesam-badge">INCLUSION FINANCIERE</span>
-          <h2>{isFinancePartner ? 'Portefeuille agriculteurs - éligibilité crédit' : 'Score de bancabilité & dossier financement'}</h2>
+          <h2>{isFinancePartner ? 'Portefeuille agriculteurs - évaluation bancabilité' : 'Passeport Économique'}</h2>
           <p>{isFinancePartner
-            ? 'Consultez les profils d\'agriculteurs FresCoop, leur score de bancabilité en temps réel, et instruisez les demandes de prêt directement depuis cette page.'
-            : 'Transformez votre activité réelle (transactions PayDunya, lots tracés, attestations) en dossier exploitable par banques, SFD et microfinance. Demande de prêt en un clic.'}
+            ? 'Consultez les profils d\'agriculteurs FresCoop et leur score de bancabilité en temps réel.'
+            : 'Votre activité réelle (ventes, paiements, lots tracés, attestations) documentée en un dossier structuré pour faciliter votre évaluation par les banques et SFD.'}
           </p>
         </div>
       </section>
@@ -8271,124 +8271,42 @@ function BancabilitePage({ actions, currentUser, notify, store }) {
               <div><em>Transactions vérifiées</em><b>{myDossier.transactionsCount}</b></div>
               <div><em>Paiements PayDunya</em><b>{myDossier.paydunyaCount}</b></div>
               {(() => { const rats = (store.ratings || []).filter((rt) => rt.sellerId === currentUser.id); if (!rats.length) return null; const avg = (rats.reduce((s, rt) => s + rt.rating, 0) / rats.length).toFixed(1); return <div><em>Note clients</em><b style={{ color: '#d97706' }}>{'★'.repeat(Math.round(Number(avg)))} {avg}/5 <small>({rats.length} avis)</small></b></div>; })()}
-              <div><em>Montant max éligible (IA)</em><b>{maxEligible > 0 ? formatMoney(maxEligible) : 'Score insuffisant'}</b></div>
             </div>
-            {maxEligible > 0 && (
-              <NoticeCard icon={Activity} title="Calcul IA du montant éligible" body={`Basé sur : revenu moyen (${formatMoney(myDossier.monthlyAverage)}/mois) × facteur score (${(scoreFactor * 100).toFixed(0)}%) × régularité (×${regularityBonus.toFixed(2)}) × bonus PayDunya (×${paydunyaBonus.toFixed(2)}). Montant max : ${formatMoney(maxEligible)} sur 6 mois.`} />
+            {myDossier.score >= 80 ? (
+              <NoticeCard icon={ShieldCheck} title="Profil bancable — Grade B" body="Votre activité économique est suffisamment documentée. Exportez votre Passeport Économique et présentez-le à votre banque ou SFD partenaire pour faciliter votre évaluation." />
+            ) : (
+              <NoticeCard icon={Activity} title="Passeport en construction" body={`Score actuel : ${myDossier.score}/100. Continuez à vendre, documenter vos livraisons et soumettre vos preuves pour atteindre le Grade B (80+) et devenir bancable.`} />
             )}
             <div className="button-row">
-              <Button variant="secondary" onClick={() => exportDossier(currentUser)}><Download size={16} /> Exporter mon dossier (PDF)</Button>
-              {maxEligible > 0 && <Button disabled={Boolean(blockingLoan)} title={blockingLoan ? 'Remboursez le prêt en cours avant une nouvelle demande' : ''} onClick={() => { setShowLoanForm(true); updateForm(setLoanForm, 'amount', String(suggestedForDuration)); updateForm(setLoanForm, 'repaymentPct', String(suggestLoanRepaymentPct(myDossier, loanForm.months))); }}><Landmark size={16} /> Demander un crédit ({formatMoney(suggestedForDuration)})</Button>}
+              <Button variant="secondary" onClick={() => exportDossier(currentUser)}><Download size={16} /> Exporter mon Passeport (PDF)</Button>
             </div>
-            {blockingLoan && <p className="muted" style={{ marginTop: '0.75rem' }}>Nouvelle demande bloquée: remboursez le prêt en cours ou attendez la décision sur la demande en attente.</p>}
           </section>
         );
       })()}
 
       {isAgriculteur && (() => {
         const dossier = buildBancabiliteDossier(currentUser, store);
-        if (dossier.score < 60) {
+        if (dossier.score < 80) {
           return (
             <section className="panel">
-              <PanelToolbar icon={Landmark} title="Demander un prêt" />
-              <div style={{ padding: '1rem', background: '#fef3c7', borderRadius: '8px', fontSize: '0.88rem', color: '#92400e' }}>
-                <strong>Grade B minimum requis</strong>
-                <p style={{ margin: '0.4rem 0 0' }}>Votre score actuel est de {dossier.score}/100 (Grade {dossier.grade}). Vous devez atteindre un score de 60 ou plus (Grade B) pour pouvoir demander un prêt. Continuez à vendre, soumettre des preuves et compléter votre profil.</p>
+              <PanelToolbar icon={Landmark} title="Statut bancabilité" />
+              <div style={{ padding: '1rem', background: '#f0fdf4', borderRadius: '8px', fontSize: '0.88rem', color: '#166534', borderLeft: '4px solid #1f835d' }}>
+                <strong>Grade B requis (score 80+)</strong>
+                <p style={{ margin: '0.4rem 0 0' }}>Score actuel : {dossier.score}/100 (Grade {dossier.grade}). Atteignez 80+ pour que votre Passeport Économique soit considéré bancable par les institutions financières partenaires.</p>
               </div>
             </section>
           );
         }
-        const sFactor = dossier.score >= 80 ? 0.7 : dossier.score >= 60 ? 0.5 : 0;
-        const regBonus = dossier.transactionsCount >= 10 ? 1.2 : dossier.transactionsCount >= 5 ? 1.1 : 1.0;
-        const pdBonus = dossier.paydunyaCount >= 3 ? 1.15 : 1.0;
-        const maxEligible6m = Math.round(dossier.monthlyAverage * 6 * sFactor * regBonus * pdBonus);
-        const mFactor = Number(loanForm.months) / 6;
-        const maxForDuration = Math.round(maxEligible6m * mFactor);
-        const requestedAmount = Number(loanForm.amount) || 0;
-        const pctUsed = maxForDuration > 0 ? Math.min(100, Math.round((requestedAmount / maxForDuration) * 100)) : 0;
-        const suggestedRepaymentPct = suggestLoanRepaymentPct(dossier, loanForm.months);
-        const selectedRepaymentPct = sanitizeRepaymentPct(loanForm.repaymentPct || suggestedRepaymentPct);
-        const estimatedMonthlyRepayment = Math.round(dossier.monthlyAverage * selectedRepaymentPct / 100);
-        const estimatedRepaymentMonths = estimatedMonthlyRepayment > 0 && requestedAmount > 0
-          ? Math.ceil(requestedAmount / estimatedMonthlyRepayment)
-          : null;
-        const blockingLoan = findBlockingLoanForFarmer(currentUser.id, store);
-
         return (
           <section className="panel">
-            <PanelToolbar icon={Landmark} title="Demander un prêt" action={
-              <Button disabled={Boolean(blockingLoan)} title={blockingLoan ? 'Remboursez le prêt en cours avant une nouvelle demande' : ''} onClick={() => { setShowLoanForm((open) => !open); if (!loanForm.amount && maxForDuration > 0) updateForm(setLoanForm, 'amount', String(maxForDuration)); if (!loanForm.repaymentPct) updateForm(setLoanForm, 'repaymentPct', String(suggestLoanRepaymentPct(dossier, loanForm.months))); }} variant={showLoanForm ? 'secondary' : 'primary'}>
-                {showLoanForm ? 'Annuler' : 'Nouvelle demande'}
-              </Button>
-            } />
-            {blockingLoan && (
-              <div style={{ padding: '0.75rem 1rem', background: '#f8fafc', borderRadius: '8px', fontSize: '0.88rem', color: '#475569', marginBottom: '0.8rem' }}>
-                Une nouvelle demande sera disponible seulement après remboursement complet du prêt en cours ou traitement de la demande en attente.
-              </div>
-            )}
-            {showLoanForm && !blockingLoan && (
-              <form className="stack-form" onSubmit={submitLoanRequest}>
-                {maxForDuration > 0 ? (
-                  <div className="loan-ia-box">
-                    <div className="loan-ia-header">
-                      <Activity size={18} />
-                      <strong>Estimation IA de votre capacité d'emprunt</strong>
-                    </div>
-                    <div className="loan-ia-amount">
-                      <span className="loan-ia-max">{formatMoney(maxForDuration)}</span>
-                      <small>montant maximum sur {loanForm.months} mois</small>
-                    </div>
-                    <div className="loan-ia-bar">
-                      <div className="loan-ia-fill" style={{ width: `${pctUsed}%`, background: pctUsed > 90 ? '#ef4444' : pctUsed > 70 ? '#f59e0b' : '#16a34a' }} />
-                    </div>
-                    <div className="loan-ia-details">
-                      <small>Revenu moyen : {formatMoney(dossier.monthlyAverage)}/mois</small>
-                      <small>Score : {dossier.score}/100 (facteur {(sFactor * 100).toFixed(0)}%)</small>
-                      <small>Régularité : ×{regBonus.toFixed(2)} · PayDunya : ×{pdBonus.toFixed(2)}</small>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="loan-ia-box" style={{ borderColor: '#fbbf24', background: '#fffbeb' }}>
-                    <div className="loan-ia-header"><CircleAlert size={18} /><strong>Score insuffisant pour le calcul IA</strong></div>
-                    <p style={{ fontSize: '0.85rem', margin: '0.5rem 0 0' }}>Continuez à vendre et soumettre des preuves pour augmenter votre score au-dessus de 40.</p>
-                  </div>
-                )}
-                <div className="field-row">
-                  <Field label={`Montant souhaité (FCFA)${maxForDuration > 0 ? ` — max ${formatMoney(maxForDuration)}` : ''}`} required>
-                    <input type="number" min="0" max={maxForDuration || undefined} value={loanForm.amount} onChange={(event) => updateForm(setLoanForm, 'amount', event.target.value)} placeholder={maxForDuration > 0 ? String(maxForDuration) : ''} />
-                  </Field>
-                  <Field label="Durée (mois)" required>
-                    <select value={loanForm.months} onChange={(event) => { updateForm(setLoanForm, 'months', event.target.value); updateForm(setLoanForm, 'repaymentPct', String(suggestLoanRepaymentPct(dossier, event.target.value))); const newMax = Math.round(maxEligible6m * (Number(event.target.value) / 6)); if (!loanForm.amount || Number(loanForm.amount) === maxForDuration) updateForm(setLoanForm, 'amount', String(newMax)); }}>
-                      <option value="3">3 mois</option>
-                      <option value="6">6 mois</option>
-                      <option value="12">12 mois</option>
-                      <option value="18">18 mois</option>
-                      <option value="24">24 mois</option>
-                    </select>
-                  </Field>
-                </div>
-                <Field label="Pourcentage prélevé sur chaque vente FresCoop" required>
-                  <select value={loanForm.repaymentPct || String(suggestedRepaymentPct)} onChange={(event) => updateForm(setLoanForm, 'repaymentPct', event.target.value)}>
-                    {[10, 15, 20, 25, 30, 35, 40].map((pct) => <option key={pct} value={pct}>{pct}% des ventes payées</option>)}
-                  </select>
-                </Field>
-                {requestedAmount > maxForDuration && maxForDuration > 0 && (
-                  <p style={{ color: '#dc2626', fontSize: '0.82rem', margin: 0 }}>⚠ Le montant dépasse votre capacité estimée ({formatMoney(maxForDuration)}). La demande risque d'être refusée.</p>
-                )}
-                <Field label="Objet (intrants, matériel, transport...)" required>
-                  <textarea rows="3" value={loanForm.purpose} onChange={(event) => updateForm(setLoanForm, 'purpose', event.target.value)} />
-                </Field>
-                <div className="loan-ia-box" style={{ background: '#f8fafc' }}>
-                  <div className="loan-ia-header"><ReceiptText size={18} /><strong>Contrat de remboursement proposé</strong></div>
-                  <div className="loan-ia-details">
-                    <small>{selectedRepaymentPct}% sera prélevé automatiquement sur chaque vente payée via FresCoop jusqu'au remboursement complet.</small>
-                    <small>Sur la base du revenu moyen actuel, cela représente environ {formatMoney(estimatedMonthlyRepayment)} par mois{estimatedRepaymentMonths ? `, soit ${estimatedRepaymentMonths} mois estimés` : ''}.</small>
-                    <small>Le prélèvement est plafonné au solde restant et chaque ligne sera visible dans le contrat.</small>
-                  </div>
-                </div>
-                <Button type="submit"><Send size={16} /> Envoyer la demande</Button>
-              </form>
-            )}
+            <PanelToolbar icon={ShieldCheck} title="Profil bancable — Grade B atteint" />
+            <div style={{ padding: '1rem', background: '#f0fdf4', borderRadius: '8px', fontSize: '0.88rem', color: '#166534', borderLeft: '4px solid #1f835d' }}>
+              <strong>Votre activité est suffisamment documentée.</strong>
+              <p style={{ margin: '0.4rem 0 0' }}>Votre Passeport Économique peut être présenté aux banques et SFD partenaires de FresCoop. La décision de financement reste du ressort de l'institution financière — FresCoop facilite votre évaluation, il ne décide pas à la place du financeur.</p>
+            </div>
+            <div className="button-row" style={{ marginTop: '1rem' }}>
+              <Button onClick={() => exportDossier(currentUser)}><Download size={16} /> Exporter mon Passeport (PDF)</Button>
+            </div>
           </section>
         );
       })()}
