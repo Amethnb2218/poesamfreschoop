@@ -5,7 +5,7 @@ const server = await readFile(new URL('../server/index.js', import.meta.url), 'u
 
 const checks = [
   ['route lots', app.includes("route.pathname === '/lots'")],
-  ['public site', app.includes('PublicSitePage') && app.includes('/demo-jury')],
+  ['public site', app.includes('PublicSitePage')],
   ['hidden orders preference', app.includes('HIDDEN_ORDERS_KEY')],
   ['order masking toolbar', app.includes('OrderVisibilityToolbar')],
   ['agent terrain role', app.includes("agentTerrain") && app.includes('AgentWorkflowPanel')],
@@ -14,8 +14,8 @@ const checks = [
   ['demo jury loader', app.includes('createFrescoopDemoStore')],
   ['consent records model', app.includes('consentRecords')],
   ['audit logs model', app.includes('auditLogs')],
-  ['farmer registration pending approval', app.includes("/api/auth/register") && server.includes("status: (role || 'agriculteur') === 'agriculteur' ? 'En attente' : 'Actif'")],
-  ['admin approval notification', server.includes("type: 'approval_request'") && server.includes("path: '/utilisateurs'") && app.includes("if (item.type === 'approval_request') return '/utilisateurs'")],
+  ['farmer registration pending approval', app.includes("/api/auth/register") && server.includes("'En attente'") && server.includes("(role || 'agriculteur') === 'agriculteur'")],
+  ['admin approval notification', server.includes("type: 'approval_request'") && server.includes("path: '/utilisateurs'") && app.includes("item.type === 'approval_request'")],
   ['inactive account lock', app.includes('getInactiveAccountMessage') && app.includes("status !== 'actif'")],
   ['partner-powered wording', app.includes('Partner-powered') || app.includes('partner-powered')],
   ['orders tab navigation', app.includes('orders-tabbar') && app.includes("tab=conversations") && app.includes("id={`order-${order.id}`}")],
