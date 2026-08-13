@@ -4,7 +4,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { initDatabase, readStore as tursoReadStore, writeStore as tursoWriteStore, createBackup, listBackups, restoreBackup } from './db.js';
+import { initDatabase, readStore as tursoReadStore, writeStore as tursoWriteStore, createBackup, listBackups, restoreBackup, upsertItems } from './db.js';
 import { handleAgroRequest } from './agro/routes.js';
 import { askAdvisor, isAgronomyQuestion } from './agro/advisor.js';
 
@@ -1873,9 +1873,14 @@ async function handleActivityProofs(request, response) {
 
     const validatedProofs = store.activityProofs.filter(p => p.userId === authData.uid && (p.status === 'valide' || p.status === 'auto_valide'));
     const score = Math.min(100, validatedProofs.length * 15);
-    const level = score >= 75 ? 3 : score >= 50 ? 2 : score >= 25 ? 1 : 0;
+    const level = score >= 80 ? 3 : score >= 50 ? 2 : score >= 25 ? 1 : 0;
 
-    await writeStore(store);
+    const itemsToUpsert = [proof];
+    if (store.notifications?.[0]?.id) itemsToUpsert.push(store.notifications[0]);
+    await upsertItems('activityProofs', [proof]);
+    if (data.agentId && store.notifications?.[0]) {
+      await upsertItems('notifications', [store.notifications[0]]);
+    }
     sendJson(response, 201, { ok: true, proof, score, level });
     return;
   }
@@ -1898,9 +1903,9 @@ async function handleActivityProofs(request, response) {
 
     const userProofs = store.activityProofs.filter(p => p.userId === proof.userId && (p.status === 'valide' || p.status === 'auto_valide'));
     const score = Math.min(100, userProofs.length * 15);
-    const level = score >= 75 ? 3 : score >= 50 ? 2 : score >= 25 ? 1 : 0;
+    const level = score >= 80 ? 3 : score >= 50 ? 2 : score >= 25 ? 1 : 0;
 
-    await writeStore(store);
+    await upsertItems('activityProofs', [proof]);
     sendJson(response, 200, { ok: true, proof, score, level });
     return;
   }

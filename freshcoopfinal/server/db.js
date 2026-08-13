@@ -93,6 +93,24 @@ export async function writeStore(data) {
   await client.batch(batch, 'write');
 }
 
+export async function upsertItem(collection, item) {
+  const id = item.id || item._id;
+  if (!id) return;
+  await client.execute({
+    sql: 'INSERT OR REPLACE INTO store (collection, id, data, updated_at) VALUES (?, ?, ?, datetime(\'now\'))',
+    args: [collection, id, JSON.stringify(item)],
+  });
+}
+
+export async function upsertItems(collection, items) {
+  if (!items.length) return;
+  const batch = items.map(item => ({
+    sql: 'INSERT OR REPLACE INTO store (collection, id, data, updated_at) VALUES (?, ?, ?, datetime(\'now\'))',
+    args: [collection, item.id || item._id, JSON.stringify(item)],
+  }));
+  await client.batch(batch, 'write');
+}
+
 export async function createBackup(name, storeData) {
   await client.execute({
     sql: 'INSERT OR REPLACE INTO backups (name, data) VALUES (?, ?)',
