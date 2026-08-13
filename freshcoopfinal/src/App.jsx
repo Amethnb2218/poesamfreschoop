@@ -515,13 +515,13 @@ function App() {
   }, [sessionUserId]);
 
   // Redirection automatique quand un compte "En attente" est approuvé
-  const prevStatusRef = useRef(currentUser?.status);
+  const prevStatusRef = useRef(null);
   useEffect(() => {
     if (!currentUser) return;
     if (currentUser.role === 'admin') { prevStatusRef.current = currentUser.status; return; }
-    const prev = normalize(prevStatusRef.current || '');
+    const prev = prevStatusRef.current;
     const curr = normalize(currentUser.status || 'Actif');
-    if (prev === 'en attente' && curr === 'actif') {
+    if (prev && normalize(prev) === 'en attente' && curr === 'actif') {
       setToast({ message: 'Votre compte a été validé ! Bienvenue.', type: 'success' });
       navigate(getRoleHomePath(currentUser.role));
     }
