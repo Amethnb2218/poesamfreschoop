@@ -400,7 +400,7 @@ async function handleAuth(request, response) {
       sendJson(response, 400, { error: 'Le mot de passe doit faire au moins 6 caractères' });
       return;
     }
-    const allowedRoles = ['agriculteur', 'acheteur', 'acheteurB2B', 'transporteur', 'agent', 'agentTerrain', 'client', 'partenaire'];
+    const allowedRoles = ['agriculteur', 'cooperative', 'acheteur', 'acheteurB2B', 'transporteur', 'agent', 'agentTerrain', 'client', 'partenaire'];
     if (role && !allowedRoles.includes(role)) {
       sendJson(response, 400, { error: 'Rôle invalide' });
       return;

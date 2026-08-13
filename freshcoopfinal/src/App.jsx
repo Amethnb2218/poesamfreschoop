@@ -65,6 +65,7 @@ import {
   UserPlus,
   Users,
   Warehouse,
+  Volume2,
   X,
   Star,
 } from 'lucide-react';
@@ -218,6 +219,7 @@ const SEEDED_ADMIN_USERS = [
 const roles = [
   { id: 'admin', label: 'Admin', locked: true },
   { id: 'agriculteur', label: 'Agriculteur' },
+  { id: 'cooperative', label: 'Coopérative' },
   { id: 'agentTerrain', label: 'Agent Terrain' },
   { id: 'client', label: 'Client' },
   { id: 'acheteurB2B', label: 'Acheteur B2B' },
@@ -2661,6 +2663,9 @@ function SellerHomePage({ currentUser, navigate, store }) {
                 </Button>
                 <Button variant="secondary" onClick={() => navigate('/conseiller')}>
                   <Bot size={18} /> Demander au conseiller
+                </Button>
+                <Button variant="secondary" onClick={() => speakText(`Sur votre zone ${cropAdvice.city}, la culture aux meilleures conditions est ${cropAdvice.name}. Semis conseillé en ${cropAdvice.monthName}. ${cropAdvice.tons ? `Rendement estimé ${cropAdvice.tons} tonnes par hectare.` : ''}`)}>
+                  <Volume2 size={18} /> Écouter
                 </Button>
               </div>
             </div>
@@ -6880,6 +6885,18 @@ const ADVISOR_SUGGESTIONS = {
   sr: ['Nafio, le ma ŋ tool a ?', 'Ke fetal a noong ?'],
 };
 
+function speakText(text, lang = 'fr') {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const clean = String(text || '').replace(/[*#\-•]/g, '').replace(/\n+/g, '. ');
+  const utterance = new SpeechSynthesisUtterance(clean);
+  const langMap = { fr: 'fr-FR', wo: 'fr-FR', pu: 'fr-FR', sr: 'fr-FR' };
+  utterance.lang = langMap[lang] || 'fr-FR';
+  utterance.rate = 0.9;
+  utterance.pitch = 1;
+  window.speechSynthesis.speak(utterance);
+}
+
 function ConseillerPage({ currentUser, notify }) {
   const [lang, setLang] = useState('fr');
   const [messages, setMessages] = useState([]);
@@ -7254,7 +7271,19 @@ function ConseillerPage({ currentUser, notify }) {
 
         {messages.map((msg, index) => (
           <div key={index} style={bubbleStyle(msg.from === 'user')}>
-            {msg.from === 'bot' ? <FormattedMessage text={msg.text} /> : msg.text}
+            {msg.from === 'bot' ? (
+              <>
+                <FormattedMessage text={msg.text} />
+                <button
+                  type="button"
+                  onClick={() => speakText(msg.text, lang)}
+                  aria-label="Ecouter la reponse"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.6rem', padding: '0.3rem 0.7rem', borderRadius: '1rem', border: '1px solid #d4ddd8', background: '#f7faf8', color: '#4a5a52', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 500 }}
+                >
+                  <Volume2 size={13} /> Ecouter
+                </button>
+              </>
+            ) : msg.text}
           </div>
         ))}
 

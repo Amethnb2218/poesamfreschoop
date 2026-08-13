@@ -2403,8 +2403,8 @@ button:disabled {
 .field span,
 .muted {
   color: var(--muted);
-  font-size: 0.84rem;
-  font-weight: 850;
+  font-size: 0.82rem;
+  font-weight: 500;
 }
 
 .stat-card strong {
@@ -2555,9 +2555,9 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--green-700);
-  font-size: 0.75rem;
-  font-weight: 800;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.72rem;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   padding: 6px 14px;
@@ -2596,30 +2596,31 @@ button:disabled {
   gap: 18px;
   align-items: stretch;
   padding: 26px;
-  border: 1px solid rgba(215, 229, 220, 0.9);
+  border: 1px solid rgba(215, 229, 220, 0.12);
   border-radius: var(--radius);
   color: #ffffff;
-  background: linear-gradient(135deg, #062f27 0%, #0f604b 52%, #247f9a 100%);
-  box-shadow: var(--shadow-lg);
+  background: linear-gradient(135deg, #0a1f1a 0%, #0d3d2e 52%, #1a5c4a 100%);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
 .seller-money-hero {
-  background: linear-gradient(135deg, #073728 0%, #1f835d 58%, #d99912 100%);
+  background: linear-gradient(135deg, #0a2a1e 0%, #155c3f 58%, #b8860b 100%);
 }
 
 .money-hero h2 {
   max-width: 920px;
   margin: 8px 0 12px;
   color: #ffffff;
-  font-size: clamp(2.1rem, 4vw, 4rem);
-  line-height: 1.02;
+  font-size: clamp(1.8rem, 3vw, 3rem);
+  line-height: 1.08;
+  font-weight: 600;
 }
 
 .money-hero p {
   max-width: 850px;
   margin: 0 0 18px;
-  color: rgba(255, 255, 255, 0.84);
-  font-weight: 780;
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 500;
   line-height: 1.62;
 }
 
@@ -2635,20 +2636,24 @@ button:disabled {
   gap: 10px;
   min-height: 220px;
   padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .money-hero-score span,
 .money-hero-score small {
-  color: rgba(255, 255, 255, 0.82);
-  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 500;
+  font-size: 0.82rem;
 }
 
 .money-hero-score strong {
   color: #ffffff;
-  font-size: clamp(2rem, 3vw, 3.4rem);
+  font-size: clamp(1.8rem, 2.5vw, 2.8rem);
+  font-weight: 700;
   line-height: 1;
   overflow-wrap: anywhere;
 }
@@ -2662,12 +2667,12 @@ button:disabled {
 .money-kpi {
   display: grid;
   gap: 8px;
-  min-height: 150px;
-  padding: 18px;
-  border: 1px solid var(--line);
+  padding: 16px 18px;
+  border: none;
+  border-left: 4px solid var(--green-700);
   border-radius: var(--radius);
   background: #ffffff;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
 
 .money-kpi svg,
@@ -2678,13 +2683,15 @@ button:disabled {
 .money-kpi span,
 .money-kpi small {
   color: var(--muted);
-  font-weight: 850;
+  font-weight: 500;
+  font-size: 0.82rem;
 }
 
 .money-kpi strong {
   color: var(--ink);
-  font-size: clamp(1.3rem, 2vw, 2rem);
-  line-height: 1.05;
+  font-size: clamp(1.2rem, 1.8vw, 1.6rem);
+  font-weight: 700;
+  line-height: 1.1;
   overflow-wrap: anywhere;
 }
 
@@ -2705,18 +2712,19 @@ button:disabled {
   gap: 12px;
   align-items: center;
   width: 100%;
-  min-height: 72px;
-  padding: 12px;
+  min-height: 64px;
+  padding: 12px 14px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   color: var(--ink);
-  background: #fbfdfb;
+  background: #ffffff;
   text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .opportunity-list button:hover {
   border-color: var(--green-700);
-  background: var(--green-100);
+  background: rgba(31, 131, 93, 0.03);
 }
 
 .icon-circle {
@@ -2742,8 +2750,8 @@ button:disabled {
 .seller-health-list span,
 .seller-health-list small {
   color: var(--muted);
-  font-size: 0.84rem;
-  font-weight: 820;
+  font-size: 0.82rem;
+  font-weight: 500;
 }
 
 .opportunity-list b,
@@ -2808,20 +2816,21 @@ button:disabled {
 
 .finance-readiness span {
   color: var(--muted);
-  font-weight: 850;
+  font-weight: 500;
 }
 
 .finance-score-card {
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
-  gap: 16px;
+  grid-template-columns: 80px minmax(0, 1fr);
+  gap: 14px;
   align-items: center;
 }
 
 .finance-score-card p {
   color: var(--muted);
-  font-weight: 780;
+  font-weight: 450;
   line-height: 1.5;
+  font-size: 0.88rem;
 }
 
 .users-admin-panel {
@@ -9232,14 +9241,14 @@ h3,
 
 .permissions-progress-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
 }
 .perm-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
+  gap: 8px;
+  padding: 10px 12px;
   border-radius: var(--radius, 8px);
   border: 1px solid var(--line, #e5e7eb);
   background: #fff;
@@ -9254,8 +9263,8 @@ h3,
   opacity: 0.55;
   color: var(--muted, #6b7280);
 }
-.perm-item strong { display: block; font-size: 0.85rem; line-height: 1.3; }
-.perm-item small { font-size: 0.75rem; color: var(--muted, #9ca3af); font-weight: 500; }
+.perm-item strong { display: block; font-size: 0.78rem; font-weight: 600; line-height: 1.3; }
+.perm-item small { font-size: 0.7rem; color: var(--muted, #9ca3af); font-weight: 450; }
 
 /* Spinner */
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -10805,17 +10814,19 @@ label, .field-label {
 .agro-risk {
   display: grid;
   gap: 3px;
-  padding: 10px 12px;
-  border-left: 4px solid var(--line-strong);
-  border-radius: 8px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--line-strong);
+  border-radius: 6px;
   background: var(--wash);
+  box-shadow: none;
 }
 
-.agro-risk strong { font-size: 0.88rem; }
+.agro-risk strong { font-size: 0.86rem; font-weight: 600; }
 
 .agro-risk span {
   color: var(--muted);
   font-size: 0.8rem;
+  font-weight: 500;
   line-height: 1.45;
 }
 
@@ -10893,14 +10904,17 @@ label, .field-label {
 
 .crop-advice-panel {
   margin-bottom: 1rem;
-  border: 1px solid var(--green-700);
-  background: linear-gradient(135deg, var(--green-100), var(--wash));
+  border: none;
+  border-left: 4px solid var(--green-700);
+  background: rgba(31, 131, 93, 0.04);
+  border-radius: var(--radius);
 }
 
 .crop-advice-text {
   margin: 10px 0 14px;
   color: var(--ink-2);
-  font-size: 0.92rem;
+  font-size: 0.9rem;
+  font-weight: 450;
   line-height: 1.6;
 }
 
