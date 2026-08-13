@@ -5645,16 +5645,20 @@ function OperationsPage({ actions, currentUser, notify, store }) {
           <Button type="submit"><Save size={18} /> Enregistrer site</Button>
         </form>
       )}
-      <section className="panel">
-        <PanelTitle icon={Warehouse} title="Sites operations" />
-        {store.hubs.length ? (
-          <div className="hub-grid">
-            {store.hubs.map((hub) => <HubCard key={hub.id} hub={hub} onDelete={() => actions.setHubs((items) => items.filter((item) => item.id !== hub.id))} />)}
-          </div>
-        ) : (
-          <EmptyState icon={Warehouse} title="Aucun site" body="Ajoutez des hubs ou sites logistiques réels." />
-        )}
-      </section>
+      {canManage && (
+        <section className="panel">
+          <PanelTitle icon={Warehouse} title="Sites operations" />
+          {store.hubs.length ? (
+            <div className="hub-grid">
+              {store.hubs.map((hub) => <HubCard key={hub.id} hub={hub} onDelete={() => actions.setHubs((items) => items.filter((item) => item.id !== hub.id))} />)}
+            </div>
+          ) : (
+            <EmptyState icon={Warehouse} title="Aucun site" body="Ajoutez des hubs ou sites logistiques réels." />
+          )}
+        </section>
+      )}
+
+      <AntiWastePage actions={actions} currentUser={currentUser} navigate={() => {}} notify={notify} store={store} />
     </PageFrame>
   );
 }
