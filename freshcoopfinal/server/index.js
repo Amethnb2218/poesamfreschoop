@@ -284,6 +284,11 @@ createServer(async (request, response) => {
       return;
     }
 
+    if (request.url?.startsWith('/api/yaay/voice')) {
+      await handleYaayVoice(request, response);
+      return;
+    }
+
     if (request.url?.startsWith('/api/yaay/chat')) {
       await handleYaayChat(request, response);
       return;
@@ -795,6 +800,71 @@ async function handlePaydunya(request, response) {
   sendJson(response, 404, { error: 'Endpoint PayDunya inconnu' });
 }
 
+async function handleYaayVoice(request, response) {
+  if (request.method !== 'POST') {
+    sendJson(response, 405, { error: 'Method not allowed' });
+    return;
+  }
+  if (!process.env.GROQ_API_KEY) {
+    sendJson(response, 503, { ok: false, error: 'Transcription non disponible' });
+    return;
+  }
+  try {
+    const chunks = [];
+    for await (const chunk of request) chunks.push(chunk);
+    const rawBody = Buffer.concat(chunks);
+    const contentType = request.headers['content-type'] || '';
+    const boundaryMatch = contentType.match(/boundary=(.+)/);
+    if (!boundaryMatch) {
+      sendJson(response, 400, { error: 'Content-Type multipart requis' });
+      return;
+    }
+    const boundary = boundaryMatch[1];
+    const parts = rawBody.toString('binary').split('--' + boundary);
+    let audioBuffer = null;
+    let lang = 'fr';
+    for (const part of parts) {
+      if (part.includes('name="audio"')) {
+        const headerEnd = part.indexOf('\r\n\r\n');
+        if (headerEnd !== -1) {
+          audioBuffer = Buffer.from(part.slice(headerEnd + 4).replace(/\r\n$/, ''), 'binary');
+        }
+      }
+      if (part.includes('name="lang"')) {
+        const headerEnd = part.indexOf('\r\n\r\n');
+        if (headerEnd !== -1) {
+          lang = part.slice(headerEnd + 4).trim().replace(/\r\n.*/, '') || 'fr';
+        }
+      }
+    }
+    if (!audioBuffer || audioBuffer.length < 100) {
+      sendJson(response, 400, { error: 'Audio manquant ou trop court' });
+      return;
+    }
+    const transcript = await transcribeWithWhisper(audioBuffer);
+    if (!transcript || transcript.trim().length === 0) {
+      sendJson(response, 200, { ok: true, transcript: '', answer: lang === 'wo' ? 'Dégguma lu nga wax. Jéemaat.' : 'Je n\'ai pas compris. Veuillez réessayer.' });
+      return;
+    }
+    const chatBody = JSON.stringify({ message: transcript, lang, context: {}, history: [] });
+    const fakeReq = { method: 'POST', url: '/api/yaay/chat', headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(chatBody) } };
+    fakeReq[Symbol.asyncIterator] = async function* () { yield Buffer.from(chatBody); };
+    let chatResult = null;
+    const fakeRes = { writeHead() {}, end(body) { try { chatResult = JSON.parse(body); } catch {} } };
+    fakeRes.setHeader = () => {};
+    await handleYaayChat(fakeReq, fakeRes);
+    sendJson(response, 200, {
+      ok: true,
+      transcript,
+      answer: chatResult?.answer || transcript,
+      model: chatResult?.model || 'whisper+groq',
+    });
+  } catch (error) {
+    console.error('[Voice]', error?.message || error);
+    sendJson(response, 500, { ok: false, error: error?.message || 'Erreur transcription' });
+  }
+}
+
 async function handleYaayChat(request, response) {
   if (request.method !== 'POST') {
     sendJson(response, 405, { error: 'Method not allowed' });
@@ -838,19 +908,21 @@ async function handleYaayChat(request, response) {
         language: lang === 'pul' ? 'pu' : lang,
         context,
         history,
-        callLlm: apiKey
-          ? async (messages) => {
-              let lastError = null;
-              for (const model of modelList) {
-                try {
-                  return await callOpenRouter(apiKey, model, messages, { temperature: 0.6, max_tokens: 900 });
-                } catch (error) {
-                  lastError = error;
+        callLlm: process.env.GROQ_API_KEY
+          ? async (messages) => callGroq(messages, { temperature: 0.6, max_tokens: 900 })
+          : apiKey
+            ? async (messages) => {
+                let lastError = null;
+                for (const model of modelList) {
+                  try {
+                    return await callOpenRouter(apiKey, model, messages, { temperature: 0.6, max_tokens: 900 });
+                  } catch (error) {
+                    lastError = error;
+                  }
                 }
+                throw lastError || new Error('Aucun modèle disponible');
               }
-              throw lastError || new Error('Aucun modèle disponible');
-            }
-          : null,
+            : null,
       });
 
       if (result.answer) {
@@ -864,10 +936,10 @@ async function handleYaayChat(request, response) {
       }
     }
 
-    if (!apiKey) {
+    if (!apiKey && !process.env.GROQ_API_KEY) {
       sendJson(response, 503, {
         ok: false,
-        error: 'OPENROUTER_API_KEY non configurée',
+        error: 'Aucune clé LLM configurée',
         fallback: true,
       });
       return;
@@ -924,53 +996,23 @@ async function handleYaayChat(request, response) {
 
     let result = null;
     const errors = [];
-    for (const model of modelList) {
+
+    if (process.env.GROQ_API_KEY) {
       try {
-        result = await callOpenRouter(apiKey, model, messages);
-        if (result?.answer) {
-          // Validation langue : si la réponse est contaminée par du wolof
-          // alors qu'on a demandé autre chose, on retente avec prompt correctif
-          const answer = result.answer;
-          const looksWolof = /\b(njëg|njeg|salamaleekum|nangadef|jerejef|jërëjëf|baax na|lu nga|nanga|ndank|lan la|demal|jëfandiko|jaaykat|jaay)\b/i.test(answer);
-          const wantsNotWolof = lang !== 'wo' && lang !== 'fr';
-          if (wantsNotWolof && looksWolof) {
-            // Retry avec instruction corrective (température basse pour coller au few-shot)
-            const retry = await callOpenRouter(
-              apiKey,
-              model,
-              [
-                ...messages,
-                { role: 'assistant', content: answer },
-                {
-                  role: 'user',
-                  content:
-                    lang === 'sr'
-                      ? "Ta réponse précédente contient du wolof (njëg, salamaleekum, etc.). Reformule EXACTEMENT la même information mais en SÉRÈRE UNIQUEMENT. Utilise : Nafio (bonjour), hiin (prix), fandu (acheter), yaad (merci), pendol ma (dis-moi), kirim (marchandise). Si un mot n'existe pas en sérère, écris-le en français entre parenthèses. N'utilise aucun mot wolof."
-                      : "Ta réponse contient du wolof. Reformule en " + langLabel + " uniquement.",
-                },
-              ],
-              { temperature: 0.4, top_p: 0.8 },
-            ).catch(() => null);
-            if (retry?.answer) {
-              // Double-check : si toujours wolof après retry, on ajoute un disclaimer honnête
-              const looksStillWolof = /\b(njëg|njeg|salamaleekum|jerejef|jërëjëf)\b/i.test(retry.answer);
-              if (looksStillWolof && lang === 'sr') {
-                result = {
-                  ...retry,
-                  answer:
-                    retry.answer +
-                    '\n\n— Note : certaines expressions peuvent sembler proches du wolof. La traduction parfaite en sérère demande une relecture humaine.',
-                };
-              } else {
-                result = retry;
-              }
-            }
-          }
-          break;
-        }
+        result = await callGroq(messages);
       } catch (err) {
-        errors.push(`${model}: ${err?.message || 'err'}`);
-        continue;
+        errors.push(`groq: ${err?.message || 'err'}`);
+      }
+    }
+
+    if (!result?.answer && apiKey) {
+      for (const model of modelList) {
+        try {
+          result = await callOpenRouter(apiKey, model, messages);
+          if (result?.answer) break;
+        } catch (err) {
+          errors.push(`${model}: ${err?.message || 'err'}`);
+        }
       }
     }
 
@@ -1199,6 +1241,66 @@ EXEMPLES DE QUESTIONS IMPRÉVUES QUE TU DOIS SAVOIR GÉRER :
 - "Bonjour" → salutation courte personnalisée
 
 N'invente pas de faits précis que tu ne connais pas. Mais utilise ta culture générale agricole/économique/sénégalaise pour donner de la valeur à chaque réponse.`;
+}
+
+function callGroq(messages, options = {}) {
+  const groqKey = process.env.GROQ_API_KEY;
+  const model = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+  return new Promise(async (resolve, reject) => {
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${groqKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature: options.temperature ?? 0.75,
+          max_tokens: options.max_tokens ?? 700,
+          top_p: options.top_p ?? 0.9,
+        }),
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        reject(new Error(`Groq ${res.status}: ${errText.slice(0, 200)}`));
+        return;
+      }
+      const data = await res.json();
+      const answer = data?.choices?.[0]?.message?.content?.trim();
+      if (!answer) {
+        reject(new Error('Réponse vide Groq'));
+        return;
+      }
+      resolve({ answer, model: data.model || model });
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+async function transcribeWithWhisper(audioBuffer) {
+  const groqKey = process.env.GROQ_API_KEY;
+  if (!groqKey) throw new Error('GROQ_API_KEY non configurée');
+  const boundary = '----FormBoundary' + randomBytes(8).toString('hex');
+  const header = `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="voice.webm"\r\nContent-Type: audio/webm\r\n\r\n`;
+  const modelPart = `\r\n--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-large-v3-turbo\r\n--${boundary}--\r\n`;
+  const body = Buffer.concat([Buffer.from(header), audioBuffer, Buffer.from(modelPart)]);
+  const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${groqKey}`,
+      'Content-Type': `multipart/form-data; boundary=${boundary}`,
+    },
+    body,
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Whisper ${res.status}: ${errText.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  return data.text || '';
 }
 
 function callOpenRouter(apiKey, model, messages, options = {}) {

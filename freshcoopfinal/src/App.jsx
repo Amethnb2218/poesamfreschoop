@@ -10068,12 +10068,17 @@ function LanguageAssistant({ currentUser, store }) {
       const res = await fetch(API_BASE + '/api/yaay/voice', { method: 'POST', body: formData });
       const data = await res.json();
       if (data?.ok && data.transcript) {
-        setMessages((prev) => [...prev, { from: 'bot', text: data.answer || findResponse(data.transcript, lang) }]);
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { from: 'user', text: data.transcript, audio: audioUrl };
+          return [...updated, { from: 'bot', text: data.answer || findResponse(data.transcript, lang) }];
+        });
         return;
       }
+      if (data?.error) throw new Error(data.error);
       throw new Error('no transcript');
     } catch {
-      setMessages((prev) => [...prev, { from: 'bot', text: lang === 'fr' ? 'Message vocal reçu. La transcription automatique n\'est pas encore disponible — veuillez reformuler par écrit.' : 'Wax wi jot na. Bind ko ci biir ngir ma man ko dégg.' }]);
+      setMessages((prev) => [...prev, { from: 'bot', text: lang === 'fr' ? 'Je n\'ai pas pu transcrire votre message. Veuillez réessayer ou écrire votre question.' : 'Mënuma dégg wax wi. Jéemaat walla bind ko.' }]);
     }
   }
 
