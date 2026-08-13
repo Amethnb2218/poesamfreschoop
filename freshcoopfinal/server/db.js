@@ -63,7 +63,13 @@ export async function initDatabase() {
   console.log('[Turso] Base initialisée');
 }
 
+let storeCache = null;
+let cacheAge = 0;
+
 export async function readStore() {
+  if (storeCache && (Date.now() - cacheAge < 5000)) {
+    return storeCache;
+  }
   const result = await client.execute('SELECT collection, id, data FROM store');
   const store = Object.fromEntries(COLLECTIONS.map(c => [c, []]));
   for (const row of result.rows) {
@@ -74,7 +80,13 @@ export async function readStore() {
       } catch {}
     }
   }
+  storeCache = store;
+  cacheAge = Date.now();
   return store;
+}
+
+export function invalidateCache() {
+  storeCache = null;
 }
 
 export async function writeStore(data) {
@@ -91,6 +103,8 @@ export async function writeStore(data) {
     }
   }
   await client.batch(batch, 'write');
+  storeCache = data;
+  cacheAge = Date.now();
 }
 
 export async function upsertItem(collection, item) {
@@ -100,6 +114,7 @@ export async function upsertItem(collection, item) {
     sql: 'INSERT OR REPLACE INTO store (collection, id, data, updated_at) VALUES (?, ?, ?, datetime(\'now\'))',
     args: [collection, id, JSON.stringify(item)],
   });
+  invalidateCache();
 }
 
 export async function upsertItems(collection, items) {
@@ -109,6 +124,7 @@ export async function upsertItems(collection, items) {
     args: [collection, item.id || item._id, JSON.stringify(item)],
   }));
   await client.batch(batch, 'write');
+  invalidateCache();
 }
 
 export async function createBackup(name, storeData) {

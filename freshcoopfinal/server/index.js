@@ -333,6 +333,13 @@ createServer(async (request, response) => {
   const displayHost = host === '0.0.0.0' ? 'localhost' : host;
   console.log(`FresCoop API listening on http://${displayHost}:${port}`);
   console.log(`PayDunya mode: ${paydunyaMode} (${paydunyaApiBase})`);
+
+  // Keep-alive: prevent Render free tier from sleeping (ping every 14 min)
+  if (process.env.NODE_ENV === 'production' && process.env.RENDER_EXTERNAL_URL) {
+    setInterval(() => {
+      fetch(`${process.env.RENDER_EXTERNAL_URL}/api/health`).catch(() => {});
+    }, 14 * 60 * 1000);
+  }
 });
 
 // ============================================================================
