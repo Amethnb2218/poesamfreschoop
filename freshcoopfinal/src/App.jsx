@@ -514,14 +514,16 @@ function App() {
     else window.localStorage.removeItem(SESSION_KEY);
   }, [sessionUserId]);
 
-  // Redirection automatique quand un compte "En attente" est approuvé
+  // Redirection automatique quand un compte "En attente" est approuvé (une seule fois)
   const prevStatusRef = useRef(null);
   useEffect(() => {
     if (!currentUser) return;
     if (currentUser.role === 'admin') { prevStatusRef.current = currentUser.status; return; }
     const prev = prevStatusRef.current;
     const curr = normalize(currentUser.status || 'Actif');
-    if (prev && normalize(prev) === 'en attente' && curr === 'actif') {
+    const alreadyNotified = sessionStorage.getItem('frescoop.validated.' + currentUser.id);
+    if (prev && normalize(prev) === 'en attente' && curr === 'actif' && !alreadyNotified) {
+      sessionStorage.setItem('frescoop.validated.' + currentUser.id, '1');
       setToast({ message: 'Votre compte a été validé ! Bienvenue.', type: 'success' });
       navigate(getRoleHomePath(currentUser.role));
     }

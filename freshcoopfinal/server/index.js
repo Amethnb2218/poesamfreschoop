@@ -416,7 +416,7 @@ async function handleAuth(request, response) {
       email: email.trim().slice(0, 200),
       phone: String(phone || '').trim().slice(0, 30),
       role: role || 'agriculteur',
-      status: (role || 'agriculteur') === 'agriculteur' ? 'En attente' : 'Actif',
+      status: (role || 'agriculteur') === 'agriculteur' || role === 'agentTerrain' ? 'En attente' : 'Actif',
       organization: String(organization || '').trim().slice(0, 100),
       region: String(region || '').trim().slice(0, 100),
       bio: '',
