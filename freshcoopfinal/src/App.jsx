@@ -1950,7 +1950,25 @@ function LoginPage({ actions, notify, onLogin, store }) {
               </select>
             </Field>
             <Field label="Organisation"><input value={registerForm.organization} onChange={(event) => updateForm(setRegisterForm, 'organization', event.target.value)} /></Field>
-            <Field label="Région"><input value={registerForm.region} onChange={(event) => updateForm(setRegisterForm, 'region', event.target.value)} /></Field>
+            <Field label="Région">
+              <select value={registerForm.region} onChange={(event) => updateForm(setRegisterForm, 'region', event.target.value)}>
+                <option value="">— Sélectionner —</option>
+                <option value="Dakar">Dakar</option>
+                <option value="Thiès">Thiès</option>
+                <option value="Diourbel">Diourbel</option>
+                <option value="Kaolack">Kaolack</option>
+                <option value="Kaffrine">Kaffrine</option>
+                <option value="Fatick">Fatick</option>
+                <option value="Saint-Louis">Saint-Louis</option>
+                <option value="Louga">Louga</option>
+                <option value="Matam">Matam</option>
+                <option value="Tambacounda">Tambacounda</option>
+                <option value="Kédougou">Kédougou</option>
+                <option value="Kolda">Kolda</option>
+                <option value="Sédhiou">Sédhiou</option>
+                <option value="Ziguinchor">Ziguinchor</option>
+              </select>
+            </Field>
             {(registerForm.role === 'agriculteur') && (
               <>
                 <Field label="Années d'expérience agricole">
@@ -8925,7 +8943,7 @@ function renderBancabiliteHtml(dossier) {
     <section>
       <h2>Bénéficiaire</h2>
       <p><strong>${escapeHtml(dossier.user.name)}</strong> - ${escapeHtml(dossier.user.email)}</p>
-      <p>Rôle: ${escapeHtml(dossier.user.role)} | Organisation: ${escapeHtml(dossier.user.organization || '—')} | Région: ${escapeHtml(dossier.user.region || '—')}</p>
+      <p>Rôle: ${escapeHtml(dossier.user.role)} | Organisation: ${escapeHtml(dossier.user.organization || '—')} | Région: ${escapeHtml((!dossier.user.region || dossier.user.region.includes('@')) ? '—' : dossier.user.region)}</p>
     </section>
     <section>
       <h2>Score Global: ${dossier.score}/100 (Grade ${dossier.grade})</h2>
