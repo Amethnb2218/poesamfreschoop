@@ -676,7 +676,11 @@ button:disabled {
 .quick-grid,
 .data-grid {
   display: grid;
-  gap: 14px;
+  gap: 10px;
+}
+
+.status-grid {
+  grid-template-columns: repeat(4, 1fr);
 }
 
 .page-frame {
@@ -2386,9 +2390,9 @@ button:disabled {
 
 .stat-card {
   display: grid;
-  gap: 4px;
+  gap: 2px;
   min-height: 0;
-  padding: 14px 16px;
+  padding: 12px 14px;
 }
 
 .stat-card svg {
@@ -2405,7 +2409,7 @@ button:disabled {
 
 .stat-card strong {
   color: var(--ink);
-  font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
   line-height: 1.1;
 }
 

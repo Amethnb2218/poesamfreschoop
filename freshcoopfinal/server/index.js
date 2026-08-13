@@ -995,9 +995,11 @@ async function handleYaayChat(request, response) {
         language: lang === 'pul' ? 'pu' : lang,
         context,
         history,
-        callLlm: process.env.GROQ_API_KEY
-          ? async (messages) => callGroq(messages, { temperature: 0.6, max_tokens: 900 })
-          : apiKey
+        callLlm: process.env.GEMINI_API_KEY
+          ? async (messages) => callGemini(messages, { temperature: 0.6, max_tokens: 900 })
+          : process.env.GROQ_API_KEY
+            ? async (messages) => callGroq(messages, { temperature: 0.6, max_tokens: 900 })
+            : apiKey
             ? async (messages) => {
                 let lastError = null;
                 for (const model of modelList) {
@@ -1084,7 +1086,15 @@ async function handleYaayChat(request, response) {
     let result = null;
     const errors = [];
 
-    if (process.env.GROQ_API_KEY) {
+    if (process.env.GEMINI_API_KEY) {
+      try {
+        result = await callGemini(messages);
+      } catch (err) {
+        errors.push(`gemini: ${err?.message || 'err'}`);
+      }
+    }
+
+    if (!result?.answer && process.env.GROQ_API_KEY) {
       try {
         result = await callGroq(messages);
       } catch (err) {
@@ -1328,6 +1338,45 @@ EXEMPLES DE QUESTIONS IMPRÉVUES QUE TU DOIS SAVOIR GÉRER :
 - "Bonjour" → salutation courte personnalisée
 
 N'invente pas de faits précis que tu ne connais pas. Mais utilise ta culture générale agricole/économique/sénégalaise pour donner de la valeur à chaque réponse.`;
+}
+
+function callGemini(messages, options = {}) {
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  return new Promise(async (resolve, reject) => {
+    try {
+      const systemMsg = messages.find(m => m.role === 'system');
+      const chatMessages = messages.filter(m => m.role !== 'system');
+      const contents = chatMessages.map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }],
+      }));
+      const body = {
+        contents,
+        generationConfig: {
+          temperature: options.temperature ?? 0.75,
+          maxOutputTokens: options.max_tokens ?? 700,
+          topP: options.top_p ?? 0.9,
+        },
+      };
+      if (systemMsg) {
+        body.systemInstruction = { parts: [{ text: systemMsg.content }] };
+      }
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+      );
+      if (!res.ok) {
+        const errText = await res.text();
+        reject(new Error(`Gemini ${res.status}: ${errText.slice(0, 200)}`));
+        return;
+      }
+      const data = await res.json();
+      const answer = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      if (!answer) { reject(new Error('Réponse vide Gemini')); return; }
+      resolve({ answer, model });
+    } catch (err) { reject(err); }
+  });
 }
 
 function callGroq(messages, options = {}) {
