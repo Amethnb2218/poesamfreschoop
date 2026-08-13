@@ -6804,29 +6804,26 @@ const ADVISOR_WELCOME = {
 
 const ADVISOR_SUGGESTIONS = {
   fr: [
-    "Quand semer l'arachide a Kaolack ?",
-    'Quel engrais pour le mil sur sol dior ?',
-    'Comment traiter les pucerons de la tomate ?',
-    'Quelle variete de riz pour la vallee du fleuve ?',
+    "Quand semer l'arachide à Kaolack ?",
+    'Comment traiter les pucerons sur tomate ?',
+    'Quelle variété de mil pour ma zone ?',
+    'Conseils irrigation saison sèche',
+    "Prix de l'oignon aujourd'hui",
   ],
-  wo: ['Kañ lañu jëmbët gerte ci Kaolack ?', 'Ban fetal la war ci dugub ?', 'Nan lañu faj tamaat yi ?'],
-  pu: ['Nde woni sahaa aawugol gerte ?', 'Ko honɗum fetal wonande gawri ?', 'Noy safrata tomate ?'],
+  wo: ['Naka lañu waral gerte ?', 'Kañ lañu jëmbët gerte ci Kaolack ?', 'Ban fetal la war ci dugub ?', 'Nan lañu faj tamaat yi ?'],
+  pu: ['Nde woni sahaa aawugol gerte ?', 'Ko honḍum fetal wonande gawri ?', 'Noy safrata tomate ?'],
   sr: ['Nafio, le ma ŋ tool a ?', 'Ke fetal a noong ?'],
 };
 
 function ConseillerPage({ currentUser, notify }) {
   const [lang, setLang] = useState('fr');
-  const [messages, setMessages] = useState([{ from: 'bot', text: ADVISOR_WELCOME.fr }]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const scrollRef = useRef(null);
-
-  useEffect(() => {
-    setMessages((prev) => {
-      if (prev.length > 1) return prev;
-      return [{ from: 'bot', text: ADVISOR_WELCOME[lang] || ADVISOR_WELCOME.fr }];
-    });
-  }, [lang]);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -6843,7 +6840,7 @@ function ConseillerPage({ currentUser, notify }) {
 
     try {
       const token = sessionStorage.getItem('frescoop.auth.token');
-      const res = await fetch(API_BASE + '/api/agro/advisor', {
+      const res = await fetch(API_BASE + '/api/yaay/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -6851,7 +6848,7 @@ function ConseillerPage({ currentUser, notify }) {
         },
         body: JSON.stringify({
           message: content,
-          language: lang,
+          lang,
           context: {
             userName: currentUser?.name,
             userRole: currentUser?.role,
@@ -6862,94 +6859,373 @@ function ConseillerPage({ currentUser, notify }) {
       });
       const data = await res.json();
       if (!res.ok || !data?.answer) throw new Error(data?.error || 'Reponse indisponible');
-      setMessages((prev) => [...prev, { from: 'bot', text: data.answer, source: data.source }]);
+      setMessages((prev) => [...prev, { from: 'bot', text: data.answer }]);
     } catch (err) {
       notify?.(err.message || 'Le conseiller est momentanement indisponible.', 'error');
       setMessages((prev) => [
         ...prev,
-        { from: 'bot', text: "Je ne peux pas repondre pour le moment. Reessayez dans un instant — vos questions precedentes restent affichees." },
+        { from: 'bot', text: "Je ne peux pas repondre pour le moment. Reessayez dans un instant." },
       ]);
     } finally {
       setLoading(false);
     }
   }
 
-  return (
-    <PageFrame>
-      <section className="panel poesam-hero">
-        <div>
-          <span className="poesam-badge">CONSEIL AGRONOMIQUE</span>
-          <h2>Un agronome dans votre poche, en quatre langues</h2>
-          <p>
-            Le conseiller connait les zones agro-ecologiques du Sahel, les varietes ISRA, les doses d'engrais,
-            la lutte biologique et le calendrier cultural. Il repond meme sans connexion au modele : un moteur
-            de reponses local prend le relais.
-          </p>
-        </div>
-      </section>
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) audioChunksRef.current.push(event.data);
+      };
+      recorder.onstop = async () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        stream.getTracks().forEach((track) => track.stop());
+        setLoading(true);
+        try {
+          const formData = new FormData();
+          formData.append('audio', blob, 'voice.webm');
+          formData.append('lang', lang);
+          const res = await fetch(API_BASE + '/api/yaay/voice', { method: 'POST', body: formData });
+          const data = await res.json();
+          if (data?.ok && data.transcript) {
+            setMessages((prev) => [...prev, { from: 'user', text: data.transcript }]);
+            if (data.answer) {
+              setMessages((prev) => [...prev, { from: 'bot', text: data.answer }]);
+            }
+          } else {
+            throw new Error(data?.error || 'Transcription indisponible');
+          }
+        } catch (err) {
+          notify?.(err.message || 'Erreur lors de la transcription vocale.', 'error');
+        } finally {
+          setLoading(false);
+        }
+      };
+      recorder.start();
+      setIsRecording(true);
+    } catch {
+      notify?.('Impossible d\'acceder au microphone. Verifiez les permissions.', 'error');
+    }
+  }
 
-      <section className="panel">
-        <PanelTitle icon={Bot} title="Poser une question" />
-        <div className="assistant-lang advisor-lang">
+  function stopRecording() {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  }
+
+  const hasMessages = messages.length > 0;
+
+  const containerStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    height: 'calc(100vh - 64px)',
+    maxHeight: 'calc(100vh - 64px)',
+    background: '#fafbfc',
+    overflow: 'hidden',
+  };
+
+  const headerStyle = {
+    padding: '1.25rem 1.5rem 1rem',
+    borderBottom: '1px solid #e8ecf0',
+    background: '#ffffff',
+    flexShrink: 0,
+  };
+
+  const headerTitleStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    marginBottom: '0.25rem',
+  };
+
+  const titleTextStyle = {
+    fontSize: '1.25rem',
+    fontWeight: 700,
+    color: '#1a2b1f',
+    margin: 0,
+  };
+
+  const subtitleStyle = {
+    fontSize: '0.85rem',
+    color: '#6b7b75',
+    margin: '0.25rem 0 0.75rem 0',
+  };
+
+  const langBarStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    flexWrap: 'wrap',
+  };
+
+  const langBtnStyle = (active) => ({
+    padding: '0.35rem 0.85rem',
+    borderRadius: '2rem',
+    border: active ? '2px solid #1f835d' : '1px solid #d4ddd8',
+    background: active ? '#eaf6f0' : '#ffffff',
+    color: active ? '#1f835d' : '#4a5a52',
+    fontWeight: active ? 600 : 400,
+    fontSize: '0.8rem',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+  });
+
+  const vocalBtnStyle = {
+    marginLeft: 'auto',
+    padding: '0.4rem 0.85rem',
+    borderRadius: '2rem',
+    border: isRecording ? '2px solid #dc3545' : '1px solid #d4ddd8',
+    background: isRecording ? '#fff0f0' : '#ffffff',
+    color: isRecording ? '#dc3545' : '#4a5a52',
+    fontSize: '0.8rem',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    fontWeight: 500,
+  };
+
+  const chatAreaStyle = {
+    flex: 1,
+    overflowY: 'auto',
+    padding: '1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+  };
+
+  const emptyStateStyle = {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '2rem',
+    textAlign: 'center',
+  };
+
+  const emptyIconStyle = {
+    width: '4rem',
+    height: '4rem',
+    borderRadius: '50%',
+    background: '#eaf6f0',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: '1rem',
+  };
+
+  const chipsContainerStyle = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.5rem',
+    justifyContent: 'center',
+    maxWidth: '600px',
+    marginTop: '1.25rem',
+  };
+
+  const chipStyle = {
+    padding: '0.5rem 1rem',
+    borderRadius: '2rem',
+    border: '1px solid #d4ddd8',
+    background: '#ffffff',
+    color: '#2d4a3e',
+    fontSize: '0.82rem',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+    whiteSpace: 'nowrap',
+  };
+
+  const bubbleStyle = (isUser) => ({
+    maxWidth: '75%',
+    padding: '0.85rem 1.1rem',
+    borderRadius: '1rem',
+    fontSize: '0.9rem',
+    lineHeight: '1.5',
+    alignSelf: isUser ? 'flex-end' : 'flex-start',
+    background: isUser ? '#1f835d' : '#ffffff',
+    color: isUser ? '#ffffff' : '#1a2b1f',
+    border: isUser ? 'none' : '1px solid #e2e8e5',
+    wordBreak: 'break-word',
+    whiteSpace: 'pre-wrap',
+  });
+
+  const inputBarStyle = {
+    padding: '0.75rem 1rem',
+    borderTop: '1px solid #e8ecf0',
+    background: '#ffffff',
+    flexShrink: 0,
+  };
+
+  const inputFormStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.6rem',
+    maxWidth: '800px',
+    margin: '0 auto',
+  };
+
+  const micBtnStyle = {
+    width: '2.5rem',
+    height: '2.5rem',
+    borderRadius: '50%',
+    border: isRecording ? '2px solid #dc3545' : '1px solid #d4ddd8',
+    background: isRecording ? '#fff0f0' : '#f7faf8',
+    color: isRecording ? '#dc3545' : '#4a5a52',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    flexShrink: 0,
+    transition: 'all 0.15s ease',
+  };
+
+  const textInputStyle = {
+    flex: 1,
+    padding: '0.7rem 1rem',
+    borderRadius: '1.5rem',
+    border: '1px solid #d4ddd8',
+    fontSize: '0.9rem',
+    outline: 'none',
+    background: '#f7faf8',
+    transition: 'border-color 0.15s ease',
+  };
+
+  const sendBtnStyle = {
+    width: '2.5rem',
+    height: '2.5rem',
+    borderRadius: '50%',
+    border: 'none',
+    background: input.trim() || loading ? '#1f835d' : '#e2e8e5',
+    color: input.trim() || loading ? '#ffffff' : '#8a9a92',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: input.trim() ? 'pointer' : 'default',
+    flexShrink: 0,
+    transition: 'all 0.15s ease',
+  };
+
+  const typingStyle = {
+    alignSelf: 'flex-start',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.7rem 1rem',
+    borderRadius: '1rem',
+    background: '#ffffff',
+    border: '1px solid #e2e8e5',
+    fontSize: '0.85rem',
+    color: '#6b7b75',
+  };
+
+  return (
+    <div style={containerStyle}>
+      {/* Header */}
+      <div style={headerStyle}>
+        <div style={headerTitleStyle}>
+          <Sprout size={22} color="#1f835d" />
+          <h2 style={titleTextStyle}>Conseiller agricole</h2>
+        </div>
+        <p style={subtitleStyle}>Posez vos questions sur les cultures, maladies, irrigation...</p>
+        <div style={langBarStyle}>
           {ADVISOR_LANGS.map(([code, label]) => (
             <button
               key={code}
               type="button"
-              className={lang === code ? 'active' : ''}
+              style={langBtnStyle(lang === code)}
               onClick={() => setLang(code)}
             >
               {label}
             </button>
           ))}
+          <button
+            type="button"
+            style={vocalBtnStyle}
+            onClick={isRecording ? stopRecording : startRecording}
+            aria-label={isRecording ? 'Arreter enregistrement' : 'Mode vocal'}
+          >
+            {isRecording ? <MicOff size={14} /> : <Mic size={14} />}
+            {isRecording ? 'Arreter' : 'Vocal'}
+          </button>
         </div>
+      </div>
 
-        <div className="assistant-messages advisor-messages" ref={scrollRef}>
-          {messages.map((msg, index) => (
-            <div key={index} className={`assistant-msg ${msg.from}`}>
-              {msg.text}
-              {msg.source === 'offline' && (
-                <small className="advisor-source">Reponse du moteur local (modele indisponible)</small>
-              )}
+      {/* Chat area */}
+      <div style={chatAreaStyle} ref={scrollRef}>
+        {!hasMessages && (
+          <div style={emptyStateStyle}>
+            <div style={emptyIconStyle}>
+              <Sprout size={28} color="#1f835d" />
             </div>
-          ))}
-          {loading && (
-            <div className="assistant-msg bot advisor-typing">
-              <Loader2 size={14} className="agro-spin" /> Le conseiller reflechit…
+            <h3 style={{ margin: '0 0 0.25rem', fontSize: '1.1rem', color: '#1a2b1f', fontWeight: 600 }}>
+              {lang === 'fr' ? 'Bienvenue !' : lang === 'wo' ? 'Dalal jamm !' : 'Jam waali !'}
+            </h3>
+            <p style={{ margin: 0, color: '#6b7b75', fontSize: '0.88rem', maxWidth: '400px' }}>
+              {ADVISOR_WELCOME[lang] || ADVISOR_WELCOME.fr}
+            </p>
+            <div style={chipsContainerStyle}>
+              {(ADVISOR_SUGGESTIONS[lang] || ADVISOR_SUGGESTIONS.fr).map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  style={chipStyle}
+                  onClick={() => send(prompt)}
+                  disabled={loading}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#1f835d'; e.currentTarget.style.background = '#eaf6f0'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#d4ddd8'; e.currentTarget.style.background = '#ffffff'; }}
+                >
+                  {prompt}
+                </button>
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        <div className="assistant-suggestions">
-          {(ADVISOR_SUGGESTIONS[lang] || ADVISOR_SUGGESTIONS.fr).map((prompt) => (
-            <button key={prompt} type="button" onClick={() => send(prompt)} disabled={loading}>{prompt}</button>
-          ))}
-        </div>
+        {messages.map((msg, index) => (
+          <div key={index} style={bubbleStyle(msg.from === 'user')}>
+            {msg.text}
+          </div>
+        ))}
 
-        <form className="assistant-form advisor-form" onSubmit={(event) => { event.preventDefault(); send(); }}>
+        {loading && (
+          <div style={typingStyle}>
+            <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Le conseiller reflechit...
+          </div>
+        )}
+      </div>
+
+      {/* Input bar */}
+      <div style={inputBarStyle}>
+        <form style={inputFormStyle} onSubmit={(event) => { event.preventDefault(); send(); }}>
+          <button
+            type="button"
+            style={micBtnStyle}
+            onClick={isRecording ? stopRecording : startRecording}
+            aria-label={isRecording ? 'Arreter' : 'Enregistrer vocal'}
+          >
+            {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
+          </button>
           <input
             value={input}
             onChange={(event) => setInput(event.target.value)}
-            placeholder={lang === 'fr' ? 'Ex : quel engrais pour le mais a Tambacounda ?' : 'Laaj ma…'}
-            aria-label="Votre question agronomique"
+            placeholder="Tapez ou parlez — votre question agricole..."
+            aria-label="Votre question agricole"
+            style={textInputStyle}
+            onFocus={(e) => { e.target.style.borderColor = '#1f835d'; }}
+            onBlur={(e) => { e.target.style.borderColor = '#d4ddd8'; }}
           />
-          <button type="submit" aria-label="Envoyer" disabled={loading}>
-            {loading ? <Loader2 size={16} className="agro-spin" /> : <Send size={16} />}
+          <button type="submit" aria-label="Envoyer" disabled={loading || !input.trim()} style={sendBtnStyle}>
+            {loading ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={16} />}
           </button>
         </form>
-      </section>
-
-      <section className="panel">
-        <PanelTitle icon={Sprout} title="Ce que le conseiller couvre" />
-        <div className="odd-grid">
-          <article><strong>Calendrier cultural</strong><p>Dates de semis par zone, cycles varietaux, echelonnement des parcelles.</p></article>
-          <article><strong>Fertilisation</strong><p>Doses NPK et uree par culture, fumure organique, prix des intrants subventionnes.</p></article>
-          <article><strong>Protection des cultures</strong><p>Lutte biologique (neem, savon noir, Bt), identification des ravageurs courants.</p></article>
-          <article><strong>Sols et rotations</strong><p>Dior, deck, hollalde, ferralitique : cultures adaptees et amendements.</p></article>
-          <article><strong>Adaptation climatique</strong><p>Varietes a cycle court, zai et demi-lunes, agroforesterie, semis echelonne.</p></article>
-          <article><strong>Financement</strong><p>Orientation vers La Banque Agricole, DER, SFD et le score de bancabilite FresCoop.</p></article>
-        </div>
-      </section>
-    </PageFrame>
+      </div>
+    </div>
   );
 }
 
