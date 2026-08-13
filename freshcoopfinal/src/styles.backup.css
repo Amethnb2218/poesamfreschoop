@@ -1603,6 +1603,7 @@ button:disabled {
 }
 
 .probleme-card:hover {
+  transform: translateY(-8px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 20px 60px rgba(0, 0, 0, 0.1);
 }
 
@@ -1718,6 +1719,7 @@ button:disabled {
 }
 
 .public-probleme-grid article:hover {
+  transform: translateY(-8px);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
 }
 
@@ -2505,6 +2507,7 @@ button:disabled {
 }
 
 .quick-action:hover {
+  transform: translateY(-3px);
   box-shadow: var(--shadow-lg);
 }
 
@@ -7255,12 +7258,9 @@ button.btn {
 }
 
 .product-card:hover,
-.record-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 24px 54px rgba(7, 27, 20, 0.14);
-}
-
+.record-card:hover,
 .hub-card:hover {
+  transform: translateY(-3px);
   box-shadow: 0 24px 54px rgba(7, 27, 20, 0.14);
 }
 
@@ -9152,6 +9152,7 @@ h3,
 }
 
 .pitch-metric-card:hover {
+  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(23,163,74,0.15);
 }
 
@@ -9322,9 +9323,11 @@ h3,
 
 /* ===== NIELSEN HEURISTICS: Fluidity, clarity, simplicity ===== */
 
-/* Transitions only on interactive elements */
-a, button, [role="button"], input, select, textarea, .btn, .stat-card, .record-card, .nav-link {
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+/* Global transitions for smoother feel */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, opacity, transform, box-shadow;
+  transition-duration: 0.15s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Don't transition layout properties */
@@ -9375,10 +9378,7 @@ a, button, [role="button"], input, select, textarea, .btn, .stat-card, .record-c
 }
 
 .stat-card:hover,
-.quick-action:hover {
-  box-shadow: 0 8px 24px rgba(7, 27, 20, 0.10);
-}
-
+.quick-action:hover,
 .product-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(7, 27, 20, 0.10);
@@ -9623,13 +9623,33 @@ label, .field-label {
 
 .reveal {
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: translateY(40px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.reveal.visible {
+
+.reveal.revealed {
   opacity: 1;
   transform: translateY(0);
 }
+
+.public-probleme-grid .reveal:nth-child(2) { transition-delay: 0.12s; }
+.public-probleme-grid .reveal:nth-child(3) { transition-delay: 0.24s; }
+.probleme-cards .reveal:nth-child(2) { transition-delay: 0.15s; }
+.probleme-cards .reveal:nth-child(3) { transition-delay: 0.3s; }
+.public-mvp-grid .reveal:nth-child(2) { transition-delay: 0.08s; }
+.public-mvp-grid .reveal:nth-child(3) { transition-delay: 0.16s; }
+.public-mvp-grid .reveal:nth-child(4) { transition-delay: 0.24s; }
+.public-mvp-grid .reveal:nth-child(5) { transition-delay: 0.32s; }
+.public-steps-8 .reveal:nth-child(2) { transition-delay: 0.06s; }
+.public-steps-8 .reveal:nth-child(3) { transition-delay: 0.12s; }
+.public-steps-8 .reveal:nth-child(4) { transition-delay: 0.18s; }
+.public-steps-8 .reveal:nth-child(5) { transition-delay: 0.24s; }
+.public-steps-8 .reveal:nth-child(6) { transition-delay: 0.30s; }
+.public-steps-8 .reveal:nth-child(7) { transition-delay: 0.36s; }
+.public-steps-8 .reveal:nth-child(8) { transition-delay: 0.42s; }
+.impact-social-grid .reveal:nth-child(2) { transition-delay: 0.1s; }
+.impact-social-grid .reveal:nth-child(3) { transition-delay: 0.2s; }
+.impact-social-grid .reveal:nth-child(4) { transition-delay: 0.3s; }
 
 /* ==========================================================================
    Hero KPIs
@@ -9775,6 +9795,7 @@ label, .field-label {
 }
 
 .modele-revenue-card:hover {
+  transform: translateY(-4px);
   box-shadow: 0 12px 40px rgba(31, 131, 93, 0.1);
 }
 
@@ -10193,6 +10214,7 @@ label, .field-label {
 }
 
 .garantie-card:hover {
+  transform: translateY(-3px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.07);
 }
 
@@ -10414,6 +10436,7 @@ label, .field-label {
 }
 
 .impact-metric:hover {
+  transform: translateY(-4px);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
 }
 
@@ -10455,6 +10478,7 @@ label, .field-label {
 }
 
 .impact-social-card:hover {
+  transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
@@ -10656,6 +10680,7 @@ label, .field-label {
 }
 
 .genre-stat-card:hover {
+  transform: translateY(-4px);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
 }
 
