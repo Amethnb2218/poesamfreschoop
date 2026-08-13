@@ -2669,13 +2669,16 @@ function SellerHomePage({ currentUser, navigate, store }) {
               </p>
               <div className="button-row">
                 <Button variant="secondary" onClick={() => navigate('/prediction')}>
-                  <Sprout size={18} /> Voir l'analyse complète
+                  <Sprout size={18} /> Analyse complète
                 </Button>
                 <Button variant="secondary" onClick={() => navigate('/conseiller')}>
-                  <Bot size={18} /> Demander au conseiller
+                  <Bot size={18} /> Conseiller
                 </Button>
-                <Button variant="secondary" onClick={() => speakText(`Sur votre zone ${cropAdvice.city}, la culture aux meilleures conditions est ${cropAdvice.name}. Semis conseillé en ${cropAdvice.monthName}. ${cropAdvice.tons ? `Rendement estimé ${cropAdvice.tons} tonnes par hectare.` : ''}`)}>
-                  <Volume2 size={18} /> Écouter
+                <Button variant="secondary" onClick={() => speakText(`Sur votre zone ${cropAdvice.city}, la culture aux meilleures conditions est ${cropAdvice.name}. Semis conseillé en ${cropAdvice.monthName}. ${cropAdvice.tons ? `Rendement estimé ${cropAdvice.tons} tonnes par hectare.` : ''}`, 'fr', 'female')}>
+                  <Volume2 size={18} /> Voix femme
+                </Button>
+                <Button variant="secondary" onClick={() => speakText(`Sur votre zone ${cropAdvice.city}, la culture aux meilleures conditions est ${cropAdvice.name}. Semis conseillé en ${cropAdvice.monthName}. ${cropAdvice.tons ? `Rendement estimé ${cropAdvice.tons} tonnes par hectare.` : ''}`, 'fr', 'male')}>
+                  <Volume2 size={18} /> Voix homme
                 </Button>
               </div>
             </div>
@@ -6910,15 +6913,21 @@ const ADVISOR_SUGGESTIONS = {
   sr: ['Nafio, le ma ŋ tool a ?', 'Ke fetal a noong ?'],
 };
 
-function speakText(text, lang = 'fr') {
+function speakText(text, lang = 'fr', gender = 'female') {
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
   const clean = String(text || '').replace(/[*#\-•]/g, '').replace(/\n+/g, '. ');
   const utterance = new SpeechSynthesisUtterance(clean);
   const langMap = { fr: 'fr-FR', wo: 'fr-FR', pu: 'fr-FR', sr: 'fr-FR' };
   utterance.lang = langMap[lang] || 'fr-FR';
-  utterance.rate = 0.9;
-  utterance.pitch = 1;
+  utterance.rate = 0.85;
+  utterance.pitch = gender === 'male' ? 0.85 : 1.1;
+  const voices = window.speechSynthesis.getVoices();
+  const frVoices = voices.filter(v => v.lang.startsWith('fr'));
+  if (frVoices.length > 0) {
+    const preferred = frVoices.find(v => gender === 'male' ? /male|homme|thomas|paul/i.test(v.name) : /female|femme|marie|amelie|virginie/i.test(v.name));
+    utterance.voice = preferred || frVoices[0];
+  }
   window.speechSynthesis.speak(utterance);
 }
 
