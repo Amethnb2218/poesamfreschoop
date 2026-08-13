@@ -654,7 +654,7 @@ function App() {
         setMenuOpen={setMenuOpen}
       />
       <main id="main-content" tabIndex="-1">
-        <PageHero meta={pageMeta} />
+        {route.pathname !== '/conseiller' && <PageHero meta={pageMeta} />}
         {!accessAllowed && (() => { navigate(getRoleHomePath(currentUser.role)); return null; })()}
         {accessAllowed && route.pathname === '/' && <DashboardPage currentUser={currentUser} navigate={navigate} stats={stats} store={store} />}
         {accessAllowed && route.pathname === '/marche' && <MarketplacePage actions={actions} currentUser={currentUser} navigate={navigate} notify={notify} store={store} />}
@@ -5058,7 +5058,7 @@ function ActivityProofPage({ actions, currentUser, navigate, notify, store }) {
   const isAdmin = currentUser.role === 'admin';
   const isReviewer = isAdmin || currentUser.role === 'agentTerrain';
 
-  const allProofsForAdmin = isReviewer ? (store.activityProofs || []).filter((p) => p.status === 'en_attente' || p.status === 'en_attente_agent') : [];
+  const allProofsForAdmin = isReviewer ? (store.activityProofs || []).filter((p) => p.status === 'en_attente' || p.status === 'en_attente_agent' || p.status === 'soumis') : [];
   const agentConfirmProofs = currentUser.role === 'agentTerrain'
     ? (store.activityProofs || []).filter((p) => p.status === 'en_attente_agent' && p.agentId === currentUser.id)
     : [];
@@ -5406,7 +5406,7 @@ function ActivityProofPage({ actions, currentUser, navigate, notify, store }) {
                             <Eye size={14} /> Voir document
                           </button>
                         )}
-                        {(proof.status === 'en_attente' || proof.status === 'en_attente_agent') && (
+                        {(proof.status === 'en_attente' || proof.status === 'en_attente_agent' || proof.status === 'soumis') && (
                           <>
                             <Button variant="primary" onClick={() => handleAdminReview(proof.id, 'valide')} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}><CheckCircle2 size={12} /> Valider</Button>
                             <Button variant="secondary" onClick={() => handleAdminReview(proof.id, 'rejete')} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}><X size={12} /> Rejeter</Button>
