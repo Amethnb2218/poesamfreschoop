@@ -1881,7 +1881,7 @@ async function handleActivityProofs(request, response) {
     } else {
       store.notifications.unshift({
         id: `notif-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
-        recipientRole: 'admin',
+        recipientRoles: ['admin', 'agentTerrain'],
         title: 'Nouvelle preuve soumise',
         body: `${submitterName} a soumis une preuve "${data.proofType || 'activité'}" à valider.`,
         type: 'proof_review',
