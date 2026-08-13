@@ -2982,6 +2982,22 @@ function MarketplacePage({ actions, currentUser, navigate, notify, store }) {
         </section>
       )}
 
+      {(() => {
+        const flashProducts = publishedProducts.filter(p => p.flashSaleDiscountPct > 0 || (p.expiryDate && (new Date(p.expiryDate).getTime() - Date.now()) < 2 * 86400000 && (new Date(p.expiryDate).getTime() - Date.now()) > 0));
+        if (flashProducts.length === 0) return null;
+        return (
+          <section className="panel" style={{ borderLeft: '4px solid #e54d35', background: '#fff8f6' }}>
+            <PanelToolbar icon={Activity} title={`Ventes flash anti-gaspi (${flashProducts.length})`} />
+            <p style={{ fontSize: '0.85rem', color: '#92400e', margin: '0 0 0.75rem' }}>Produits frais à écouler rapidement — prix réduits pour éviter le gaspillage.</p>
+            <div className="product-grid">
+              {flashProducts.slice(0, 4).map(product => (
+                <ProductCard key={product.id} product={product} store={store} currentUser={currentUser} onAddToCart={() => addToCart(product)} onContact={() => openContact(product)} />
+              ))}
+            </div>
+          </section>
+        );
+      })()}
+
       <section className="panel">
         <PanelToolbar
           icon={Search}
