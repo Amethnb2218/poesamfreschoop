@@ -318,6 +318,14 @@ createServer(async (request, response) => {
         { id: 'usr-demo-ibrahima', name: 'Ibrahima Sow', email: 'ibrahima.sow@demo.sn', phone: '+221 76 987 65 43', region: 'Kaffrine', organization: 'Coopérative Niayes Vertes', gie: 'Oui', gieName: 'Coop Niayes Vertes', foncier: 'Titre formel', experienceYears: 15, gender: 'Homme' },
       ];
 
+      if (!store.ratings) store.ratings = [];
+      if (!store.loanRepayments) store.loanRepayments = [];
+      if (!store.transactions) store.transactions = [];
+      if (!store.orders) store.orders = [];
+      if (!store.activityProofs) store.activityProofs = [];
+      if (!store.paymentRecords) store.paymentRecords = [];
+      if (!store.users) store.users = [];
+
       for (const farmer of demoFarmers) {
         if (store.users.some(u => u.id === farmer.id)) continue;
         store.users.push({ ...farmer, role: 'agriculteur', status: 'Actif', createdAt: sixMonthsAgo, passwordHash: hash, bio: '', verificationScore: 92, verificationLevel: 3 });
