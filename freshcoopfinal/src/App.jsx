@@ -4356,7 +4356,13 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
                         </div>
                         <div className="cart-item-quantity" aria-label={`Quantite ${product?.name || 'produit'}`}>
                           <button type="button" onClick={() => updateCartQuantity(item.productId, item.quantity - 1)}>-</button>
-                          <span>{item.quantity}</span>
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => updateCartQuantity(item.productId, Math.max(1, Number(e.target.value) || 1))}
+                            style={{ width: '3rem', textAlign: 'center', border: '1px solid #d4ddd8', borderRadius: '0.25rem', padding: '0.2rem', fontSize: '0.9rem' }}
+                          />
                           <button type="button" onClick={() => updateCartQuantity(item.productId, item.quantity + 1)}><Plus size={15} /></button>
                         </div>
                         <div className="cart-item-total">
@@ -13000,21 +13006,42 @@ async function filesToAttachments(files) {
   return Promise.all((files || []).map(fileToAttachment));
 }
 
+function compressImage(file, maxWidth = 800, quality = 0.7) {
+  return new Promise((resolve) => {
+    if (!file.type.startsWith('image/')) { resolve(null); return; }
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(null);
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 async function fileToAttachment(file) {
   if (!file) return null;
   if (file.size > MAX_FILE_SIZE) {
     throw new Error(`Fichier trop lourd: ${file.name}. Limite 2 Mo.`);
   }
-  const dataUrl = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error(`Lecture impossible: ${file.name}`));
-    reader.readAsDataURL(file);
-  });
+  let dataUrl = await compressImage(file);
+  if (!dataUrl) {
+    dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error(`Lecture impossible: ${file.name}`));
+      reader.readAsDataURL(file);
+    });
+  }
   try {
+    const token = sessionStorage.getItem('frescoop.auth.token');
     const res = await fetch(API_BASE + '/api/upload', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       body: JSON.stringify({ file: dataUrl, folder: 'frescoop' }),
     });
     const result = await res.json();
