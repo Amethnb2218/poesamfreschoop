@@ -12312,10 +12312,10 @@ function getPrimaryNavLinks(role) {
   const links = {
     admin: ['/', '/utilisateurs', '/prediction', '/conseiller', '/bancabilite', '/impact'],
     agriculteur: ['/', '/produits', '/commandes', '/prediction', '/conseiller', '/bancabilite'],
-    agentTerrain: ['/', '/verification', '/prediction', '/conseiller', '/commandes', '/operations'],
+    agentTerrain: ['/', '/verification', '/conseiller', '/commandes', '/operations'],
     client: ['/', '/marche', '/commandes'],
-    acheteurB2B: ['/', '/marche', '/lots', '/prediction', '/commandes'],
-    partenaire: ['/', '/prediction', '/bancabilite', '/impact'],
+    acheteurB2B: ['/', '/marche', '/lots', '/commandes'],
+    partenaire: ['/', '/bancabilite', '/impact'],
   }[role] || ['/'];
 
   return links.map(navItemByPath).filter(Boolean);
