@@ -9633,7 +9633,7 @@ label, .field-label {
   transform: translateY(12px);
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
-.reveal.visible {
+.reveal.revealed {
   opacity: 1;
   transform: translateY(0);
 }
