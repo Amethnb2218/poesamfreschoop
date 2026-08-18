@@ -11,11 +11,16 @@ import { isAdminRole, isBuyerRole, isSellerRole, scopeLots } from '@/lib/roles';
 
 export default function LotsScreen() {
   const { user, store, refresh, loading } = useSession();
-  if (!user) return null;
+
+  // useMemo avant le retour anticipé : le nombre de hooks doit rester constant
+  // entre les rendus, y compris pendant l'initialisation de la session.
   const lots = useMemo(
-    () => scopeLots(store.lots || [], user.role, user.id),
-    [store.lots, user.role, user.id],
+    () => (user ? scopeLots(store.lots || [], user.role, user.id) : []),
+    [store.lots, user],
   );
+
+  if (!user) return null;
+
   const isMine = isSellerRole(user.role);
   const isAllView = isAdminRole(user.role);
   const isBuyer = isBuyerRole(user.role);

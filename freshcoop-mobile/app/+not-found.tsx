@@ -11,5 +11,7 @@ export default function NotFoundScreen() {
   const status = String(user.status || 'Actif').toLowerCase();
   if (status === 'en attente') return <Redirect href="/pending" />;
 
-  return <Redirect href="/(tabs)/index" />;
+  // Le segment (tabs) est un groupe : il n'apparaît pas dans l'URL. La racine
+  // de l'app authentifiée est donc "/", pas "/(tabs)/index".
+  return <Redirect href="/" />;
 }

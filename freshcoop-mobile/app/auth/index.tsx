@@ -27,7 +27,7 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
 
   if (loading) return null;
-  if (user) return <Redirect href="/(tabs)/index" />;
+  if (user) return <Redirect href="/" />;
 
   async function onSubmit() {
     setError(null);
@@ -38,7 +38,7 @@ export default function LoginScreen() {
     setSubmitting(true);
     try {
       await login(email, password);
-      router.replace('/(tabs)/index');
+      router.replace('/');
     } catch (err: any) {
       setError(err?.message || 'Connexion impossible');
     } finally {

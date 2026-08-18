@@ -11,9 +11,14 @@ import { useSession } from '@/context/SessionContext';
 
 export default function RoiScreen() {
   const { user, store } = useSession();
-  if (!user) return null;
 
+  // useMemo doit être appelé avant tout retour anticipé. Avec le `if (!user)`
+  // placé au-dessus, le nombre de hooks changeait entre deux rendus au moment
+  // où la session s'initialise (null puis renseignée), ce que React interdit :
+  // « Rendered more hooks than during the previous render ».
   const data = useMemo(() => {
+    if (!user) return null;
+
     const myOrders = (store.orders || []).filter((o: any) => o.sellerId === user.id);
     const myTransactions = (store.transactions || []).filter(
       (t: any) => t.userId === user.id || t.ownerId === user.id,
@@ -69,6 +74,8 @@ export default function RoiScreen() {
       monthly,
     };
   }, [store, user]);
+
+  if (!user || !data) return null;
 
   const pctImprovement = data.revenueWithout > 0
     ? Math.round(((data.totalRevenue - data.revenueWithout) / data.revenueWithout) * 100)

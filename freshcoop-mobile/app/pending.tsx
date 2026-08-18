@@ -39,7 +39,7 @@ export default function PendingScreen() {
     if (current) {
       const status = String(current.status || '').toLowerCase();
       if (status === 'actif') {
-        router.replace('/(tabs)/index');
+        router.replace('/');
       }
     }
   }, [store.users, user]);

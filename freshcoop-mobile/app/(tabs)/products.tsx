@@ -13,12 +13,15 @@ import { isAdminRole, isFieldAgentRole, isSellerRole, scopeProducts } from '@/li
 
 export default function ProductsScreen() {
   const { user, store, refresh, loading, mutateStore } = useSession();
-  if (!user) return null;
 
+  // useMemo avant le retour anticipé : le nombre de hooks doit rester constant
+  // entre les rendus, y compris pendant l'initialisation de la session.
   const products = useMemo(
-    () => scopeProducts(store.products || [], user.role, user.id),
-    [store.products, user.role, user.id],
+    () => (user ? scopeProducts(store.products || [], user.role, user.id) : []),
+    [store.products, user],
   );
+
+  if (!user) return null;
 
   async function verifyProduct(productId: string, outcome: 'Fiable' | 'A revoir') {
     await mutateStore((store) => ({

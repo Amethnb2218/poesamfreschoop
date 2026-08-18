@@ -12,12 +12,15 @@ import { isAdminRole, scopeHubs } from '@/lib/roles';
 
 export default function OperationsScreen() {
   const { user, store, refresh, loading } = useSession();
-  if (!user) return null;
 
+  // useMemo avant le retour anticipé : le nombre de hooks doit rester constant
+  // entre les rendus, y compris pendant l'initialisation de la session.
   const hubs = useMemo(
-    () => scopeHubs(store.hubs || [], user.role, user.id),
-    [store.hubs, user.role, user.id],
+    () => (user ? scopeHubs(store.hubs || [], user.role, user.id) : []),
+    [store.hubs, user],
   );
+
+  if (!user) return null;
 
   const dispatches = store.dispatches || [];
   const crates = store.crates || [];
