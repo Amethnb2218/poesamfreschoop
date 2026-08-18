@@ -55,7 +55,7 @@ function generateFrenchAnswer(text, stats, userName) {
     return `Chaque lot FresCoop possede un QR code unique qui expose son origine (parcelle, village), les photos qualite, la temperature en hub froid en temps reel et l'historique complet (recolte, stockage, livraison, paiement). ${stats.lots ? stats.lots + ' lots sont actuellement traces' : 'Consultez l\'onglet Lots'} pour scanner un QR ou voir le detail.`;
   }
 
-  if (has(text, ['pay', 'paiement', 'wave', 'orange money', 'paydunya', 'regler', 'facture'])) {
+  if (has(text, ['pay', 'paiement', 'wave', 'orange money', 'maxit', 'regler', 'facture'])) {
     return `Les paiements FresCoop passent par GIM-Pay de facon securisee : Wave, Orange Money, Free Money, cartes Visa/Mastercard et virement bancaire. L'argent va directement du client au producteur avec une commission transparente de 2%. Un recu automatique est genere dans votre espace Paiement.`;
   }
 

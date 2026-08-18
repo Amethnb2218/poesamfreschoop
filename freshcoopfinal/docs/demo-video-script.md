@@ -18,7 +18,7 @@ Voix off : fr standard, rythme moderé, chaleureux et convaincu
 | 0:14–0:22 | **Révélation — logo FresCoop** | Le noir et blanc redevient couleur. Le logo FresCoop apparaît avec un jingle | "FresCoop transforme ce gaspillage en revenu. Une seule plateforme, quatre leviers." |
 | 0:22–0:36 | **Levier 1 — Traçabilité froid** | Animation d'un lot: QR code, capteurs IoT, thermomètre qui s'affiche, timeline du lot en temps réel | "Chaque lot reçoit un jumeau numérique: QR, capteurs froid, IA prédictive. Les acheteurs B2B voient la qualité avant d'acheter." |
 | 0:36–0:50 | **Levier 2 — Anti-gaspi** | Une DLC courte s'affiche en rouge, une notification part, prix -25%, acheteur reçoit alerte | "Quand un lot approche sa date limite, FresCoop déclenche une vente éclair ciblée. 15 à 40% de réduction automatique, zéro perte." |
-| 0:50–1:04 | **Levier 3 — PayDunya intégré** | Wave, Orange Money, Free Money, carte bancaire s'enchainent. Reçu numérique apparaît | "Le paiement est réel, sécurisé, via PayDunya. Orange Money, Wave, carte bancaire — le reçu est instantané et vérifiable." |
+| 0:50–1:04 | **Levier 3 — MaxIt intégré** | Wave, Orange Money, Free Money, carte bancaire s'enchainent. Reçu numérique apparaît | "Le paiement est réel, sécurisé, via MaxIt. Orange Money, Wave, carte bancaire — le reçu est instantané et vérifiable." |
 | 1:04–1:18 | **Levier 4 — Bancabilité** | Score 82/100 grade A s'anime, dossier PDF sort, banque valide, microfinance valide | "Chaque transaction alimente un score de bancabilité. Fatou exporte son dossier et décroche son premier crédit — sans papier, sans attente." |
 | 1:18–1:28 | **Inclusion USSD** | Téléphone à touches Nokia, *384*FRES# s'affiche, menu wolof, agricultrice souriante | "Pas de smartphone ? *384*FRES# en wolof, pulaar ou sérère. 70% de producteurs couverts dès le premier mois." |
 | 1:28–1:38 | **Assistant Yaay** | Bulle chat qui s'ouvre, questions-réponses en wolof, icone AI qui sourit | "Yaay, notre assistante IA, répond en quatre langues locales. 24h/24, pour que la technologie parle la langue du terrain." |
@@ -76,7 +76,7 @@ Voix off : fr standard, rythme moderé, chaleureux et convaincu
 - **Texte** : "Alerte DLC · Prix dégressif · Acheteur ciblé"
 - **SFX** : buzz alerte + cash register final
 
-### Scène 6 — PAYDUNYA (0:50–1:04)
+### Scène 6 — MAXIT (0:50–1:04)
 - **Carrousel de logos** : Orange Money, Wave, Free Money, Visa, Mastercard
 - **Animation** :
   1. Téléphone au centre, choix du mode de paiement
@@ -92,7 +92,7 @@ Voix off : fr standard, rythme moderé, chaleureux et convaincu
 - **Animation** :
   1. Score ring 0 → 82/100 en rotation
   2. Grade A apparaît en vert
-  3. Critères cochés un par un : ancienneté, PayDunya, attestations, lots, revenu
+  3. Critères cochés un par un : ancienneté, MaxIt, attestations, lots, revenu
   4. Le PDF sort et s'envoie vers 3 logos : Banque, SFD, Microfinance
 - **Texte** : "Score 82/100 · Grade A · Dossier éligible"
 - **SFX** : ding de validation x3
@@ -180,7 +180,7 @@ Voix off : fr standard, rythme moderé, chaleureux et convaincu
 0:00–0:03 Hook "30% de la récolte perdue"
 0:03–0:08 Logo FresCoop + tagline
 0:08–0:15 Traçabilité + anti-gaspi (montage rapide)
-0:15–0:22 PayDunya + bancabilité (montage rapide)
+0:15–0:22 MaxIt + bancabilité (montage rapide)
 0:22–0:28 KPI impact qui montent
 0:28–0:30 Logo + "POESAM 2026"
 

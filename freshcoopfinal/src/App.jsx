@@ -769,12 +769,12 @@ function VerifyReceiptPage({ navigate, route, store }) {
               <div><em>Code de reçu</em><b>{payment.receiptCode}</b></div>
               <div><em>Date du paiement</em><b>{formatDate(payment.createdAt)}</b></div>
               <div><em>Statut</em><b className="status-valid">✓ {payment.status || 'Payé'}</b></div>
-              <div><em>Mode de paiement</em><b>{payment.partner || 'PayDunya'}</b></div>
+              <div><em>Mode de paiement</em><b>{payment.partner || 'MaxIt'}</b></div>
               {product && <div><em>Produit</em><b>{product.name}</b></div>}
               {linkedOrder && <div><em>Quantité</em><b>{formatNumber(linkedOrder.quantity)} {linkedOrder.unit || product?.unit || 'kg'}</b></div>}
               {payer && <div><em>Client</em><b>{payer.name}</b></div>}
               {seller && <div><em>Vendeur</em><b>{seller.name}</b></div>}
-              {payment.paydunyaToken && <div><em>Référence PayDunya</em><b className="ref-token">{payment.paydunyaToken}</b></div>}
+              {payment.maxitToken && <div><em>Référence MaxIt</em><b className="ref-token">{payment.maxitToken}</b></div>}
             </div>
 
             <div className="verify-seal">
@@ -1077,7 +1077,7 @@ function PublicPageComment({ navigate }) {
     "Inscription et vérification d'identité (CNI)",
     'Publication de vos produits sur le marché',
     "Réception de commandes d'acheteurs",
-    'Paiement confirmé via PayDunya',
+    'Paiement confirmé via MaxIt',
     'Score de bancabilité qui monte',
     'Dossier de crédit exportable',
     'Présentation à une banque ou SFD',
@@ -4001,7 +4001,7 @@ function OrdersPage({ actions, currentUser, navigate, notify, route, store }) {
         paymentStatus: 'En attente',
         assignedAgentId: assignedAgent?.id || '',
         agentWorkflow: {},
-        message: 'Commande FresCoop en attente de paiement. Règlement sécurisé via PayDunya requis avant préparation.',
+        message: 'Commande FresCoop en attente de paiement. Règlement sécurisé via MaxIt requis avant préparation.',
         productSnapshot: snapshotCartProduct(item.product),
       };
     });
@@ -4605,7 +4605,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
   const [receipt, setReceipt] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [pendingToken, setPendingToken] = useState(() => {
-    try { return sessionStorage.getItem('frescoop.paydunya.token') || ''; } catch { return ''; }
+    try { return sessionStorage.getItem('frescoop.maxit.token') || ''; } catch { return ''; }
   });
   const orderIds = useMemo(() => new URLSearchParams(route.search || '').get('orders')?.split(',').filter(Boolean) || [], [route.search]);
   const queryStatus = useMemo(() => new URLSearchParams(route.search || '').get('status') || '', [route.search]);
@@ -4617,16 +4617,16 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
   ));
   const total = payableOrders.reduce((sum, order) => sum + getOrderTotal(order, store), 0);
 
-  function finalizePayment(token, paydunyaData) {
+  function finalizePayment(token, maxitData) {
     // Garde anti-rejouage: si un paymentRecord existe déjà avec ce token, on ne refait rien
-    const alreadyProcessed = (store.paymentRecords || []).some((record) => record.paydunyaToken === token);
+    const alreadyProcessed = (store.paymentRecords || []).some((record) => record.maxitToken === token);
     if (alreadyProcessed) {
-      const existing = (store.paymentRecords || []).find((record) => record.paydunyaToken === token);
+      const existing = (store.paymentRecords || []).find((record) => record.maxitToken === token);
       if (existing) {
-        const paidOrders = (store.orders || []).filter((order) => order.paydunyaToken === token);
-        setReceipt({ code: existing.receiptCode, orders: paidOrders, total: existing.amount, paidAt: existing.createdAt, token, paydunyaReceiptUrl: existing.paydunyaReceiptUrl || '' });
+        const paidOrders = (store.orders || []).filter((order) => order.maxitToken === token);
+        setReceipt({ code: existing.receiptCode, orders: paidOrders, total: existing.amount, paidAt: existing.createdAt, token, maxitReceiptUrl: existing.maxitReceiptUrl || '' });
       }
-      try { sessionStorage.removeItem('frescoop.paydunya.token'); } catch {}
+      try { sessionStorage.removeItem('frescoop.maxit.token'); } catch {}
       setPendingToken('');
       return;
     }
@@ -4639,7 +4639,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
     ));
     if (!eligibleOrders.length) {
       notify('Aucune commande éligible au paiement.', 'info');
-      try { sessionStorage.removeItem('frescoop.paydunya.token'); } catch {}
+      try { sessionStorage.removeItem('frescoop.maxit.token'); } catch {}
       setPendingToken('');
       return;
     }
@@ -4736,14 +4736,14 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
         agentId: order.assignedAgentId || agent?.id || '',
         amount: getOrderTotal(order, store),
         status: 'Paye',
-        partner: `PayDunya (${paydunyaData?.mode || 'test'})`,
+        partner: `MaxIt (${maxitData?.mode || 'test'})`,
         receiptCode,
-        paydunyaToken: token,
-        paydunyaReceiptUrl: paydunyaData?.receiptUrl || '',
+        maxitToken: token,
+        maxitReceiptUrl: maxitData?.receiptUrl || '',
         loanDeductionAmount: loanDeduction?.amount || 0,
         loanDeductionPct: loanDeduction?.repaymentPct || 0,
         sellerNetAmount: getOrderTotal(order, store) - (loanDeduction?.amount || 0),
-        regulatoryNote: 'Paiement execute via PayDunya. FresCoop conserve la preuve de coordination.',
+        regulatoryNote: 'Paiement execute via MaxIt. FresCoop conserve la preuve de coordination.',
       };
     });
 
@@ -4753,7 +4753,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
       paymentStatus: 'Paye',
       paidAt: now,
       receiptCode,
-      paydunyaToken: token,
+      maxitToken: token,
       assignedAgentId: order.assignedAgentId || getAvailableFieldAgent(store)?.id || '',
       updatedAt: now,
     } : order));
@@ -4792,12 +4792,12 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
         ownerId: order.sellerId,
         label: `Vente ${product?.name || 'produit'} (${formatNumber(order.quantity)} ${order.unit || product?.unit || 'kg'})`,
         amount: getOrderTotal(order, store),
-        paymentMethod: `PayDunya`,
+        paymentMethod: `MaxIt`,
         status: 'Paye',
         buyer: currentUser.name || 'Client',
         orderId: order.id,
         receiptCode,
-        paydunyaToken: token,
+        maxitToken: token,
         loanDeductionAmount: repayment?.amount || 0,
         netAmount: getOrderTotal(order, store) - (repayment?.amount || 0),
       };
@@ -4807,10 +4807,10 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
     }
 
     actions.setNotifications((items) => [...notifications, ...items]);
-    actions.setAuditLogs((items) => [createAuditLog(currentUser, 'payment_paydunya_confirmed', `Paiement PayDunya confirmé: ${receiptCode} (token ${token})`, receiptCode), ...items]);
-    setReceipt({ code: receiptCode, orders: eligibleOrders, total: totalAmount, paidAt: now, token, paydunyaReceiptUrl: paydunyaData?.receiptUrl || '' });
+    actions.setAuditLogs((items) => [createAuditLog(currentUser, 'payment_maxit_confirmed', `Paiement MaxIt confirmé: ${receiptCode} (token ${token})`, receiptCode), ...items]);
+    setReceipt({ code: receiptCode, orders: eligibleOrders, total: totalAmount, paidAt: now, token, maxitReceiptUrl: maxitData?.receiptUrl || '' });
     notify('Paiement confirmé. Reçu généré.', 'success');
-    try { sessionStorage.removeItem('frescoop.paydunya.token'); } catch {}
+    try { sessionStorage.removeItem('frescoop.maxit.token'); } catch {}
     setPendingToken('');
   }
 
@@ -4818,17 +4818,17 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
     if (!token) return;
     setProcessing(true);
     try {
-      const res = await fetch(`${API_BASE}/api/paydunya/confirm/${encodeURIComponent(token)}`);
+      const res = await fetch(`${API_BASE}/api/maxit/confirm/${encodeURIComponent(token)}`);
       const data = await res.json();
       if (data?.confirmed) {
         finalizePayment(token, data);
       } else {
         notify(`Paiement non confirmé (statut: ${data?.status || 'inconnu'}). Aucun reçu généré.`);
-        try { sessionStorage.removeItem('frescoop.paydunya.token'); } catch {}
+        try { sessionStorage.removeItem('frescoop.maxit.token'); } catch {}
         setPendingToken('');
       }
     } catch (error) {
-      notify(`Erreur verification PayDunya: ${error.message}`);
+      notify(`Erreur verification MaxIt: ${error.message}`);
     } finally {
       setProcessing(false);
     }
@@ -4837,7 +4837,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
   useEffect(() => {
     if (queryStatus === 'cancel') {
       notify('Paiement annulé. Aucun reçu généré.');
-      try { sessionStorage.removeItem('frescoop.paydunya.token'); } catch {}
+      try { sessionStorage.removeItem('frescoop.maxit.token'); } catch {}
       setPendingToken('');
       navigate(route.pathname);
       return;
@@ -4865,7 +4865,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
     setProcessing(true);
     try {
       const description = `Commande FresCoop - ${payableOrders.length} article(s)`;
-      const res = await fetch(API_BASE + '/api/paydunya/create-invoice', {
+      const res = await fetch(API_BASE + '/api/maxit/create-invoice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -4879,16 +4879,16 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
       });
       const data = await res.json();
       if (!data?.ok || !data?.url) {
-        notify(data?.error || 'Echec initialisation PayDunya');
+        notify(data?.error || 'Echec initialisation MaxIt');
         setProcessing(false);
         return;
       }
-      try { sessionStorage.setItem('frescoop.paydunya.token', data.token); } catch {}
+      try { sessionStorage.setItem('frescoop.maxit.token', data.token); } catch {}
       setPendingToken(data.token);
-      notify('Redirection vers PayDunya...');
+      notify('Redirection vers MaxIt...');
       window.location.href = data.url;
     } catch (error) {
-      notify(`Erreur PayDunya: ${error.message}`);
+      notify(`Erreur MaxIt: ${error.message}`);
       setProcessing(false);
     }
   }
@@ -4923,7 +4923,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
             <div><em>Code de reçu</em><b>{receipt.code}</b></div>
             <div><em>Date & heure</em><b>{formatDate(receipt.paidAt)}</b></div>
             <div><em>Articles</em><b>{receipt.orders.length} produit{receipt.orders.length > 1 ? 's' : ''}</b></div>
-            <div><em>Mode</em><b>{receipt.token?.startsWith('DEMO') ? 'Simulation démo' : 'PayDunya'}</b></div>
+            <div><em>Mode</em><b>{receipt.token?.startsWith('DEMO') ? 'Simulation démo' : 'MaxIt'}</b></div>
           </div>
           <div className="payment-success-qr">
             <img
@@ -4953,7 +4953,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
       ) : (
         <section className="panel payment-panel partner-powered">
           <PanelToolbar icon={ReceiptText} title="Paiement sécurisé" action={<Button variant="secondary" onClick={() => navigate('/commandes?tab=cart')}><ShoppingCart size={16} /> Retour commandes</Button>} />
-          <NoticeCard icon={ShieldCheck} title="Paiement via PayDunya" body="Orange Money, Wave, Free Money, carte bancaire. Aucun reçu n'est émis tant que le paiement n'est pas confirmé." />
+          <NoticeCard icon={ShieldCheck} title="Paiement via MaxIt" body="Orange Money, Wave, Free Money, carte bancaire. Aucun reçu n'est émis tant que le paiement n'est pas confirmé." />
           {pendingToken && (
             <NoticeCard icon={CircleAlert} title="Paiement en cours de vérification" body={`Référence: ${pendingToken}. Cliquez ci-dessous pour vérifier le statut.`} />
           )}
@@ -4979,7 +4979,7 @@ function PaymentPage({ actions, currentUser, navigate, notify, route, store }) {
               <div className="summary-total"><span>Total à payer</span><strong>{formatMoney(total)}</strong></div>
               <div className="button-row">
                 <Button onClick={payNow} disabled={processing}>
-                  <CheckCircle2 size={18} /> {processing ? 'Redirection...' : 'Payer via PayDunya'}
+                  <CheckCircle2 size={18} /> {processing ? 'Redirection...' : 'Payer via MaxIt'}
                 </Button>
                 <Button variant="secondary" onClick={simulateAcceptedPayment} disabled={processing}>
                   <CheckCircle2 size={18} /> {processing ? '...' : 'Simuler paiement (démo)'}
@@ -6389,9 +6389,9 @@ function ImpactPage({ stats, store }) {
           <span className="poesam-badge">IMPACT FILIÈRES AGRICOLES</span>
           <h2>FresCoop en chiffres: indicateurs mesurables</h2>
           <p>Chaque lot trace, chaque paiement partenaire, chaque capteur froid convertit des pertes en revenu pour les acteurs agricoles en Afrique. Aucun chiffre fictif: ces KPI sont calcules en temps reel sur l activité du compte.</p>
-          <div className="paydunya-counter" style={{ marginTop: '1rem', padding: '0.75rem 1.25rem', background: 'var(--surface)', borderRadius: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="maxit-counter" style={{ marginTop: '1rem', padding: '0.75rem 1.25rem', background: 'var(--surface)', borderRadius: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
             <ReceiptText size={18} />
-            <span><strong>{impact.paydunyaTxCount}</strong> paiements PayDunya (Wave, OM, Free Money)</span>
+            <span><strong>{impact.maxitTxCount}</strong> paiements MaxIt (Wave, OM, Free Money)</span>
           </div>
         </div>
       </section>
@@ -6403,7 +6403,7 @@ function ImpactPage({ stats, store }) {
         <StatCard icon={Sprout} label="CO2 évité (kg eq.)" value={formatCompact(impact.co2SavedKg)} tone="blue" />
         <StatCard icon={Tractor} label="Coopératives connectées" value={impact.coopérativeCount} tone="green" />
         <StatCard icon={Truck} label="Kg tracés jusqu'au marché" value={formatCompact(impact.tracedKg)} tone="blue" />
-        <StatCard icon={ReceiptText} label="Transactions partenaires" value={impact.paydunyaTxCount} tone="gold" />
+        <StatCard icon={ReceiptText} label="Transactions partenaires" value={impact.maxitTxCount} tone="gold" />
         <StatCard icon={ShieldCheck} label="Preuves économiques émises" value={stats.proofs} tone="coral" />
       </div>
 
@@ -7395,7 +7395,7 @@ function computeUemoaImpact(store) {
   const producers = users.filter((user) => user.role === 'agriculteur');
   const womenProducers = producers.filter((user) => user.gender === 'Femme' || user.gender === 'F' || /(^|\s)(fatou|aissatou|aïssatou|aminata|awa|khady|marieme|mariéme|mariame|mame|ndeye|fama|ndèye|fatoumata|diarra|binta|astou|bintou|soda|coumba|rokhaya|rokhia|aida|aïda|yacine|khadija|khadidja|penda|dior|oumy|mareme|marème)/i.test(String(user.name || ''))).length;
   const coopérativeCount = (store.coopératives || []).length;
-  const paydunyaTxCount = paymentRecords.filter((record) => record.paydunyaToken || /paydunya/i.test(record.partner || '')).length;
+  const maxitTxCount = paymentRecords.filter((record) => record.maxitToken || /maxit/i.test(record.partner || '')).length;
 
   return {
     lossesAvertedPercent,
@@ -7405,7 +7405,7 @@ function computeUemoaImpact(store) {
     totalProducers: producers.length,
     womenProducers,
     coopérativeCount,
-    paydunyaTxCount,
+    maxitTxCount,
     transactionsCount: transactions.length,
     revenue: totalRevenue,
   };
@@ -7861,7 +7861,7 @@ function RepayLoanBlock({ loan, actions, currentUser, store, notify }) {
     };
     const notif = loan.partnerId ? createAppNotification({
         actor: currentUser,
-        body: `${currentUser.name} a remboursé ${formatMoney(amount)}${isFullyRepaid ? ' (solde complet)' : ''} sur le prêt ${loan.contractCode || ''}. Mode: ${method === 'paydunya' ? 'PayDunya' : 'Simulation'}.`,
+        body: `${currentUser.name} a remboursé ${formatMoney(amount)}${isFullyRepaid ? ' (solde complet)' : ''} sur le prêt ${loan.contractCode || ''}. Mode: ${method === 'maxit' ? 'MaxIt' : 'Simulation'}.`,
         path: '/bancabilite',
         recipientId: loan.partnerId,
         relatedId: loan.id,
@@ -7886,7 +7886,7 @@ function RepayLoanBlock({ loan, actions, currentUser, store, notify }) {
     if (amount > remaining) { notify(`Le montant dépasse le solde restant (${formatMoney(remaining)}).`, 'error'); return; }
     setProcessing(true);
     try {
-      const res = await fetch(API_BASE + '/api/paydunya/create-invoice', {
+      const res = await fetch(API_BASE + '/api/maxit/create-invoice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -7900,15 +7900,15 @@ function RepayLoanBlock({ loan, actions, currentUser, store, notify }) {
       });
       const data = await res.json();
       if (!data?.ok || !data?.url) {
-        notify(data?.error || 'Echec initialisation PayDunya', 'error');
+        notify(data?.error || 'Echec initialisation MaxIt', 'error');
         setProcessing(false);
         return;
       }
-      executeRepayment(amount, 'paydunya');
-      notify('Redirection vers PayDunya...');
+      executeRepayment(amount, 'maxit');
+      notify('Redirection vers MaxIt...');
       window.location.href = data.url;
     } catch (error) {
-      notify(`Erreur PayDunya: ${error.message}`, 'error');
+      notify(`Erreur MaxIt: ${error.message}`, 'error');
       setProcessing(false);
     }
   }
@@ -7947,7 +7947,7 @@ function RepayLoanBlock({ loan, actions, currentUser, store, notify }) {
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             <button type="button" className="btn btn-primary" onClick={handleGimPay} disabled={processing} style={{ fontSize: '0.82rem', padding: '0.45rem 0.8rem' }}>
-              {processing ? '...' : '💳 Payer via PayDunya'}
+              {processing ? '...' : '💳 Payer via MaxIt'}
             </button>
             <button type="button" className="btn btn-secondary" onClick={handleSimulation} disabled={processing} style={{ fontSize: '0.82rem', padding: '0.45rem 0.8rem' }}>
               {processing ? '...' : '⚡ Simulation paiement'}
@@ -8312,8 +8312,8 @@ function BancabilitePage({ actions, currentUser, notify, store }) {
         const scoreFactor = myDossier.score >= 80 ? 0.7 : myDossier.score >= 60 ? 0.5 : myDossier.score >= 40 ? 0.3 : 0;
         const monthsFactor = Number(loanForm.months) / 6;
         const regularityBonus = myDossier.transactionsCount >= 10 ? 1.2 : myDossier.transactionsCount >= 5 ? 1.1 : 1.0;
-        const paydunyaBonus = myDossier.paydunyaCount >= 3 ? 1.15 : 1.0;
-        const maxEligible = Math.round(myDossier.monthlyAverage * 6 * scoreFactor * regularityBonus * paydunyaBonus);
+        const maxitBonus = myDossier.maxitCount >= 3 ? 1.15 : 1.0;
+        const maxEligible = Math.round(myDossier.monthlyAverage * 6 * scoreFactor * regularityBonus * maxitBonus);
         const suggestedForDuration = Math.round(maxEligible * monthsFactor);
         const blockingLoan = findBlockingLoanForFarmer(currentUser.id, store);
         return (
@@ -8331,7 +8331,7 @@ function BancabilitePage({ actions, currentUser, notify, store }) {
             <div className="bancabilite-kpi">
               <div><em>Revenu mensuel moyen</em><b>{formatMoney(myDossier.monthlyAverage)}</b></div>
               <div><em>Transactions vérifiées</em><b>{myDossier.transactionsCount}</b></div>
-              <div><em>Paiements PayDunya</em><b>{myDossier.paydunyaCount}</b></div>
+              <div><em>Paiements MaxIt</em><b>{myDossier.maxitCount}</b></div>
               {(() => { const rats = (store.ratings || []).filter((rt) => rt.sellerId === currentUser.id); if (!rats.length) return null; const avg = (rats.reduce((s, rt) => s + rt.rating, 0) / rats.length).toFixed(1); return <div><em>Note clients</em><b style={{ color: '#d97706' }}>{'★'.repeat(Math.round(Number(avg)))} {avg}/5 <small>({rats.length} avis)</small></b></div>; })()}
             </div>
             {myDossier.score >= 80 ? (
@@ -8552,7 +8552,7 @@ function BancabilitePage({ actions, currentUser, notify, store }) {
               <div><em>Revenu vérifié</em><b>{formatMoney(dossier.totalRevenue)}</b></div>
               <div><em>Moyenne / mois</em><b>{formatMoney(dossier.monthlyAverage)}</b></div>
               <div><em>Transactions</em><b>{dossier.transactionsCount}</b></div>
-              <div><em>PayDunya</em><b>{dossier.paydunyaCount}</b></div>
+              <div><em>MaxIt</em><b>{dossier.maxitCount}</b></div>
               {(() => { const rats = (store.ratings || []).filter((rt) => rt.sellerId === user.id); if (!rats.length) return null; const avg = (rats.reduce((s, rt) => s + rt.rating, 0) / rats.length).toFixed(1); return <div><em>Note clients</em><b style={{ color: '#d97706' }}>{'★'.repeat(Math.round(Number(avg)))} {avg}/5 <small>({rats.length})</small></b></div>; })()}
             </div>
             <div className="button-row">
@@ -8881,7 +8881,7 @@ function buildBancabiliteDossier(user, store) {
   const orders = (store.orders || []).filter((item) => item.sellerId === user.id);
   const paidOrders = orders.filter((order) => order.paymentStatus === 'Paye' || order.status === 'Confirmee' || order.status === 'Livree');
   const paymentRecords = (store.paymentRecords || []).filter((record) => record.sellerId === user.id);
-  const paydunyaTx = paymentRecords.filter((r) => r.paydunyaToken || /paydunya/i.test(r.partner || ''));
+  const maxitTx = paymentRecords.filter((r) => r.maxitToken || /maxit/i.test(r.partner || ''));
   const proofs = (store.proofs || []).filter((item) => item.ownerId === user.id);
   const activityProofs = (store.activityProofs || []).filter((item) => item.userId === user.id && (item.status === 'valide' || item.status === 'auto_valide'));
   const totalRevenue = paidOrders.reduce((sum, order) => sum + getOrderTotal(order, store), 0)
@@ -8928,11 +8928,11 @@ function buildBancabiliteDossier(user, store) {
   // ══════════════════════════════════════════════════════════════════
   const identiteCriteria = [
     { label: 'Revenu mensuel vérifié', value: `${formatCompact(monthlyAverage)} FCFA/mois`, points: Math.min(12, Math.floor(monthlyAverage / 40000) * 2) },
-    { label: 'Paiements traçables (PayDunya/OM)', value: `${paydunyaTx.length} paiement(s)`, points: Math.min(10, paydunyaTx.length * 3) },
+    { label: 'Paiements traçables (MaxIt/OM)', value: `${maxitTx.length} paiement(s)`, points: Math.min(10, maxitTx.length * 3) },
     { label: 'Justificatifs économiques', value: `${proofs.length + paidOrders.length} pièce(s)`, points: Math.min(8, (proofs.length + paidOrders.length) * 2) },
     { label: 'Expérience agricole déclarée', value: experienceYears > 0 ? `${experienceYears} ans` : 'Non renseigné', points: Math.min(5, Math.floor(experienceYears / 2)) },
     { label: 'Foncier (formel ou coutumier)', value: hasFoncier ? foncierValue : 'Non renseigné', points: hasFoncier ? 5 : 0 },
-    { label: 'Mobile Money actif', value: (hasMobileMoney || paydunyaTx.length > 0) ? 'Oui' : 'Non', points: (hasMobileMoney || paydunyaTx.length > 0) ? 4 : 0 },
+    { label: 'Mobile Money actif', value: (hasMobileMoney || maxitTx.length > 0) ? 'Oui' : 'Non', points: (hasMobileMoney || maxitTx.length > 0) ? 4 : 0 },
     { label: 'Épargne informelle (tontine)', value: hasTontine ? 'Oui' : 'Non', points: hasTontine ? 4 : 0 },
   ];
   const identiteScore = Math.min(50, identiteCriteria.reduce((sum, c) => sum + c.points, 0));
@@ -8963,7 +8963,7 @@ function buildBancabiliteDossier(user, store) {
     totalRevenue,
     monthlyAverage,
     transactionsCount: transactions.length + paidOrders.length,
-    paydunyaCount: paydunyaTx.length,
+    maxitCount: maxitTx.length,
     activityProofsCount: activityProofs.length,
     agriCollectionCount: agriCollections.length,
     repaymentHistory: { repaid, defaults },
@@ -8999,7 +8999,7 @@ function renderBancabiliteHtml(dossier) {
       <h2>Indicateurs clés</h2>
       <p>Revenu total vérifié: <strong>${escapeHtml(formatMoney(dossier.totalRevenue))}</strong></p>
       <p>Revenu mensuel moyen: <strong>${escapeHtml(formatMoney(dossier.monthlyAverage))}</strong></p>
-      <p>Transactions vérifiées: ${dossier.transactionsCount} | Paiements traçables: ${dossier.paydunyaCount}</p>
+      <p>Transactions vérifiées: ${dossier.transactionsCount} | Paiements traçables: ${dossier.maxitCount}</p>
       <p>Vérifications terrain: ${dossier.activityProofsCount}</p>
     </section>
     <section>
@@ -9721,7 +9721,7 @@ function LotDigitalTwinCard({ lot, canReserve, canConsent, onReserve, onShareCon
       <div className="payment-proof-card">
         <ShieldCheck size={18} />
         <div>
-          <strong>Paiement sécurisé via PayDunya</strong>
+          <strong>Paiement sécurisé via MaxIt</strong>
           <span>Orange Money, Wave, Free Money, carte bancaire. Reçu numérique rattaché au lot.</span>
         </div>
       </div>
@@ -10286,31 +10286,31 @@ function LanguageAssistant({ currentUser, store }) {
 
   const quickPrompts = {
     fr: [
-      { q: 'Comment vendre mes produits ?', a: 'Trois étapes: 1) Publiez votre produit dans "Produits" avec photo et prix, 2) Les acheteurs vous commandent depuis le Marché, 3) Vous recevez le paiement PayDunya directement sur votre compte (Orange Money, Wave, banque).' },
+      { q: 'Comment vendre mes produits ?', a: 'Trois étapes: 1) Publiez votre produit dans "Produits" avec photo et prix, 2) Les acheteurs vous commandent depuis le Marché, 3) Vous recevez le paiement MaxIt directement sur votre compte (Orange Money, Wave, banque).' },
       { q: 'Quel est le prix du jour ?', a: `Consultez la page "Marché" pour voir tous les produits disponibles et leurs prix en temps réel. Actuellement ${store.products.length} produits sont listés sur la plateforme.` },
-      { q: 'Comment obtenir un crédit bancaire ?', a: 'Allez dans "Bancabilité": FresCoop calcule votre score (0-100) à partir de vos ventes et paiements PayDunya. Exportez le dossier PDF et présentez-le à une banque ou SFD partenaire. Plus vous vendez via FresCoop, meilleur est votre score.' },
+      { q: 'Comment obtenir un crédit bancaire ?', a: 'Allez dans "Bancabilité": FresCoop calcule votre score (0-100) à partir de vos ventes et paiements MaxIt. Exportez le dossier PDF et présentez-le à une banque ou SFD partenaire. Plus vous vendez via FresCoop, meilleur est votre score.' },
       { q: 'Comment éviter de perdre ma récolte ?', a: 'Inscrivez vos produits dès la récolte. La page "Anti-gaspi" détecte les lots à DLC courte et propose une réduction automatique (-15% à -40%) pour vendre vite aux acheteurs B2B avant perte. Utilisez aussi les hubs froid pour prolonger la durée de vie.' },
       { q: 'Comment suivre un lot ?', a: 'Chaque lot reçoit un QR code. Dans "Lots froids", scannez le QR pour voir: température en temps réel, photos qualité, durée de vie restante, acheteur recommandé et preuve de paiement.' },
       { q: 'Je n ai pas de smartphone', a: 'Pas de problème! Appelez *384*FRES# depuis un téléphone à touches (même 2G). Menu en wolof/pular: cours du jour, déclaration de stock, vente, consultation paiement. Testez le simulateur dans "USSD".' },
     ],
     wo: [
-      { q: 'Naka laa man jaay sama njaay ?', a: '1) Bind sa njaay ci "Produits" ak nataal ak njëg, 2) Jaaykatyi dinañu la jënd ci Marché, 3) Dinga jot sa pay ci PayDunya (Orange Money, Wave, banq).' },
+      { q: 'Naka laa man jaay sama njaay ?', a: '1) Bind sa njaay ci "Produits" ak nataal ak njëg, 2) Jaaykatyi dinañu la jënd ci Marché, 3) Dinga jot sa pay ci MaxIt (Orange Money, Wave, banq).' },
       { q: 'Lan mooy njëg bis bi ?', a: `Demal ci "Marché" ngir gis njëg yépp ci waxtu wi. Tey am na ${store.products.length} njaay ci plateforme bi.` },
-      { q: 'Naka laa man jot crédit ?', a: 'Demal ci "Bancabilité": FresCoop dina wax sa score (0-100) ci sa njaay ak pay PayDunya. Yeggali dossier PDF, yobbu ko banq walla SFD. Bu nga jaay lu bari ci FresCoop, sa score mooy baax.' },
+      { q: 'Naka laa man jot crédit ?', a: 'Demal ci "Bancabilité": FresCoop dina wax sa score (0-100) ci sa njaay ak pay MaxIt. Yeggali dossier PDF, yobbu ko banq walla SFD. Bu nga jaay lu bari ci FresCoop, sa score mooy baax.' },
       { q: 'Naka laa fi man moytu yàq sama ngëneel ?', a: 'Bindal sa ngëneel jekk. "Anti-gaspi" dina gis yi doon yàq, jaay leen ak -15% ba -40% ci jaaykat B2B yi. Jëfandikoo hub yu sedd ngir sedd sa ngëneel.' },
       { q: 'Naka laa man topp sama lot ?', a: 'Lot bu ci nekk am na QR code. Ci "Lots froids", scaan QR bi: température, nataal, bërëb-bi mu des, jaaykat wi reccommende, pay yi.' },
       { q: 'Amuma téléphone bu baax', a: 'Dara du jaxasu! Woo *384*FRES# ci téléphone bi am touche (2G doy na). Menu ci wolof: njëg bis bi, bind stock, jaay, saytu pay.' },
     ],
     pul: [
-      { q: 'No mbaawnoo njeeygol am ?', a: '1) Winndu njeeygol ma e "Produits" e nataal e coggu, 2) Yiɗɓe soodugol ina sooda e Marché, 3) A heɓa njoɓdi ma e PayDunya.' },
+      { q: 'No mbaawnoo njeeygol am ?', a: '1) Winndu njeeygol ma e "Produits" e nataal e coggu, 2) Yiɗɓe soodugol ina sooda e Marché, 3) A heɓa njoɓdi ma e MaxIt.' },
       { q: 'No foti coggu hannde ?', a: `Yahu e "Marché" ngam yi\'ugol kala njeeygol e coggu maggi. Hannde ${store.products.length} njeeygol woni e plateforme.` },
-      { q: 'No mbaawnoo heɓugol tokkoral ?', a: 'Yahu e "Bancabilité": FresCoop hiitoo score maa (0-100) e njeeygol e njoɓdi PayDunya. Yaltin dossier PDF, addan banka walla SFD.' },
+      { q: 'No mbaawnoo heɓugol tokkoral ?', a: 'Yahu e "Bancabilité": FresCoop hiitoo score maa (0-100) e njeeygol e njoɓdi MaxIt. Yaltin dossier PDF, addan banka walla SFD.' },
       { q: 'No reenoo bonnde ndema am ?', a: '"Anti-gaspi" ko hollitta ko boni: jeey ɗum -15% haa -40% e soodooɓe B2B ado ɗum bonnugol.' },
       { q: 'No ndaroo-mi lot ?', a: 'Lot kala ina jogii QR code. E "Lots froids", scaan QR ndi: wulaango, nataa, ñalɗi keddiiɗi, soodoowo, njoɓdi.' },
       { q: 'Mi alaa simartifol', a: 'Noddu *384*FRES# e njokkondiral foti touches. Menu e pulaar: coggu hannde, winndugol stock, njeeygol.' },
     ],
     sr: [
-      { q: 'Le mbaane mbelax lomi tedd ?', a: '1) Bisim kirim ma ole "Produits", 2) Nga nu jim moox le "Marché", 3) Mi fa pay ole PayDunya.' },
+      { q: 'Le mbaane mbelax lomi tedd ?', a: '1) Bisim kirim ma ole "Produits", 2) Nga nu jim moox le "Marché", 3) Mi fa pay ole MaxIt.' },
       { q: 'Le ma ŋ kirim penaar ?', a: `Da "Marché" ole ya kirim ma tedd. Penaar ${store.products.length} kirim ne.` },
       { q: 'Le mbaane haat ana ?', a: 'Da "Bancabilité": score ma (0-100). Yol ma e yo le bank ole SFD.' },
       { q: 'Le mbaane rot ale ñoox ?', a: '"Anti-gaspi" yol ŋ ŋoox le -15% haa -40%.' },
@@ -10650,11 +10650,11 @@ function PitchPage({ navigate, store }) {
     },
     {
       title: 'La solution FresCoop',
-      body: 'Une plateforme intégrée qui connecte lot froid, paiement partenaire (PayDunya) et preuve économique portable. Pas de wallet: le paiement reste chez Wave, OM, Free Money. FresCoop fabrique la preuve.',
+      body: 'Une plateforme intégrée qui connecte lot froid, paiement partenaire (MaxIt) et preuve économique portable. Pas de wallet: le paiement reste chez Wave, OM, Free Money. FresCoop fabrique la preuve.',
       metrics: [
         { label: 'Lots traces', value: String(store.lots?.length || 0) },
         { label: 'Hubs solaires', value: String(store.hubs?.length || 0) },
-        { label: 'Paiements partenaires', value: String(impact.paydunyaTxCount) },
+        { label: 'Paiements partenaires', value: String(impact.maxitTxCount) },
       ],
     },
     {
@@ -13220,7 +13220,7 @@ function renderPaymentReceiptHtml(receipt, store, user) {
   const dateStr = paidDate.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
   const timeStr = paidDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   const invoiceNum = `FC-${paidDate.getFullYear()}-${receipt.code.slice(-8)}`;
-  const method = receipt.token?.startsWith('DEMO') ? 'Simulation démo' : 'PayDunya';
+  const method = receipt.token?.startsWith('DEMO') ? 'Simulation démo' : 'MaxIt';
 
   const verifyUrl = getReceiptVerifyUrl(receipt.code);
   const qrUrl = getQrImageUrl(verifyUrl, 220);
@@ -13574,7 +13574,7 @@ function renderBusinessReportHtml(store) {
       </div>
       <div class="kpi-row">
         <div class="kpi-card green"><span class="kpi-value">${formatCompact(impact.tracedKg)}</span><span class="kpi-label">Kg traces</span></div>
-        <div class="kpi-card gold"><span class="kpi-value">${impact.paydunyaTxCount}</span><span class="kpi-label">Paiements PayDunya</span></div>
+        <div class="kpi-card gold"><span class="kpi-value">${impact.maxitTxCount}</span><span class="kpi-label">Paiements MaxIt</span></div>
         <div class="kpi-card blue"><span class="kpi-value">${(store.lots || []).length}</span><span class="kpi-label">Lots actifs</span></div>
         <div class="kpi-card coral"><span class="kpi-value">${store.proofs.length}</span><span class="kpi-label">Preuves économiques</span></div>
       </div>
@@ -13582,7 +13582,7 @@ function renderBusinessReportHtml(store) {
 
     <section>
       <h2>Proposition de valeur</h2>
-      <p>FresCoop digitalise la chaîne de valeur agricole africaine : marketplace multicanale, stockage froid solaire, paiement mobile (PayDunya, Wave, Orange Money) et preuve économique portable pour l'accès au crédit formel.</p>
+      <p>FresCoop digitalise la chaîne de valeur agricole africaine : marketplace multicanale, stockage froid solaire, paiement mobile (MaxIt, Wave, Orange Money) et preuve économique portable pour l'accès au crédit formel.</p>
     </section>
 
     <section>
